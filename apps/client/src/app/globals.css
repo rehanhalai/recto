@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* --- TEA & OLD PAPER PALETTE --- */
+
+  /* Tea Green (Inverted: 100=Dark, 900=Light) */
+  --color-tea-green-100: #2d331a;
+  --color-tea-green-200: #5b6635;
+  --color-tea-green-300: #88994f;
+  --color-tea-green-400: #acbb7b;
+  --color-tea-green-500: #ccd5ae;
+  --color-tea-green-600: #d6debe;
+  --color-tea-green-700: #e1e6cf;
+  --color-tea-green-800: #ebeedf;
+  --color-tea-green-900: #f5f7ef;
+  --color-tea-green: #ccd5ae;
+
+  /* Beige (Inverted: 100=Dark, 900=Light) */
+  --color-beige-100: #3d4216;
+  --color-beige-200: #79842c;
+  --color-beige-300: #b3c146;
+  --color-beige-400: #ced788;
+  --color-beige-500: #e9edc9;
+  --color-beige-600: #edf1d4;
+  --color-beige-700: #f2f4df;
+  --color-beige-800: #f6f8ea;
+  --color-beige-900: #fbfbf4;
+  --color-beige: #e9edc9;
+
+  /* Cornsilk (Inverted: 100=Dark, 900=Light) */
+  --color-cornsilk-100: #5d5103;
+  --color-cornsilk-200: #baa206;
+  --color-cornsilk-300: #f8dc27;
+  --color-cornsilk-400: #fbeb84;
+  --color-cornsilk-500: #fefae0;
+  --color-cornsilk-600: #fefbe7;
+  --color-cornsilk-700: #fefced;
+  --color-cornsilk-800: #fffdf3;
+  --color-cornsilk-900: #fffef9;
+  --color-cornsilk: #fefae0;
+
+  /* Papaya Whip (Inverted: 100=Dark, 900=Light) */
+  --color-papaya-whip-100: #533e08;
+  --color-papaya-whip-200: #a57b10;
+  --color-papaya-whip-300: #eab227;
+  --color-papaya-whip-400: #f2d079;
+  --color-papaya-whip-500: #faedcd;
+  --color-papaya-whip-600: #fbf1d6;
+  --color-papaya-whip-700: #fcf4e0;
+  --color-papaya-whip-800: #fdf8eb;
+  --color-papaya-whip-900: #fefbf5;
+  --color-papaya-whip: #faedcd;
+
+  /* Light Bronze (Inverted: 100=Dark, 900=Light) */
+  --color-light-bronze-100: #32210f;
+  --color-light-bronze-200: #64411f;
+  --color-light-bronze-300: #96622e;
+  --color-light-bronze-400: #c58341;
+  --color-light-bronze-500: #d4a373;
+  --color-light-bronze-600: #dcb68f;
+  --color-light-bronze-700: #e5c8ab;
+  --color-light-bronze-800: #eedac7;
+  --color-light-bronze-900: #f6ede3;
+  --color-light-bronze: #d4a373;
+
+  /* Semantic Colors - Mapped to Tea Palette */
+  --color-paper: var(--paper);
+  --color-card-surface: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+
+  /* Existing Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-playfair-display);
+  --font-mono: var(--font-geist-mono);
+  /* ... keep other Shadcn variables ... */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  :root {
+    /* LIGHT MODE: Clean Gallery */
+
+    /* Background: Pure White (or Zinc-50 #fafafa for slight softness) */
+    --paper: #ffffff;
+
+    /* Card: White (with shadow to separate) */
+    --card: #ffffff;
+
+    /* Text: Zinc-950 (Deep Matte Black - NOT #000000) */
+    --ink: #09090b;
+
+    /* Muted Text: Zinc-500 (Neutral Gray) */
+    --ink-muted: #71717a;
+
+    /* Border: Zinc-200 (Very faint gray) */
+    --border-subtle: #e4e4e7;
+
+    /* Accent: Zinc-900 (Black buttons for monochrome look) */
+    --accent: #18181b;
+
+    /* Hover Accent: Zinc-700 */
+    --accent-dark: #3f3f46;
+  }
+
+  .dark {
+    /* DARK MODE: Soft Graphite (Your Choice) */
+
+    /* Background: Zinc-950 (Neutral dark gray) */
+    --paper: #09090b;
+
+    /* Card: Zinc-900 (Lighter gray) */
+    --card: #18181b;
+
+    /* Text: Zinc-50 (Soft Off-White) */
+    --ink: #fafafa;
+
+    /* Muted Text: Zinc-400 */
+    --ink-muted: #a1a1aa;
+
+    /* Border: Zinc-800 */
+    --border-subtle: #27272a;
+
+    /* Accent: White (High contrast against graphite) */
+    --accent: #ffffff;
+
+    /* Hover Accent: Zinc-200 */
+    --accent-dark: #e4e4e7;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-paper text-ink;
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.02) 2px,
+      rgba(0, 0, 0, 0.02) 4px
+    );
+  }
+
+  /* Typography - Serif for Headings */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
+  }
+
+  h1 {
+    @apply text-4xl sm:text-5xl md:text-6xl font-bold tracking-tighter;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl font-bold tracking-tighter;
+  }
+
+  h3 {
+    @apply text-2xl sm:text-3xl font-semibold tracking-tight;
+  }
+
+  h4 {
+    @apply text-xl font-semibold;
+  }
+
+  .italic-serif {
+    @apply font-serif italic text-ink/90 dark:text-ink/90;
+  }
+}

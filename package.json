@@ -1,0 +1,21 @@
+{
+  "name": "recto",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Recto monorepo",
+  "author": "Rehan Halai",
+  "license": "ISC",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.7.0",
+    "turbo": "^2.5.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
