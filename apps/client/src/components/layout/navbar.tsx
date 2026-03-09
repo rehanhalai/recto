@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
 import {
   MagnifyingGlassIcon,
   BookmarkIcon,
@@ -9,7 +9,7 @@ import {
   GearIcon,
   UserIcon,
   SignOutIcon,
-} from '@phosphor-icons/react';
+} from "@phosphor-icons/react";
 import {
   Button,
   Input,
@@ -28,16 +28,23 @@ import {
   SheetHeader,
   SheetTitle,
   Separator,
-} from '@/components/ui';
-import { ThemeToggle } from '@/components/theme-toggle';
-import Image from 'next/image';
-import { LibraryIcon, Menu } from 'lucide-react';
-import { useAuth } from '@/features/auth';
+} from "@/components/ui";
+import { ThemeToggle } from "@/components/theme-toggle";
+import Image from "next/image";
+import { LibraryIcon, Menu } from "lucide-react";
+import { useAuth } from "@/features/auth";
+import LightLogo from "@/../public/logoText.webp";
+import DarkLogo from "@/../public/logoDarkTheme.webp";
+import { useTheme } from "next-themes";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const { user, isAuthenticated, logout } = useAuth();
+  const { theme, systemTheme } = useTheme();
+
+  const currentTheme = theme === "system" ? systemTheme : theme;
+  const isDarkMode = currentTheme === "dark";
 
   return (
     <nav className="sticky top-0 z-50 bg-paper dark:bg-card backdrop-blur border-b border-border-subtle dark:border-border-subtle shadow-sm">
@@ -67,16 +74,16 @@ export function Navbar() {
                       <Avatar className="w-16 h-16 ring-2 ring-orange-200 dark:ring-orange-900">
                         <AvatarImage
                           src={
-                            user?.avatarImage || 'https://github.com/shadcn.png'
+                            user?.avatarImage || "https://github.com/shadcn.png"
                           }
                         />
                         <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100">
-                          {user?.userName.slice(0, 1).toUpperCase() || 'JD'}
+                          {user?.userName.slice(0, 1).toUpperCase() || "JD"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="text-left">
                         <SheetTitle className="text-lg font-bold text-ink dark:text-ink tracking-tight">
-                          {user?.userName || 'John Doe'}
+                          {user?.userName || "John Doe"}
                         </SheetTitle>
                         <p className="text-sm text-ink-muted dark:text-ink-muted">
                           Book lover & avid reader
@@ -161,11 +168,9 @@ export function Navbar() {
               className="flex items-center gap-2 font-bold text-xl text-ink dark:text-ink tracking-tight absolute left-1/2 -translate-x-1/2"
             >
               <Image
-                src="/logo.svg"
+                src={isDarkMode ? DarkLogo : LightLogo}
                 alt="Recto Logo"
                 loading="eager"
-                width={96}
-                height={40}
               />
             </Link>
 
@@ -189,7 +194,12 @@ export function Navbar() {
               href="/home"
               className="flex items-center gap-2 font-bold text-xl text-ink dark:text-ink tracking-tight"
             >
-              <Image src="/logo.svg" alt="Recto Logo" width={96} height={40} />
+              <Image
+                src={isDarkMode ? DarkLogo : LightLogo}
+                alt="Recto Logo"
+                width={96}
+                height={40}
+              />
             </Link>
 
             {/* Center: Nav Links + Search */}
@@ -240,15 +250,15 @@ export function Navbar() {
                       <Avatar className="w-8 h-8">
                         <AvatarImage
                           src={
-                            user?.avatarImage || 'https://github.com/shadcn.png'
+                            user?.avatarImage || "https://github.com/shadcn.png"
                           }
                         />
                         <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100 text-xs">
-                          {user?.userName?.slice(0, 1).toUpperCase() || 'U'}
+                          {user?.userName?.slice(0, 1).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-sm font-medium">
-                        {user?.userName || 'User'}
+                        {user?.userName || "User"}
                       </span>
                     </Button>
                   </DropdownMenuTrigger>

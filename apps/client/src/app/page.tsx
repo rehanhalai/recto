@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { tokenManager } from "@/lib/api-client";
+import { apiFetch } from "@/lib/fetch";
 import {
   BookOpenIcon,
   StarIcon,
@@ -39,23 +39,29 @@ export default function LandingPage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Fast client-side gate to avoid landing page flicker
+  // Fast client-side gate to check auth via cookies
   useEffect(() => {
-    const token =
-      tokenManager.getAccessToken() ||
-      (typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null);
-
-    if (token) {
-      router.replace("/home");
-    } else {
-      setCheckingAuth(false);
-    }
+    const checkAuth = async () => {
+      try {
+        const res = await apiFetch<any>("/user/whoami");
+        if (res.success) {
+          router.replace("/home");
+        } else {
+          setCheckingAuth(false);
+        }
+      } catch (e) {
+        setCheckingAuth(false);
+      }
+    };
+    checkAuth();
   }, [router]);
 
   if (checkingAuth) {
-    return null;
+    return (
+      <div className="min-h-screen bg-paper dark:bg-paper flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      </div>
+    );
   }
   // Book cover colors for visual variety
   const bookCovers = [

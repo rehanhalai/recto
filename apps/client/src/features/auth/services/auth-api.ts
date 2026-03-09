@@ -3,7 +3,7 @@
  * Handles all authentication-related API calls matching the server endpoints
  */
 
-import { apiClient, tokenManager } from "@/lib/api-client";
+import { apiFetch, getBaseUrl } from "@/lib/fetch";
 import {
   LoginCredentials,
   SignupCredentials,
@@ -30,11 +30,10 @@ import {
 export const signupRequest = async (
   credentials: SignupCredentials,
 ): Promise<SignupOTPResponse> => {
-  const response = await apiClient.post<SignupOTPResponse>(
-    "/user/signup",
-    credentials,
-    { requiresAuth: false },
-  );
+  const response = await apiFetch<SignupOTPResponse>("/auth/signup", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
   return response;
 };
 
@@ -44,11 +43,11 @@ export const signupRequest = async (
 export const verifySignupOTP = async (
   verification: OTPVerification,
 ): Promise<ApiResponse<SignupVerifyResponse>> => {
-  const response = await apiClient.post<ApiResponse<SignupVerifyResponse>>(
-    "/user/signup-verify",
-    verification,
+  const response = await apiFetch<ApiResponse<SignupVerifyResponse>>(
+    "/auth/signup-verify",
     {
-      requiresAuth: false,
+      method: "POST",
+      body: JSON.stringify(verification),
     },
   );
   return response;
@@ -64,13 +63,10 @@ export const verifySignupOTP = async (
 export const loginRequest = async (
   credentials: LoginCredentials,
 ): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>(
-    "/user/signin",
-    credentials,
-    {
-      requiresAuth: false,
-    },
-  );
+  const response = await apiFetch<AuthResponse>("/auth/signin", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
 
   return response;
 };
@@ -83,13 +79,9 @@ export const loginRequest = async (
  * Refresh access token using refresh token from response
  */
 export const refreshAccessToken = async (): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>(
-    "/user/refresh-accesstoken",
-    {},
-    {
-      requiresAuth: false,
-    },
-  );
+  const response = await apiFetch<AuthResponse>("/user/refresh-accesstoken", {
+    method: "POST",
+  });
 
   return response;
 };
@@ -103,11 +95,7 @@ export const refreshAccessToken = async (): Promise<AuthResponse> => {
  */
 export const logoutRequest = async (): Promise<void> => {
   try {
-    await apiClient.post<ApiResponse<{}>>(
-      "/user/logout",
-      {},
-      { credentials: "include" },
-    );
+    await apiFetch<ApiResponse<{}>>("/auth/logout", { method: "POST" });
   } catch (error) {
     console.error("Logout request failed:", error);
   } finally {
@@ -123,7 +111,7 @@ export const logoutRequest = async (): Promise<void> => {
  * Get current authenticated user
  */
 export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
-  return apiClient.get<ApiResponse<User>>("/user/whoami");
+  return apiFetch<ApiResponse<User>>("/user/whoami");
 };
 
 // ============================================
@@ -135,7 +123,7 @@ export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
  * User should be redirected to this URL
  */
 export const getGoogleAuthUrl = (): string => {
-  return `${apiClient.getBaseUrl()}/user/google`;
+  return `${getBaseUrl()}/auth/google`;
 };
 
 /**
@@ -179,8 +167,9 @@ export const handleGoogleCallback = async (): Promise<
 export const forgotPasswordRequest = async (
   data: ForgotPasswordRequest,
 ): Promise<ApiResponse<{}>> => {
-  return apiClient.post<ApiResponse<{}>>("/user/password-otp", data, {
-    requiresAuth: false,
+  return apiFetch<ApiResponse<{}>>("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify(data),
   });
 };
 
@@ -190,10 +179,12 @@ export const forgotPasswordRequest = async (
 export const verifyPasswordResetOTP = async (
   data: PasswordResetOTPVerification,
 ): Promise<ApiResponse<{ resetToken: string }>> => {
-  return apiClient.post<ApiResponse<{ resetToken: string }>>(
-    "/user/password-otp-verify",
-    data,
-    { requiresAuth: false },
+  return apiFetch<ApiResponse<{ resetToken: string }>>(
+    "/auth/password-otp-verify",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    },
   );
 };
 
@@ -203,8 +194,9 @@ export const verifyPasswordResetOTP = async (
 export const setNewPassword = async (
   data: NewPasswordRequest,
 ): Promise<ApiResponse<{}>> => {
-  return apiClient.post<ApiResponse<{}>>("/user/new-password", data, {
-    requiresAuth: false,
+  return apiFetch<ApiResponse<{}>>("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(data),
   });
 };
 
@@ -218,7 +210,10 @@ export const setNewPassword = async (
 export const changePassword = async (
   data: ChangePasswordRequest,
 ): Promise<ApiResponse<{}>> => {
-  return apiClient.post<ApiResponse<{}>>("/user/change-password", data);
+  return apiFetch<ApiResponse<{}>>("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 };
 
 /**
@@ -227,7 +222,10 @@ export const changePassword = async (
 export const updateProfile = async (
   data: ProfileUpdate,
 ): Promise<ApiResponse<User>> => {
-  return apiClient.patch<ApiResponse<User>>("/user/update-profile", data);
+  return apiFetch<ApiResponse<User>>("/user/update-profile", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 };
 
 /**
@@ -236,9 +234,8 @@ export const updateProfile = async (
 export const checkUsernameAvailability = async (
   userName: string,
 ): Promise<ApiResponse<{ isAvailable: boolean }>> => {
-  return apiClient.get<ApiResponse<{ isAvailable: boolean }>>(
+  return apiFetch<ApiResponse<{ isAvailable: boolean }>>(
     `/user/check?userName=${encodeURIComponent(userName)}`,
-    { requiresAuth: false },
   );
 };
 

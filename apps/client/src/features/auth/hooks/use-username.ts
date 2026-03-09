@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiFetch } from "@/lib/fetch";
 
 interface GenerateUsernameResponse {
   username: string;
@@ -11,7 +11,7 @@ export const useGenerateUsername = () => {
   return useQuery({
     queryKey: ["generateUsername"],
     queryFn: async () => {
-      const response = await apiClient.get<GenerateUsernameResponse>(
+      const response = await apiFetch<GenerateUsernameResponse>(
         "/user/generate-username",
       );
       return response;

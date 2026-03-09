@@ -3,7 +3,7 @@
  * Fetches book recommendations by genre, public lists, and featured blogs
  */
 
-import { apiClient } from "@/lib/api-client";
+import { apiFetch } from "@/lib/fetch";
 
 /**
  * Book data interface
@@ -79,7 +79,7 @@ export const homeService = {
     limit: number = 6,
   ): Promise<BookResponse[]> {
     try {
-      const response = await apiClient.get<ApiResponse<SearchResponse>>(
+      const response = await apiFetch<ApiResponse<SearchResponse>>(
         `/books/search?genre=${encodeURIComponent(genre)}&limit=${limit}`,
       );
       return response.data.results || [];
@@ -135,7 +135,7 @@ export const homeService = {
    */
   async getPublicLists(limit: number = 3): Promise<BookListResponse[]> {
     try {
-      const response = await apiClient.get<ApiResponse<BookListResponse[]>>(
+      const response = await apiFetch<ApiResponse<BookListResponse[]>>(
         `/lists/public?limit=${limit}`,
       );
       return response.data || [];
@@ -151,7 +151,7 @@ export const homeService = {
    */
   async getTrendingBlogs(limit: number = 3): Promise<BlogResponse[]> {
     try {
-      const response = await apiClient.get<
+      const response = await apiFetch<
         ApiResponse<{ blogs: BlogResponse[]; pagination: any }>
       >(`/blogs?limit=${limit}&sort=createdAt&order=desc`);
 
@@ -170,7 +170,7 @@ export const homeService = {
    */
   async getTopRatedBooks(limit: number = 6): Promise<BookResponse[]> {
     try {
-      const response = await apiClient.get<ApiResponse<SearchResponse>>(
+      const response = await apiFetch<ApiResponse<SearchResponse>>(
         `/books/search?sort=averageRating&order=desc&limit=${limit}`,
       );
       return response.data.results || [];
@@ -186,7 +186,7 @@ export const homeService = {
    */
   async getNewReleases(limit: number = 6): Promise<BookResponse[]> {
     try {
-      const response = await apiClient.get<ApiResponse<SearchResponse>>(
+      const response = await apiFetch<ApiResponse<SearchResponse>>(
         `/books/search?sort=releaseDate&order=desc&limit=${limit}`,
       );
       return response.data.results || [];
