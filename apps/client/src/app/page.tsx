@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/fetch";
 import {
@@ -10,14 +10,10 @@ import {
   StarIcon,
   UsersIcon,
   ChatCircleIcon,
-  SparkleIcon,
-  CaretRightIcon,
   TrendUpIcon,
   ListBulletsIcon,
-  HeartIcon,
-  MagnifyingGlassIcon,
   CompassIcon,
-  BooksIcon,
+  ArrowRightIcon,
 } from "@phosphor-icons/react";
 import {
   Accordion,
@@ -25,648 +21,831 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Navbar } from "@/components/layout/navbar";
-import { List as LucideList } from "lucide-react";
+import { Footer } from "@/components/layout/footer";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+// ─────────────────────────────────────────────────────────
+// MODULE-LEVEL STATIC DATA (perf: no re-allocations on render)
+// ─────────────────────────────────────────────────────────
+
+const HERO_LINES = [
+  { text: "Discover Your Next", weight: "font-light" },
+  { text: "Great Read.", weight: "font-bold" },
+] as const;
+
+const FEATURES = [
+  {
+    icon: BookOpenIcon,
+    title: "Track",
+    description:
+      "Log every book you've read, mark current reads, and follow your progress throughout the year.",
+    size: "large",
+  },
+  {
+    icon: StarIcon,
+    title: "Review",
+    description:
+      "Write detailed reviews, share ratings, and engage with passionate readers.",
+    size: "small",
+  },
+  {
+    icon: CompassIcon,
+    title: "Discover",
+    description:
+      "Explore curated lists, trending books, and genre-based recommendations.",
+    size: "small",
+  },
+  {
+    icon: UsersIcon,
+    title: "Connect",
+    description:
+      "Follow readers, join discussions, and build your literary community.",
+    size: "small",
+  },
+] as const;
+
+const PILLARS = [
+  {
+    num: "01",
+    icon: ChatCircleIcon,
+    title: "Social Reviews & Blogs",
+    description:
+      "Share detailed opinions, write in-depth posts, and engage in real conversations about books.",
+  },
+  {
+    num: "02",
+    icon: TrendUpIcon,
+    title: "Smart Tracking",
+    description:
+      "Detailed reading stats, yearly goals, and habit insights that actually make you want to read more.",
+  },
+  {
+    num: "03",
+    icon: ListBulletsIcon,
+    title: "Curated Lists",
+    description:
+      "Create and share reading lists. Discover trending collections curated by the community.",
+  },
+] as const;
+
+const TESTIMONIALS = [
+  {
+    name: "Sarah Chen",
+    role: "Avid Reader",
+    quote:
+      "Finally, a book app that doesn't feel like a spreadsheet. Clean, focused, and actually enjoyable to use.",
+    initials: "SC",
+  },
+  {
+    name: "James Wilson",
+    role: "Book Critic",
+    quote:
+      "The community aspect is what sets Recto apart. Real conversations about real books — nothing more.",
+    initials: "JW",
+  },
+  {
+    name: "Emma Davis",
+    role: "Literature Student",
+    quote:
+      "I've been waiting for something like Recto for years. The design alone made me want to read more.",
+    initials: "ED",
+  },
+  {
+    name: "Arjun Mehta",
+    role: "Weekend Reader",
+    quote:
+      "I built my entire reading list for 2025 in an afternoon. It just works the way your brain does.",
+    initials: "AM",
+  },
+  {
+    name: "Léa Dubois",
+    role: "Librarian",
+    quote:
+      "Recommending this to every patron. It's the GoodReads we deserved but never got.",
+    initials: "LD",
+  },
+  {
+    name: "Marcus Osei",
+    role: "Sci-fi Enthusiast",
+    quote:
+      "Discovering new books just got dangerous. My to-read pile has tripled since the beta.",
+    initials: "MO",
+  },
+] as const;
+
+const FAQ_ITEMS = [
+  {
+    id: "faq-1",
+    question: "Will Recto be free?",
+    answer:
+      "Yes. Core features — tracking, reviews, lists, community — are always free. We believe access to a beautiful reading tool shouldn't cost anything.",
+  },
+  {
+    id: "faq-2",
+    question: "When is Recto launching?",
+    answer:
+      "We're in early access, building towards public launch. Sign up and you'll be among the first to know — and the first in.",
+  },
+  {
+    id: "faq-3",
+    question: "Can I import data from Goodreads?",
+    answer:
+      "Goodreads import is on our roadmap. We want switching to be painless — your reading history belongs to you.",
+  },
+  {
+    id: "faq-4",
+    question: "Will there be a mobile app?",
+    answer:
+      "Yes. Mobile is a priority. The web experience is fully responsive today, with a native app planned post-launch.",
+  },
+] as const;
+
+// ─────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Fast client-side gate to check auth via cookies
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await apiFetch<any>("/user/whoami");
-        if (res.success) {
-          router.replace("/home");
-        } else {
-          setCheckingAuth(false);
-        }
-      } catch (e) {
+  // Refs for GSAP targets
+  const heroRef = useRef<HTMLElement>(null);
+  const line0Ref = useRef<HTMLSpanElement>(null);
+  const line1Ref = useRef<HTMLSpanElement>(null);
+  const heroDividerRef = useRef<HTMLDivElement>(null);
+  const heroSubRef = useRef<HTMLParagraphElement>(null);
+  const heroCtaRef = useRef<HTMLDivElement>(null);
+  const manifestoRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
+  const aboutRef = useRef<HTMLElement>(null);
+  const aboutRightRef = useRef<HTMLDivElement>(null);
+  const ctaBannerRef = useRef<HTMLElement>(null);
+
+  // Stable auth check — useCallback to prevent re-creation
+  const checkAuth = useCallback(async () => {
+    try {
+      const res = await apiFetch<{ success: boolean }>("/user/whoami");
+      if (res.success) {
+        router.replace("/home");
+      } else {
         setCheckingAuth(false);
       }
-    };
-    checkAuth();
+    } catch {
+      setCheckingAuth(false);
+    }
   }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // Memoize doubled testimonials for the marquee (stable reference)
+  const doubledTestimonials = useMemo(
+    () => [...TESTIMONIALS, ...TESTIMONIALS],
+    [],
+  );
+
+  // GSAP Animations — only after auth check resolves
+  useEffect(() => {
+    if (checkingAuth) return;
+
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReduced) return;
+
+    const ctx = gsap.context(() => {
+      // ── HERO: Two-line cinematic reveal ───────────────────
+      gsap.from([line0Ref.current, line1Ref.current], {
+        y: 60,
+        opacity: 0,
+        duration: 1.1,
+        ease: "power4.out",
+        stagger: 0.15,
+      });
+
+      gsap.from(heroDividerRef.current, {
+        scaleX: 0,
+        transformOrigin: "left center",
+        duration: 1.3,
+        ease: "power4.out",
+        delay: 0.25,
+      });
+
+      gsap.from(heroSubRef.current, {
+        y: 28,
+        opacity: 0,
+        duration: 0.9,
+        ease: "power3.out",
+        delay: 0.5,
+      });
+
+      gsap.from(heroCtaRef.current, {
+        y: 18,
+        opacity: 0,
+        duration: 0.7,
+        ease: "power3.out",
+        delay: 0.72,
+      });
+
+      // ── MANIFESTO: fade-in on scroll ─────────────────────
+      if (manifestoRef.current) {
+        gsap.from(manifestoRef.current.querySelector(".manifesto-text"), {
+          scrollTrigger: {
+            trigger: manifestoRef.current,
+            start: "top 85%",
+          },
+          opacity: 0,
+          y: 20,
+          duration: 1,
+          ease: "power3.out",
+        });
+      }
+
+      // ── FEATURES: staggered reveal ────────────────────────
+      if (featuresRef.current) {
+        gsap.from(featuresRef.current.querySelector(".features-header"), {
+          scrollTrigger: { trigger: featuresRef.current, start: "top 85%" },
+          y: 24,
+          opacity: 0,
+          duration: 0.7,
+          ease: "power3.out",
+        });
+
+        gsap.from(featuresRef.current.querySelectorAll(".feature-card"), {
+          scrollTrigger: { trigger: featuresRef.current, start: "top 80%" },
+          y: 32,
+          opacity: 0,
+          duration: 0.7,
+          ease: "power3.out",
+          stagger: 0.08,
+        });
+      }
+
+      // ── ABOUT: slide from sides + subtle parallax ─────────
+      if (aboutRef.current) {
+        gsap.from(aboutRef.current.querySelector(".about-left"), {
+          scrollTrigger: { trigger: aboutRef.current, start: "top 80%" },
+          x: -36,
+          opacity: 0,
+          duration: 0.95,
+          ease: "power3.out",
+        });
+
+        if (aboutRightRef.current) {
+          gsap.from(aboutRightRef.current, {
+            scrollTrigger: { trigger: aboutRef.current, start: "top 80%" },
+            x: 36,
+            opacity: 0,
+            duration: 0.95,
+            ease: "power3.out",
+          });
+
+          // Parallax scrub
+          gsap.to(aboutRightRef.current, {
+            scrollTrigger: {
+              trigger: aboutRef.current,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 0.8,
+            },
+            y: -50,
+            ease: "none",
+          });
+        }
+      }
+
+      // ── CTA BANNER ────────────────────────────────────────
+      if (ctaBannerRef.current) {
+        gsap.from(ctaBannerRef.current.querySelector(".cta-content"), {
+          scrollTrigger: {
+            trigger: ctaBannerRef.current,
+            start: "top 80%",
+          },
+          y: 40,
+          opacity: 0,
+          duration: 0.9,
+          ease: "power4.out",
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, [checkingAuth]);
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-paper dark:bg-paper flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full border-2 border-ink/15 border-t-ink/60 animate-spin" />
       </div>
     );
   }
-  // Book cover colors for visual variety
-  const bookCovers = [
-    { color: "bg-blue-700", top: "10%", left: "5%", rotation: "-12deg" },
-    { color: "bg-orange-600", top: "15%", left: "75%", rotation: "8deg" },
-    { color: "bg-red-700", top: "50%", left: "8%", rotation: "15deg" },
-    { color: "bg-green-700", top: "55%", left: "80%", rotation: "-10deg" },
-    { color: "bg-purple-700", top: "75%", left: "12%", rotation: "12deg" },
-    { color: "bg-indigo-700", top: "70%", left: "82%", rotation: "-15deg" },
-  ];
 
   return (
-    <div className="min-h-screen bg-paper dark:bg-paper">
-      {/* Navigation */}
+    <div className="min-h-screen bg-paper text-ink overflow-x-hidden">
+      {/* ══════════════════════════════════════════════
+          NAVIGATION
+      ══════════════════════════════════════════════ */}
       <Navbar />
 
-      {/* Hero Section - Using your design */}
-      <section className="mb-10 px-4 sm:px-6 lg:px-8 pt-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-gradient-to-br from-accent/10 to-accent-dark/10 dark:from-accent/20 dark:to-accent-dark/20 rounded-2xl overflow-hidden border border-border-subtle dark:border-border-subtle/20 p-6 md:p-8 lg:p-10 relative">
-            {/* Floating Book Covers Background */}
-            <div className="absolute inset-0 overflow-hidden opacity-10 dark:opacity-5">
-              {bookCovers.map((book, idx) => (
-                <div
-                  key={idx}
-                  className={`absolute w-16 h-24 md:w-20 md:h-32 ${book.color} rounded-lg shadow-lg`}
-                  style={{
-                    top: book.top,
-                    left: book.left,
-                    rotate: book.rotation,
-                    animation: `float 6s ease-in-out ${idx * 0.2}s infinite`,
-                  }}
-                />
-              ))}
-            </div>
+      {/* ══════════════════════════════════════════════
+          HERO — Full Viewport, Cinematic
+      ══════════════════════════════════════════════ */}
+      <section
+        ref={heroRef}
+        className="relative min-h-[100svh] flex flex-col justify-center px-6 sm:px-10 lg:px-20 pt-24 pb-20 overflow-hidden"
+      >
+        {/* Background watermark — decorative, aria-hidden */}
+        <span
+          aria-hidden="true"
+          className="font-cormorant absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 text-[32vw] font-italic text-ink/[0.022] dark:text-ink/[0.04] select-none pointer-events-none leading-none"
+        >
+          R
+        </span>
 
-            <div className="max-w-2xl relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <SparkleIcon className="w-6 h-6 text-accent dark:text-accent" />
-                <span className="italic-serif text-accent dark:text-accent text-sm font-semibold uppercase tracking-wider">
-                  Welcome to Recto
+        {/* Eyebrow badge — gold dot + Cormorant italic label */}
+        <div className="flex items-center gap-2.5 mb-10">
+          <span
+            aria-hidden="true"
+            className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0"
+          />
+          <span className="font-cormorant text-sm text-gold tracking-[0.15em]">
+            Early Access — Coming Soon
+          </span>
+        </div>
+
+        {/* Headline — two lines, weight contrast */}
+        <div className="mb-8 overflow-hidden">
+          <h1 className="text-[clamp(3.2rem,8.5vw,7.8rem)] font-serif tracking-tighter leading-[0.9] max-w-5xl">
+            <span
+              ref={line0Ref}
+              className="block font-light text-ink/80 dark:text-ink/80"
+            >
+              {HERO_LINES[0].text}
+            </span>
+            <span
+              ref={line1Ref}
+              className="block font-bold text-ink dark:text-ink"
+            >
+              {HERO_LINES[1].text}
+            </span>
+          </h1>
+        </div>
+
+        {/* Animated divider */}
+        <div
+          ref={heroDividerRef}
+          aria-hidden="true"
+          className="w-20 h-px bg-gold/60 mb-8"
+        />
+
+        {/* Subheadline — DM Sans, light, restrained */}
+        <p
+          ref={heroSubRef}
+          className="text-base sm:text-lg text-ink-muted max-w-md leading-loose mb-12 font-light tracking-wide"
+        >
+          A social reading platform for people who take books seriously. Track.
+          Discover. Connect.
+        </p>
+
+        {/* CTA Row */}
+        <div
+          ref={heroCtaRef}
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-4"
+        >
+          <Link href="/signup">
+            <Button className="bg-ink text-paper dark:bg-ink dark:text-paper hover:bg-accent-dark dark:hover:bg-accent-dark font-medium text-sm px-7 py-5 rounded-lg transition-all duration-200 cursor-pointer shadow-sm">
+              Request Early Access
+              <ArrowRightIcon aria-hidden="true" className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
+          <Link
+            href="#about"
+            className="text-sm text-ink-muted hover:text-ink dark:hover:text-ink font-medium transition-colors duration-200 cursor-pointer flex items-center gap-1.5 group"
+          >
+            Learn what we&apos;re building
+            <span className="group-hover:translate-x-0.5 transition-transform duration-200">
+              →
+            </span>
+          </Link>
+        </div>
+
+        {/* Scroll cue */}
+        <div
+          aria-label="Scroll down"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30"
+        >
+          <span className="text-[9px] uppercase tracking-[0.22em] font-dm-sans">
+            Scroll
+          </span>
+          <div
+            aria-hidden="true"
+            className="w-px h-8 bg-ink dark:bg-ink animate-[pulse_2.5s_ease-in-out_infinite]"
+          />
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          MANIFESTO STRIP — Full-width editorial quote
+      ══════════════════════════════════════════════ */}
+      <section
+        ref={manifestoRef}
+        className="border-y border-border-subtle dark:border-border-subtle py-14 px-6 sm:px-10 overflow-hidden"
+      >
+        <p className="manifesto-text text-center max-w-5xl mx-auto text-xl sm:text-2xl md:text-3xl font-cormorant text-ink/75 dark:text-ink/70 leading-snug">
+          &ldquo;For the readers who finish books in one sitting. Who mark pages
+          with receipts. Who judge a room by its shelves.&rdquo;
+        </p>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          FEATURES — Asymmetric Bento Grid
+      ══════════════════════════════════════════════ */}
+      <section id="features" ref={featuresRef} className="py-28 px-6 sm:px-10">
+        <div className="max-w-6xl mx-auto">
+          {/* Section header */}
+          <div className="features-header mb-14">
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-gold mb-4">
+              What Recto Offers
+            </p>
+            <h2 className="text-4xl sm:text-5xl font-serif font-bold tracking-tighter text-ink max-w-lg leading-tight">
+              Everything a serious reader needs.
+            </h2>
+          </div>
+
+          {/* Bento grid — asymmetric */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Large "Track" card — spans 2 cols on lg */}
+            <div className="feature-card lg:col-span-2 group p-7 rounded-2xl border border-border-subtle dark:border-border-subtle bg-card dark:bg-card hover:border-ink/20 dark:hover:border-ink/20 transition-all duration-300 cursor-default">
+              <div className="flex items-start justify-between mb-8">
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <BookOpenIcon
+                    aria-hidden="true"
+                    className="w-5 h-5 text-ink-muted"
+                    weight="light"
+                  />
+                </div>
+                <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink-muted/50">
+                  01
                 </span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-bold text-ink dark:text-ink mb-4">
-                Discover Your Next Great Read
-              </h1>
-              <p className="text-lg text-ink-muted dark:text-ink-muted mb-8">
-                Explore curated book recommendations, trending lists, and
-                insights from passionate readers. Track your reading journey and
-                connect with a vibrant community of book lovers.
+              <h3 className="text-2xl font-serif font-semibold text-ink mb-3 tracking-tight">
+                Track
+              </h3>
+              <p className="text-sm text-ink-muted leading-relaxed mb-8 max-w-xs">
+                Log every book you&apos;ve read, mark current reads, and follow
+                your reading progress throughout the year.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/home">
-                  <Button className="bg-accent hover:bg-accent-dark dark:bg-accent dark:hover:bg-accent-dark text-white dark:text-black font-bold text-lg py-6 px-8 rounded-xl transition-all duration-300 shadow-lg">
-                    Start Exploring
-                    <CaretRightIcon className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-                <Link href="#features">
-                  <Button
-                    variant="outline"
-                    className="font-semibold text-lg py-6 px-8 rounded-xl"
-                  >
-                    Learn More
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <style jsx>{`
-          @keyframes float {
-            0%,
-            100% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-20px);
-            }
-          }
-        `}</style>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="italic-serif text-3xl md:text-4xl text-ink dark:text-ink mb-4">
-              Why Choose Recto?
-            </h2>
-            <p className="text-ink-muted dark:text-ink-muted max-w-2xl mx-auto">
-              Everything you need to track, discover, and share your love for
-              books
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Track */}
-            <Card className="bg-card dark:bg-card border-border-subtle dark:border-border-subtle hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3">
-                  <BookOpenIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <CardTitle className="text-ink dark:text-ink">Track</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-ink-muted dark:text-ink-muted text-sm">
-                  Log every book you've read, mark your current reads, and keep
-                  track of your reading progress throughout the year.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Review */}
-            <Card className="bg-card dark:bg-card border-border-subtle dark:border-border-subtle hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3">
-                  <StarIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <CardTitle className="text-ink dark:text-ink">Review</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-ink-muted dark:text-ink-muted text-sm">
-                  Share your thoughts and ratings with the community. Write
-                  detailed reviews and engage with other passionate readers.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Discover */}
-            <Card className="bg-card dark:bg-card border-border-subtle dark:border-border-subtle hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-3">
-                  <CompassIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <CardTitle className="text-ink dark:text-ink">
-                  Discover
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-ink-muted dark:text-ink-muted text-sm">
-                  Explore genre-based recommendations, trending books, and
-                  curated lists from readers with similar tastes.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Connect */}
-            <Card className="bg-card dark:bg-card border-border-subtle dark:border-border-subtle hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-3">
-                  <UsersIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <CardTitle className="text-ink dark:text-ink">
-                  Connect
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-ink-muted dark:text-ink-muted text-sm">
-                  Follow readers, join discussions, and build a community of
-                  book lovers who share your passion for reading.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* What is Recto Section */}
-      <section
-        id="about"
-        className="bg-accent dark:bg-accent text-white dark:text-black py-20 px-4"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Text Content */}
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold font-serif mb-6">
-                What is Recto?
-              </h2>
-              <p className="text-white/90 dark:text-black/80 mb-4 leading-relaxed">
-                Recto is a social platform built for book enthusiasts. Whether
-                you're a casual reader or a bookworm, Recto helps you track what
-                you're reading, discover your next favorite book, and connect
-                with fellow readers who share your passion.
-              </p>
-              <p className="text-white/90 dark:text-black/80 leading-relaxed mb-8">
-                From tracking your reading statistics to sharing detailed
-                reviews and writing blogs, to curating personalized reading
-                lists—Recto is your home for all things books.
-              </p>
-
-              <div className="space-y-6">
-                <div className="flex items-starIcont gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-white/20 dark:bg-black/20 flex items-center justify-center flex-shrink-0">
-                    <ChatCircleIcon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-serif mb-1">
-                      Social Reviews & Blogs
-                    </h3>
-                    <p className="text-white/80 dark:text-black/70 text-sm">
-                      Engage with readers, share your opinions, and write
-                      in-depth blog posts about your favorite books.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-starIcont gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-white/20 dark:bg-black/20 flex items-center justify-center flex-shrink-0">
-                    <TrendUpIcon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-serif mb-1">
-                      Smart Tracking
-                    </h3>
-                    <p className="text-white/80 dark:text-black/70 text-sm">
-                      Keep detailed stats on your reading habits and see your
-                      progress over time.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-starIcont gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-white/20 dark:bg-black/20 flex items-center justify-center flex-shrink-0">
-                    <ListBulletsIcon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-serif mb-1">
-                      Curated Lists
-                    </h3>
-                    <p className="text-white/80 dark:text-black/70 text-sm">
-                      Create and share reading lists, discover trending
-                      collections from the community.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Feature Showcase */}
-            <div className="flex justify-center">
-              <div className="bg-white/10 dark:bg-black/10 backdrop-blur rounded-3xl p-6 shadow-2xl w-full max-w-sm border border-white/20 dark:border-black/20">
-                <div className="bg-paper dark:bg-paper rounded-2xl overflow-hidden">
-                  <div className="bg-gradient-to-br from-accent/20 to-accent-dark/20 aspect-video flex items-center justify-center">
-                    <BooksIcon className="w-16 h-16 text-ink dark:text-ink opacity-50" />
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div className="h-4 bg-border-subtle dark:bg-border-subtle rounded w-3/4" />
-                    <div className="h-4 bg-border-subtle dark:bg-border-subtle rounded w-1/2" />
-                    <div className="flex gap-2 mt-4">
-                      <div className="h-10 bg-border-subtle dark:bg-border-subtle rounded flex-1" />
-                      <div className="h-10 bg-border-subtle dark:bg-border-subtle rounded flex-1" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Dashboard Preview */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="italic-serif text-3xl md:text-4xl text-ink dark:text-ink mb-4">
-              Your Reading Dashboard
-            </h2>
-            <p className="text-ink-muted dark:text-ink-muted max-w-2xl mx-auto">
-              Get insights into your reading habits with beautiful statistics
-              and progress tracking
-            </p>
-          </div>
-
-          <div className="bg-card dark:bg-card rounded-2xl shadow-2xl overflow-hidden border border-border-subtle dark:border-border-subtle">
-            {/* Browser Chrome */}
-            <div className="bg-border-subtle/30 dark:bg-border-subtle/10 border-b border-border-subtle dark:border-border-subtle px-6 py-4 flex items-center gap-3">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-              </div>
-              <div className="flex-1 text-center text-sm text-ink-muted dark:text-ink-muted font-mono">
-                dashboard.recto.app
-              </div>
-            </div>
-
-            {/* Dashboard Content */}
-            <div className="p-8 md:p-12 bg-paper dark:bg-paper">
-              <div className="space-y-8">
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: "Books Read", value: "24", icon: BookOpenIcon },
-                    { label: "Pages Read", value: "6,847", icon: StarIcon },
-                    { label: "Avg Rating", value: "4.2", icon: HeartIcon },
-                    {
-                      label: "Reading Streak",
-                      value: "18d",
-                      icon: TrendUpIcon,
-                    },
-                  ].map((stat) => (
+              {/* Inline progress bar mockup */}
+              <div className="space-y-2.5">
+                {[
+                  {
+                    title: "The Remains of the Day",
+                    pct: 68,
+                    color: "bg-blue-700",
+                  },
+                  { title: "East of Eden", pct: 41, color: "bg-amber-700" },
+                  { title: "Middlemarch", pct: 19, color: "bg-emerald-800" },
+                ].map((b) => (
+                  <div key={b.title} className="flex items-center gap-3">
                     <div
-                      key={stat.label}
-                      className="bg-card dark:bg-card p-4 rounded-xl border border-border-subtle dark:border-border-subtle hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <stat.icon className="w-4 h-4 text-accent dark:text-accent" />
-                        <p className="text-xs text-ink-muted dark:text-ink-muted">
-                          {stat.label}
-                        </p>
+                      className={`w-4 h-6 rounded-sm flex-shrink-0 ${b.color}`}
+                      aria-hidden="true"
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-[11px] text-ink-muted truncate pr-2">
+                          {b.title}
+                        </span>
+                        <span className="text-[11px] text-ink-muted flex-shrink-0">
+                          {b.pct}%
+                        </span>
                       </div>
-                      <p className="text-2xl font-bold text-ink dark:text-ink">
-                        {stat.value}
-                      </p>
+                      <div className="h-0.5 w-full bg-border-subtle dark:bg-border-subtle rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-ink/30 dark:bg-ink/30 rounded-full"
+                          style={{ width: `${b.pct}%` }}
+                          aria-hidden="true"
+                        />
+                      </div>
                     </div>
-                  ))}
-                </div>
-
-                {/* Books Grid */}
-                <div>
-                  <h3 className="text-lg font-semibold font-serif text-ink dark:text-ink mb-4">
-                    Currently Reading
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {[
-                      "bg-blue-700",
-                      "bg-orange-600",
-                      "bg-red-700",
-                      "bg-green-700",
-                      "bg-purple-700",
-                    ].map((color, i) => (
-                      <div
-                        key={i}
-                        className={`aspect-[3/4] rounded-lg shadow-md ${color} hover:scale-105 transition-transform cursor-pointer`}
-                      />
-                    ))}
                   </div>
-                </div>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Testimonials */}
-      <section className="py-20 px-4 bg-paper dark:bg-paper">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="italic-serif text-3xl md:text-4xl text-ink dark:text-ink mb-4">
-              What Readers Say
-            </h2>
-            <p className="text-ink-muted dark:text-ink-muted max-w-2xl mx-auto">
-              Join thousands of book lovers who are already tracking their
-              reading journey with Recto
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Sarah Chen",
-                role: "Avid Reader",
-                quote:
-                  "Recto transformed how I track my reading. I've read more books this year than ever before!",
-                initials: "SC",
-                color: "bg-blue-500",
-              },
-              {
-                name: "James Wilson",
-                role: "Book Critic",
-                quote:
-                  "The community here is amazing. I've discovered so many books through other readers' reviews.",
-                initials: "JW",
-                color: "bg-orange-500",
-              },
-              {
-                name: "Emma Davis",
-                role: "Student",
-                quote:
-                  "Love how easy it is to organize my reading lists. Recto is my new reading companion.",
-                initials: "ED",
-                color: "bg-purple-500",
-              },
-            ].map((testimonial) => (
-              <Card
-                key={testimonial.name}
-                className="bg-card dark:bg-card border-border-subtle dark:border-border-subtle hover:shadow-lg transition-shadow"
+            {/* Three small cards */}
+            {FEATURES.slice(1).map((f, i) => (
+              <div
+                key={f.title}
+                className="feature-card group p-7 rounded-2xl border border-border-subtle dark:border-border-subtle bg-card dark:bg-card hover:border-ink/20 dark:hover:border-ink/20 transition-all duration-300 cursor-default"
               >
-                <CardContent className="pt-6">
-                  <div className="flex gap-4 mb-4">
-                    <div
-                      className={`w-12 h-12 rounded-full ${testimonial.color} flex items-center justify-center text-white font-bold flex-shrink-0`}
-                    >
-                      {testimonial.initials}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink dark:text-ink">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-sm text-ink-muted dark:text-ink-muted">
-                        {testimonial.role}
-                      </p>
-                    </div>
+                <div className="flex items-start justify-between mb-8">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <f.icon
+                      aria-hidden="true"
+                      className="w-5 h-5 text-ink-muted"
+                      weight="light"
+                    />
                   </div>
-                  <p className="text-ink-muted dark:text-ink-muted italic">
-                    "{testimonial.quote}"
-                  </p>
-                </CardContent>
-              </Card>
+                  <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink-muted/50">
+                    0{i + 2}
+                  </span>
+                </div>
+                <h3 className="text-lg font-serif font-semibold text-ink mb-2 tracking-tight">
+                  {f.title}
+                </h3>
+                <p className="text-sm text-ink-muted leading-relaxed">
+                  {f.description}
+                </p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="italic-serif text-3xl md:text-4xl text-ink dark:text-ink mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-ink-muted dark:text-ink-muted">
-              Everything you need to know about Recto
+      {/* ══════════════════════════════════════════════
+          ABOUT — Dark Editorial Section
+      ══════════════════════════════════════════════ */}
+      <section
+        id="about"
+        ref={aboutRef}
+        className="py-28 px-6 sm:px-10 bg-ink dark:bg-card text-paper dark:text-ink overflow-hidden"
+      >
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+          {/* Left — text */}
+          <div className="about-left">
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-paper/40 dark:text-ink-muted mb-6">
+              Our Mission
             </p>
+
+            {/* Pull quote in Cormorant */}
+            <blockquote className="font-cormorant text-2xl sm:text-3xl text-paper/80 dark:text-ink/80 leading-snug mb-8 border-l-2 border-gold/40 pl-5">
+              &ldquo;Books are uniquely portable magic.&rdquo;
+              <cite className="block text-sm font-sans font-light text-paper/40 dark:text-ink-muted not-italic mt-2">
+                — Stephen King
+              </cite>
+            </blockquote>
+
+            <p className="text-paper/65 dark:text-ink-muted text-sm leading-loose mb-10">
+              Recto is a social platform built for book enthusiasts. Whether
+              you&apos;re a casual reader or a devoted bookworm, Recto helps you
+              own your reading life — without the clutter.
+            </p>
+
+            {/* Numbered pillars */}
+            <div className="space-y-7">
+              {PILLARS.map((pillar) => (
+                <div key={pillar.num} className="flex items-start gap-4">
+                  <span className="font-cormorant text-lg text-gold/70 mt-0.5 w-8 flex-shrink-0 leading-none">
+                    {pillar.num}
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold text-paper dark:text-ink mb-1 font-sans">
+                      {pillar.title}
+                    </h3>
+                    <p className="text-xs text-paper/55 dark:text-ink-muted leading-relaxed font-sans">
+                      {pillar.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <Accordion type="single" collapsible className="space-y-4">
-            <AccordionItem
-              value="item-1"
-              className="bg-card dark:bg-card border border-border-subtle dark:border-border-subtle rounded-lg"
-            >
-              <AccordionTrigger className="px-6 py-4 hover:no-underline text-ink dark:text-ink">
-                <span className="text-left">Is Recto free?</span>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4 text-ink-muted dark:text-ink-muted">
-                Yes! Recto is completely free to use. We believe everyone should
-                have access to a platform for tracking and sharing their reading
-                journey. We may introduce premium features in the future, but
-                the core functionality will always be free.
-              </AccordionContent>
-            </AccordionItem>
+          {/* Right — elevated book card (parallax target) */}
+          <div
+            ref={aboutRightRef}
+            className="flex justify-center md:justify-end"
+          >
+            <div className="w-full max-w-sm">
+              <div className="bg-paper/[0.06] dark:bg-ink/[0.04] rounded-2xl border border-paper/12 dark:border-border-subtle p-6 backdrop-blur-sm">
+                <div className="flex items-center justify-between mb-5">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-paper/35 dark:text-ink-muted">
+                    Currently Reading
+                  </p>
+                  <p className="font-cormorant text-xs text-gold/60 italic">
+                    3 active
+                  </p>
+                </div>
 
-            <AccordionItem
-              value="item-2"
-              className="bg-card dark:bg-card border border-border-subtle dark:border-border-subtle rounded-lg"
-            >
-              <AccordionTrigger className="px-6 py-4 hover:no-underline text-ink dark:text-ink">
-                <span className="text-left">
-                  Can I import data from Goodreads?
+                <div className="space-y-3">
+                  {[
+                    {
+                      color: "bg-blue-700",
+                      title: "The Remains of the Day",
+                      author: "Kazuo Ishiguro",
+                      progress: 68,
+                    },
+                    {
+                      color: "bg-amber-700",
+                      title: "East of Eden",
+                      author: "John Steinbeck",
+                      progress: 41,
+                    },
+                    {
+                      color: "bg-emerald-800",
+                      title: "Middlemarch",
+                      author: "George Eliot",
+                      progress: 19,
+                    },
+                  ].map((book) => (
+                    <div
+                      key={book.title}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-paper/[0.05] dark:bg-ink/[0.05] border border-paper/8 dark:border-border-subtle"
+                    >
+                      <div
+                        className={`w-8 h-12 rounded flex-shrink-0 shadow-md ${book.color}`}
+                        aria-hidden="true"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-paper dark:text-ink truncate">
+                          {book.title}
+                        </p>
+                        <p className="text-[10px] text-paper/45 dark:text-ink-muted mt-0.5">
+                          {book.author}
+                        </p>
+                        <div className="mt-2 h-0.5 w-full bg-paper/10 dark:bg-border-subtle rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-paper/45 dark:bg-ink-muted rounded-full"
+                            style={{ width: `${book.progress}%` }}
+                            aria-hidden="true"
+                          />
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-paper/35 dark:text-ink-muted flex-shrink-0">
+                        {book.progress}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Mini stats */}
+                <div className="mt-5 pt-4 border-t border-paper/10 dark:border-border-subtle grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { v: "24", l: "Books" },
+                    { v: "4.2★", l: "Avg" },
+                    { v: "18d", l: "Streak" },
+                  ].map((s) => (
+                    <div key={s.l}>
+                      <p className="text-sm font-bold text-paper dark:text-ink font-serif">
+                        {s.v}
+                      </p>
+                      <p className="text-[9px] text-paper/35 dark:text-ink-muted uppercase tracking-wider">
+                        {s.l}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          TESTIMONIALS — CSS Marquee (zero JS)
+      ══════════════════════════════════════════════ */}
+      <section className="py-24 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 sm:px-10 mb-12">
+          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-gold mb-4">
+            Early Readers
+          </p>
+          <h2 className="text-4xl sm:text-5xl font-serif font-bold tracking-tighter text-ink">
+            People are waiting.
+          </h2>
+        </div>
+
+        {/* Marquee track — aria: the section heading gives context */}
+        <div
+          className="flex"
+          aria-label="Testimonials from early readers"
+          role="region"
+        >
+          <div className="flex gap-4 animate-marquee will-change-transform">
+            {doubledTestimonials.map((t, i) => (
+              <article
+                key={`${t.initials}-${i}`}
+                className="flex-shrink-0 w-72 sm:w-80 p-6 rounded-2xl border border-border-subtle dark:border-border-subtle bg-card dark:bg-card mx-2"
+              >
+                {/* Gold quotemark */}
+                <span
+                  aria-hidden="true"
+                  className="font-cormorant text-3xl text-gold/50 leading-none block mb-3"
+                >
+                  &ldquo;
                 </span>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4 text-ink-muted dark:text-ink-muted">
-                We're working on Goodreads integration! For now, you can
-                manually add your books to Recto. Once you starIcont using
-                Recto, you can export your data anytime to keep your reading
-                history safe.
-              </AccordionContent>
-            </AccordionItem>
+                <blockquote className="text-sm text-ink leading-relaxed mb-5">
+                  {t.quote}
+                </blockquote>
+                <footer className="flex items-center gap-3 pt-4 border-t border-border-subtle dark:border-border-subtle">
+                  <div className="w-8 h-8 rounded-full bg-ink dark:bg-ink flex items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] font-semibold text-paper dark:text-paper">
+                      {t.initials}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-ink">{t.name}</p>
+                    <p className="text-[10px] text-ink-muted">{t.role}</p>
+                  </div>
+                </footer>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            <AccordionItem
-              value="item-3"
-              className="bg-card dark:bg-card border border-border-subtle dark:border-border-subtle rounded-lg"
-            >
-              <AccordionTrigger className="px-6 py-4 hover:no-underline text-ink dark:text-ink">
-                <span className="text-left">Is there a mobile app?</span>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4 text-ink-muted dark:text-ink-muted">
-                Not yet, but it's on our roadmap! For now, Recto works great on
-                mobile browsers and is fully responsive. You can add it to your
-                home screen for a native-like experience.
-              </AccordionContent>
-            </AccordionItem>
+      {/* ══════════════════════════════════════════════
+          FAQ
+      ══════════════════════════════════════════════ */}
+      <section
+        id="faq"
+        className="py-24 px-6 sm:px-10 border-t border-border-subtle dark:border-border-subtle"
+      >
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-14">
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-gold mb-4">
+              Got Questions?
+            </p>
+            <h2 className="text-4xl sm:text-5xl font-serif font-bold tracking-tighter text-ink">
+              We&apos;ve got answers.
+            </h2>
+          </div>
 
-            <AccordionItem
-              value="item-4"
-              className="bg-card dark:bg-card border border-border-subtle dark:border-border-subtle rounded-lg"
-            >
-              <AccordionTrigger className="px-6 py-4 hover:no-underline text-ink dark:text-ink">
-                <span className="text-left">
-                  How do I find book recommendations?
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4 text-ink-muted dark:text-ink-muted">
-                You can discover books through user reviews, reading lists
-                curated by the community, and personalized recommendations based
-                on your reading history. You can also follow other readers and
-                see what they're currently reading.
-              </AccordionContent>
-            </AccordionItem>
+          <Accordion type="single" collapsible className="space-y-2">
+            {FAQ_ITEMS.map((item) => (
+              <AccordionItem
+                key={item.id}
+                value={item.id}
+                className="border border-border-subtle dark:border-border-subtle rounded-xl overflow-hidden bg-card dark:bg-card"
+              >
+                <AccordionTrigger className="px-6 py-5 hover:no-underline text-ink font-medium font-sans text-left text-sm cursor-pointer">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-5 text-ink-muted text-sm leading-loose font-sans">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
           </Accordion>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="bg-gradient-to-br from-accent to-accent-dark dark:from-accent dark:to-accent-dark py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center text-white dark:text-black">
-          <h2 className="text-3xl md:text-4xl font-bold font-serif mb-6">
-            Ready to starIcont tracking your reading?
-          </h2>
-          <p className="text-lg mb-8 opacity-90">
-            Join thousands of readers who are already using Recto to discover
-            their next favorite book.
+      {/* ══════════════════════════════════════════════
+          FINAL CTA — Cinematic Dark Banner
+      ══════════════════════════════════════════════ */}
+      <section
+        ref={ctaBannerRef}
+        className="py-32 px-6 sm:px-10 bg-ink dark:bg-card overflow-hidden"
+      >
+        <div className="cta-content max-w-3xl mx-auto text-center">
+          {/* Gold rule */}
+          <div aria-hidden="true" className="w-12 h-px bg-gold mx-auto mb-10" />
+
+          <p className="font-cormorant text-sm tracking-[0.22em] text-paper/40 dark:text-ink-muted mb-6">
+            Get Early Access
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+          <h2 className="text-4xl sm:text-6xl font-serif font-bold tracking-tighter text-paper dark:text-ink mb-4 leading-tight">
+            Your reading life,{" "}
+            <em className="font-normal not-italic font-cormorant text-paper/70 dark:text-ink/70">
+              beautifully kept.
+            </em>
+          </h2>
+
+          <p className="text-paper/50 dark:text-ink-muted text-sm leading-relaxed mb-12 max-w-md mx-auto">
+            Join the waitlist. Be the first to experience Recto when we open
+            doors — no spam, just the good stuff.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup">
-              <Button
-                size="lg"
-                className="bg-white dark:bg-black text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 font-semibold shadow-lg"
-              >
-                Get StarIconted Free
-                <CaretRightIcon className="ml-2 w-5 h-5" />
+              <Button className="bg-paper text-ink dark:bg-ink dark:text-paper hover:bg-paper/90 dark:hover:bg-ink/90 font-medium text-sm px-8 py-5 rounded-lg transition-all duration-200 cursor-pointer">
+                Join the Waitlist
+                <ArrowRightIcon aria-hidden="true" className="ml-2 w-4 h-4" />
               </Button>
             </Link>
             <Link href="/home">
               <Button
-                size="lg"
-                variant="outline"
-                className="border-white dark:border-black text-white dark:text-black hover:bg-white/10 dark:hover:bg-black/10"
+                variant="ghost"
+                className="text-paper/50 dark:text-ink-muted hover:text-paper dark:hover:text-ink text-sm px-5 py-5 cursor-pointer"
               >
-                Explore Books
+                Preview the app →
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-accent dark:bg-accent text-white dark:text-black py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="font-bold font-serif flex items-center gap-2 mb-4 text-lg">
-                <BookOpenIcon className="w-5 h-5" /> Recto
-              </h3>
-              <p className="text-sm opacity-80">
-                A social platform for book lovers to track, review, and discover
-                books.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold font-serif mb-4">Product</h4>
-              <ul className="space-y-2 text-sm opacity-80">
-                <li>
-                  <a
-                    href="#features"
-                    className="hover:opacity-100 transition-opacity"
-                  >
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#about"
-                    className="hover:opacity-100 transition-opacity"
-                  >
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#faq"
-                    className="hover:opacity-100 transition-opacity"
-                  >
-                    FAQ
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold font-serif mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm opacity-80">
-                <li>
-                  <a href="#" className="hover:opacity-100 transition-opacity">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-100 transition-opacity">
-                    Terms of Service
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold font-serif mb-4">Follow Us</h4>
-              <ul className="space-y-2 text-sm opacity-80">
-                <li>
-                  <a href="#" className="hover:opacity-100 transition-opacity">
-                    Twitter
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-100 transition-opacity">
-                    Instagram
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-white/20 dark:border-black/20 pt-8 text-center text-sm opacity-80">
-            <p>© 2026 Recto. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      {/* ══════════════════════════════════════════════
+          FOOTER
+      ══════════════════════════════════════════════ */}
+      <Footer />
     </div>
   );
 }

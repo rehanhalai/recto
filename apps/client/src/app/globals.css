@@ -66,7 +66,12 @@
   --color-light-bronze-900: #f6ede3;
   --color-light-bronze: #d4a373;
 
-  /* Semantic Colors - Mapped to Tea Palette */
+  /* ── Literary Dusk — Gold Accent ── */
+  --color-gold: #c9a96e;
+  --color-gold-muted: #a0804e;
+  --color-gold-subtle: #f5ecd8;
+
+  /* Semantic Colors */
   --color-paper: var(--paper);
   --color-card-surface: var(--card);
   --color-ink: var(--ink);
@@ -75,13 +80,15 @@
   --color-accent: var(--accent);
   --color-accent-dark: var(--accent-dark);
 
-  /* Existing Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  /* ── Font System — Literary Dusk ── */
+  --font-sans: var(--font-dm-sans);
   --font-serif: var(--font-playfair-display);
+  --font-cormorant: var(--font-cormorant);
   --font-mono: var(--font-geist-mono);
-  /* ... keep other Shadcn variables ... */
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -89,53 +96,53 @@
 
 @layer base {
   :root {
-    /* LIGHT MODE: Clean Gallery */
+    /* ── LIGHT MODE: Literary Dusk — Warm Parchment ── */
 
-    /* Background: Pure White (or Zinc-50 #fafafa for slight softness) */
-    --paper: #ffffff;
+    /* Warm cream — like a high-quality book page, not clinical white */
+    --paper: #faf7f2;
 
-    /* Card: White (with shadow to separate) */
-    --card: #ffffff;
+    /* Warm ecru — clearly distinct from paper, creates depth */
+    --card: #f3ede3;
 
-    /* Text: Zinc-950 (Deep Matte Black - NOT #000000) */
-    --ink: #09090b;
+    /* Deep warm ink — avoids cold harshness */
+    --ink: #1c1814;
 
-    /* Muted Text: Zinc-500 (Neutral Gray) */
-    --ink-muted: #71717a;
+    /* Warm taupe — readable but subordinate */
+    --ink-muted: #78695a;
 
-    /* Border: Zinc-200 (Very faint gray) */
-    --border-subtle: #e4e4e7;
+    /* Warm tan hairline */
+    --border-subtle: #e0d8cc;
 
-    /* Accent: Zinc-900 (Black buttons for monochrome look) */
-    --accent: #18181b;
+    /* Near-black with warm undertone */
+    --accent: #1c1814;
 
-    /* Hover Accent: Zinc-700 */
-    --accent-dark: #3f3f46;
+    /* Rich warm dark brown */
+    --accent-dark: #3a2f24;
   }
 
   .dark {
-    /* DARK MODE: Soft Graphite (Your Choice) */
+    /* ── DARK MODE: Literary Dusk — Midnight Library ── */
 
-    /* Background: Zinc-950 (Neutral dark gray) */
-    --paper: #09090b;
+    /* Near-black with warm brown undertone — like aged leather */
+    --paper: #0e0d0a;
 
-    /* Card: Zinc-900 (Lighter gray) */
-    --card: #18181b;
+    /* Warm dark brown — clearly distinct from paper */
+    --card: #181510;
 
-    /* Text: Zinc-50 (Soft Off-White) */
-    --ink: #fafafa;
+    /* Warm cream text — never cold white */
+    --ink: #ede8df;
 
-    /* Muted Text: Zinc-400 */
-    --ink-muted: #a1a1aa;
+    /* Warm muted tan */
+    --ink-muted: #9a8b7a;
 
-    /* Border: Zinc-800 */
-    --border-subtle: #27272a;
+    /* Warm dark separator */
+    --border-subtle: #2a2520;
 
-    /* Accent: White (High contrast against graphite) */
-    --accent: #ffffff;
+    /* Warm off-white accent */
+    --accent: #ede8df;
 
-    /* Hover Accent: Zinc-200 */
-    --accent-dark: #e4e4e7;
+    /* Dimmer warm cream */
+    --accent-dark: #c8bfb4;
   }
 
   * {
@@ -152,16 +159,25 @@
 
   body {
     @apply bg-paper text-ink;
-    background-image: repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.02) 2px,
-      rgba(0, 0, 0, 0.02) 4px
-    );
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Organic paper grain — very subtle, depth without distraction */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
   }
 
-  /* Typography - Serif for Headings */
+  .dark body {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+
+  /* ── Accessibility: touch-action on all buttons ── */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* ── Typography — Headings use Playfair Display ── */
   h1,
   h2,
   h3,
@@ -169,6 +185,7 @@
   h5,
   h6 {
     @apply font-serif;
+    text-wrap: balance;
   }
 
   h1 {
@@ -187,7 +204,44 @@
     @apply text-xl font-semibold;
   }
 
+  /* Cormorant italic — for display accents, manifesto, pull quotes */
+  .font-cormorant {
+    font-family: var(--font-cormorant), "Garamond", serif;
+    font-style: italic;
+  }
+
   .italic-serif {
     @apply font-serif italic text-ink/90 dark:text-ink/90;
+  }
+
+  /* ── CSS Marquee for testimonials ── */
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee 28s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none;
+    }
+  }
+
+  /* ── Gold accent utility ── */
+  .text-gold {
+    color: #c9a96e;
+  }
+  .bg-gold {
+    background-color: #c9a96e;
+  }
+  .border-gold {
+    border-color: #c9a96e;
   }
 }
