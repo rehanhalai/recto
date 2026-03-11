@@ -171,6 +171,8 @@ export function Navbar() {
                 src={isDarkMode ? DarkLogo : LightLogo}
                 alt="Recto Logo"
                 loading="eager"
+                width={100}
+                height={100}
               />
             </Link>
 
