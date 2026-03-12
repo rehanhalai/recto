@@ -48,7 +48,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-paper dark:bg-card border-t border-border-subtle dark:border-border-subtle">
+    <footer className="bg-black border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Main Footer Grid - Responsive */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8 mb-6 sm:mb-8">
