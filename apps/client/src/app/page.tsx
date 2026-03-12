@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/fetch";
 import { Navbar } from "@/components/layout/navbar";
@@ -11,6 +11,15 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Global ScrollTrigger optimization
+if (typeof window !== "undefined") {
+  ScrollTrigger.config({
+    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+    syncInterval: 100,
+    limitCallbacks: true,
+  });
+}
 
 export default function LandingPage() {
   const router = useRouter();
@@ -71,18 +80,6 @@ export default function LandingPage() {
         delay: 0.2,
         ease: "power3.out",
       });
-
-      // Parallax effect for paper background
-      gsap.to("main", {
-        scrollTrigger: {
-          trigger: "main",
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true,
-        },
-        backgroundPositionY: "20%",
-        ease: "none",
-      });
     });
 
     return () => ctx.revert();
@@ -90,17 +87,14 @@ export default function LandingPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
-        <div className="w-5 h-5 rounded-full border-2 border-ink/15 border-t-ink/60 animate-spin" />
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full border-2 border-white/15 border-t-white animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-gold/30 selection:text-white">
-      {/* Texture Overlays */}
-      <div className="fixed inset-0 pointer-events-none z-100 opacity-[0.03] mix-blend-multiply bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-
       <Navbar />
       <main className="relative bg-black">
         <HeroScrollSequence />
@@ -108,20 +102,18 @@ export default function LandingPage() {
         {/* Thematic Content to Carry On the Scroll */}
         <section className="paper-section min-h-screen flex flex-col items-center justify-center px-6 py-32 text-center relative z-10 bg-black text-white">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-linear-to-b from-gold/40 to-transparent" />
-          
+
           <span className="text-xs uppercase tracking-[0.4em] text-white/60 mb-8 block font-medium">
             The Digital Library Reimagined
           </span>
-          
+
           <h2 className="text-5xl md:text-7xl lg:text-8xl max-w-6xl tracking-tight leading-[0.9] mb-16 font-serif">
             Where every story <br />
-            <span className="italic text-gold px-4 font-normal">
-              finds
-            </span>
+            <span className="italic text-gold px-4 font-normal">finds</span>
             <br />
             its rightful space.
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mt-12 text-left border-t border-white/10 pt-16">
             <div className="space-y-4">
               <span className="text-gold font-serif italic text-2xl">01</span>

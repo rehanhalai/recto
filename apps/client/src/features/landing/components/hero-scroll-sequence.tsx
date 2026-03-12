@@ -12,22 +12,28 @@ export function HeroScrollSequence() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const frameSources = useMemo(
-    () =>
-      Array.from(
-        { length: TOTAL_FRAMES },
-        (_, i) => `/frames/frame_${String(i + 1).padStart(4, "0")}.webp`,
-      ),
-    [],
+  const lastDrawnFrame = useRef<number>(-1);
+  const milestoneRef = useRef<HTMLDivElement>(null);
+  const isMobile = useRef(
+    typeof window !== "undefined" && window.innerWidth < 768,
   );
+
+  const frameSources = useMemo(() => {
+    const rawFrames = Array.from(
+      { length: TOTAL_FRAMES },
+      (_, i) => `/frames/frame_${String(i + 1).padStart(4, "0")}.webp`,
+    );
+
+    return rawFrames;
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     const pinElement = pinRef.current;
+    const milestoneEl = milestoneRef.current;
 
-    if (!canvas || !container || !pinElement) return;
+    if (!canvas || !container || !pinElement || !milestoneEl) return;
 
     const context = canvas.getContext("2d", { alpha: false });
     if (!context) return;
@@ -52,7 +58,9 @@ export function HeroScrollSequence() {
 
     const updateLayout = (image: HTMLImageElement) => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Reduce DPR on mobile to improve fill rate performance
+      const maxDpr = isMobile.current ? 1.2 : 2;
+      const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
       const nextWidth = Math.max(1, Math.round(rect.width * dpr));
       const nextHeight = Math.max(1, Math.round(rect.height * dpr));
 
@@ -83,15 +91,23 @@ export function HeroScrollSequence() {
     };
 
     const drawFrame = (frame: number) => {
-      const image = images[normalizeFrame(frame)];
+      const frameIndex = normalizeFrame(frame);
+
+      // Don't redraw if frame hasn't changed
+      if (frameIndex === lastDrawnFrame.current) return;
+
+      const image = images[frameIndex];
       if (!image || !image.complete || image.naturalWidth === 0) return;
 
       // Update layout only if size changed or first run
       if (layout.width === 0) updateLayout(image);
 
       context.clearRect(0, 0, layout.width, layout.height);
+
+      // Performance optimization for mobile: disable high quality smoothing
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
+
       context.drawImage(
         image,
         layout.offsetX,
@@ -99,6 +115,8 @@ export function HeroScrollSequence() {
         layout.drawWidth,
         layout.drawHeight,
       );
+
+      lastDrawnFrame.current = frameIndex;
     };
 
     const gsapContext = gsap.context(() => {
@@ -107,7 +125,7 @@ export function HeroScrollSequence() {
           trigger: container,
           start: "top top",
           end: () => `+=${window.innerHeight * 5}`,
-          scrub: 2,
+          scrub: isMobile.current ? 0.5 : 2, // Faster scrub on mobile to reduce lag feel
           pin: pinElement,
           pinSpacing: true,
           anticipatePin: 1,
@@ -122,22 +140,42 @@ export function HeroScrollSequence() {
         ease: "none",
         duration: 4, // 80% of the timeline
         onUpdate: () => {
-          requestAnimationFrame(() => drawFrame(playhead.frame));
+          drawFrame(playhead.frame);
 
-          // Milestone logic
+          // Milestone logic - optimized to prevent redundant calls
           const progress = playhead.frame / TOTAL_FRAMES;
-          const milestoneEl = document.querySelector(".milestone-text");
-          if (milestoneEl) {
-            if (progress > 0 && progress < 0.4) {
-              gsap.to(milestoneEl, { opacity: 1, duration: 0.5 });
-              milestoneEl.textContent = "The library of your dreams";
-            } else if (progress >= 0.4 && progress < 0.7) {
-              milestoneEl.textContent = "Reimagined for the digital age";
-            } else if (progress >= 0.7) {
-              gsap.to(milestoneEl, { opacity: 0, y: -20, duration: 0.5 });
-            } else {
-              gsap.to(milestoneEl, { opacity: 0, y: 20, duration: 0.5 });
-            }
+
+          const currentText = milestoneEl.textContent;
+          let nextText = "";
+          let nextOpacity = 0;
+          let nextY = 20;
+
+          if (progress > 0 && progress < 0.4) {
+            nextText = "The library of your dreams";
+            nextOpacity = 1;
+            nextY = 0;
+          } else if (progress >= 0.4 && progress < 0.7) {
+            nextText = "Reimagined for the digital age";
+            nextOpacity = 1;
+            nextY = 0;
+          } else if (progress >= 0.7) {
+            nextText = "Reimagined for the digital age";
+            nextOpacity = 0;
+            nextY = -20;
+          }
+
+          if (
+            nextText !== currentText ||
+            (nextOpacity === 1 &&
+              (milestoneEl as HTMLElement).style.opacity === "0")
+          ) {
+            milestoneEl.textContent = nextText;
+            gsap.to(milestoneEl, {
+              opacity: nextOpacity,
+              y: nextY,
+              duration: 0.5,
+              overwrite: "auto",
+            });
           }
         },
       });
@@ -153,9 +191,15 @@ export function HeroScrollSequence() {
             const img = new Image();
             img.src = src;
             img.decoding = "async";
-            img.onload = () => {
-              images[i] = img;
-              if (i === 0) drawFrame(1);
+            img.onload = async () => {
+              try {
+                await img.decode();
+                images[i] = img;
+                if (i === 0) drawFrame(1);
+              } catch (e) {
+                console.warn("Failed to decode image, falling back", e);
+                images[i] = img;
+              }
               resolve();
             };
           });
@@ -168,9 +212,17 @@ export function HeroScrollSequence() {
         const img = new Image();
         img.src = src;
         img.decoding = "async";
-        img.onload = () => {
-          images[i + priorityCount] = img;
-        };
+        img
+          .decode()
+          .then(() => {
+            images[i + priorityCount] = img;
+          })
+          .catch(() => {
+            // fallback if decode fails
+            img.onload = () => {
+              images[i + priorityCount] = img;
+            };
+          });
       });
     };
 
@@ -199,22 +251,25 @@ export function HeroScrollSequence() {
     <div ref={containerRef} className="relative w-full">
       <div
         ref={pinRef}
-        className="relative h-screen w-full overflow-hidden bg-paper"
+        className="relative h-screen w-full overflow-hidden bg-black"
       >
         <canvas
           ref={canvasRef}
           aria-label="Scroll-driven cinematic preview"
-          className="relative z-10 block h-screen w-full transition-transform duration-500"
+          className="relative z-10 block h-screen w-full"
         />
         <div className="scroll-indicator pointer-events-none absolute bottom-30 left-1/2 z-30 -translate-x-1/2 flex flex-col items-center gap-6">
-          <div className="milestone-text opacity-0 translate-y-20 text-center text-white font-serif italic text-xl mb-20 transition-all duration-700 max-w-xs" />
+          <div
+            ref={milestoneRef}
+            className="opacity-0 text-center text-white font-serif italic text-xl mb-20 max-w-xs"
+          />
 
-          <div className="flex items-center gap-2 rounded-full border border-border-subtle bg-paper/75 px-4 py-2 backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-md">
             <span
               aria-hidden="true"
               className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse"
             />
-            <span className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
               Scroll to explore
             </span>
           </div>
