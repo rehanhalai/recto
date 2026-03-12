@@ -24,6 +24,10 @@ export function HeroScrollSequence() {
       (_, i) => `/frames/frame_${String(i + 1).padStart(4, "0")}.webp`,
     );
 
+    // On mobile, we only need the first frame
+    if (isMobile.current) {
+      return [rawFrames[0]];
+    }
     return rawFrames;
   }, []);
 
@@ -33,7 +37,7 @@ export function HeroScrollSequence() {
     const pinElement = pinRef.current;
     const milestoneEl = milestoneRef.current;
 
-    if (!canvas || !container || !pinElement || !milestoneEl) return;
+    if (!canvas || !container || !pinElement) return;
 
     const context = canvas.getContext("2d", { alpha: false });
     if (!context) return;
@@ -120,12 +124,15 @@ export function HeroScrollSequence() {
     };
 
     const gsapContext = gsap.context(() => {
+      // Disable animation and pinning on mobile
+      if (isMobile.current) return;
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container,
           start: "top top",
           end: () => `+=${window.innerHeight * 5}`,
-          scrub: isMobile.current ? 0.5 : 2, // Faster scrub on mobile to reduce lag feel
+          scrub: 2,
           pin: pinElement,
           pinSpacing: true,
           anticipatePin: 1,
@@ -144,6 +151,7 @@ export function HeroScrollSequence() {
 
           // Milestone logic - optimized to prevent redundant calls
           const progress = playhead.frame / TOTAL_FRAMES;
+          if (!milestoneEl) return;
 
           const currentText = milestoneEl.textContent;
           let nextText = "";
@@ -259,10 +267,12 @@ export function HeroScrollSequence() {
           className="relative z-10 block h-screen w-full"
         />
         <div className="scroll-indicator pointer-events-none absolute bottom-30 left-1/2 z-30 -translate-x-1/2 flex flex-col items-center gap-6">
-          <div
-            ref={milestoneRef}
-            className="opacity-0 text-center text-white font-serif italic text-xl mb-20 max-w-xs"
-          />
+          {!isMobile.current && (
+            <div
+              ref={milestoneRef}
+              className="opacity-0 text-center text-white font-serif italic text-xl mb-20 max-w-xs"
+            />
+          )}
 
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-md">
             <span
