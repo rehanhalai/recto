@@ -6,7 +6,12 @@ import { apiFetch } from "@/lib/fetch";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { HeroScrollSequence } from "../features/landing/components/hero-scroll-sequence";
+import { CustomCursor } from "../features/landing/components/custom-cursor";
 import useLenis from "@/utils/lenis";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function LandingPage() {
   const router = useRouter();
@@ -30,6 +35,26 @@ export default function LandingPage() {
     checkAuth();
   }, [checkAuth]);
 
+  useEffect(() => {
+    if (checkingAuth) return;
+
+    const ctx = gsap.context(() => {
+      gsap.to("nav", {
+        scrollTrigger: {
+          trigger: "main",
+          start: "top top",
+          end: "+=50",
+          scrub: true,
+        },
+        opacity: 0,
+        pointerEvents: "none",
+        duration: 0.3,
+      });
+    });
+
+    return () => ctx.revert();
+  }, [checkingAuth]);
+
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
@@ -39,7 +64,8 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-paper text-ink cursor-none">
+      <CustomCursor />
       <Navbar />
       <main>
         <HeroScrollSequence />
