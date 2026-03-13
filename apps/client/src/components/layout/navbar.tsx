@@ -47,7 +47,7 @@ export function Navbar() {
   const isDarkMode = currentTheme === "dark";
 
   return (
-    <nav className="sticky top-0 z-50 bg-paper dark:bg-card backdrop-blur border-b border-border-subtle dark:border-border-subtle shadow-sm">
+    <nav className="sticky top-0 z-50 bg-paper dark:bg-card md:backdrop-blur border-b border-border-subtle dark:border-border-subtle shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Mobile: Hamburger + Logo + Search Icon */}
@@ -170,7 +170,10 @@ export function Navbar() {
               <Image
                 src={isDarkMode ? DarkLogo : LightLogo}
                 alt="Recto Logo"
+                priority
                 loading="eager"
+                width={100}
+                height={100}
               />
             </Link>
 
@@ -197,6 +200,7 @@ export function Navbar() {
               <Image
                 src={isDarkMode ? DarkLogo : LightLogo}
                 alt="Recto Logo"
+                priority
                 width={96}
                 height={40}
               />

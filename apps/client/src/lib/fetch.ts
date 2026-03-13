@@ -8,7 +8,7 @@ export const apiFetch = async <T>(
   endpoint: string,
   options?: ApiFetchOptions,
 ): Promise<T> => {
-  const url = `${config.api.baseUrl}${endpoint}`;
+  const url = `${config.apiUrl}${endpoint}`;
 
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -36,5 +36,5 @@ export const apiFetch = async <T>(
 };
 
 export const getBaseUrl = (): string => {
-  return config.api.baseUrl;
+  return config.apiUrl;
 };

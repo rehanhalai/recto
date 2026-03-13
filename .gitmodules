@@ -1,0 +1,3 @@
+[submodule ".agent/antigravity-skills"]
+	path = .agent/antigravity-skills
+	url = https://github.com/guanyang/antigravity-skills.git
