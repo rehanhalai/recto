@@ -1,16 +1,30 @@
 import * as crypto from "crypto";
 import {
   pgTable,
+  pgEnum,
   varchar,
   text,
   boolean,
+  smallint,
   integer,
   timestamp,
   uniqueIndex,
+  index,
+  check,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { users } from "./users";
 import { books } from "./books";
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+export const readingStatusEnum = pgEnum("reading_status", [
+  "wishlist",
+  "reading",
+  "finished",
+]);
+
+// ─── Tables ───────────────────────────────────────────────────────────────────
 
 export const addedBooks = pgTable(
   "added_books",
@@ -19,19 +33,28 @@ export const addedBooks = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     userId: varchar("user_id", { length: 255 })
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
     bookId: varchar("book_id", { length: 255 })
-      .references(() => books.id)
+      .references(() => books.id, { onDelete: "cascade" })
       .notNull(),
-    status: varchar("status", { length: 50 }).notNull().default("wishlist"), // reading, finished, wishlist
+    status: readingStatusEnum("status").notNull().default("wishlist"),
     startedAt: timestamp("started_at", { withTimezone: true }),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (t) => ({
     uniqueIdx: uniqueIndex("added_books_user_book_idx").on(t.userId, t.bookId),
+    statusIdx: index("added_books_status_idx").on(t.userId, t.status),
+    finishedAtCheck: check(
+      "chk_added_books_finished_at",
+      sql`${t.status} != 'finished' OR ${t.finishedAt} IS NOT NULL`,
+    ),
   }),
 );
 
@@ -42,22 +65,28 @@ export const bookReviews = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     userId: varchar("user_id", { length: 255 })
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
     bookId: varchar("book_id", { length: 255 })
-      .references(() => books.id)
+      .references(() => books.id, { onDelete: "cascade" })
       .notNull(),
     content: text("content"),
-    rating: integer("rating").notNull(), // 0 to 5
-    likesCount: integer("likes_count").default(0),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    rating: smallint("rating").notNull(),
+    containsSpoilers: boolean("contains_spoilers").default(false).notNull(),
+    likesCount: integer("likes_count").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (t) => ({
     uniqueUserBookIdx: uniqueIndex("book_review_user_book_idx").on(
       t.userId,
       t.bookId,
     ),
+    bookIdIdx: index("book_reviews_book_id_idx").on(t.bookId),
   }),
 );
 
@@ -68,12 +97,14 @@ export const reviewLikes = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     reviewId: varchar("review_id", { length: 255 })
-      .references(() => bookReviews.id)
+      .references(() => bookReviews.id, { onDelete: "cascade" })
       .notNull(),
     userId: varchar("user_id", { length: 255 })
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (t) => ({
     uniqueReviewUserIdx: uniqueIndex("review_like_review_user_idx").on(
@@ -83,55 +114,66 @@ export const reviewLikes = pgTable(
   }),
 );
 
-export const bookLists = pgTable("book_lists", {
-  id: varchar("id", { length: 255 })
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: varchar("user_id", { length: 255 })
-    .references(() => users.id)
-    .notNull(),
-  name: varchar("name", { length: 100 }).notNull(),
-  description: varchar("description", { length: 500 }),
-  isPublic: boolean("is_public").default(false),
-  bookCount: integer("book_count").default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
+export const bookLists = pgTable(
+  "book_lists",
+  {
+    id: varchar("id", { length: 255 })
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: varchar("user_id", { length: 255 })
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    name: varchar("name", { length: 100 }).notNull(),
+    description: varchar("description", { length: 500 }),
+    isPublic: boolean("is_public").default(true).notNull(),
+    bookCount: integer("book_count").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    userIdIdx: index("book_lists_user_id_idx").on(t.userId),
+  }),
+);
 
-export const bookListItems = pgTable("book_list_items", {
-  id: varchar("id", { length: 255 })
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  listId: varchar("list_id", { length: 255 })
-    .references(() => bookLists.id)
-    .notNull(),
-  bookId: varchar("book_id", { length: 255 })
-    .references(() => books.id)
-    .notNull(),
-  position: integer("position").notNull(),
-  addedAt: timestamp("added_at", { withTimezone: true }).defaultNow(),
-});
+export const bookListItems = pgTable(
+  "book_list_items",
+  {
+    id: varchar("id", { length: 255 })
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    listId: varchar("list_id", { length: 255 })
+      .references(() => bookLists.id, { onDelete: "cascade" })
+      .notNull(),
+    bookId: varchar("book_id", { length: 255 })
+      .references(() => books.id, { onDelete: "cascade" })
+      .notNull(),
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    uniqueListBookIdx: uniqueIndex("book_list_items_list_book_idx").on(
+      t.listId,
+      t.bookId,
+    ),
+    listIdIdx: index("book_list_items_list_id_idx").on(t.listId),
+  }),
+);
+
+// ─── Relations ────────────────────────────────────────────────────────────────
 
 export const addedBooksRelations = relations(addedBooks, ({ one }) => ({
-  user: one(users, {
-    fields: [addedBooks.userId],
-    references: [users.id],
-  }),
-  book: one(books, {
-    fields: [addedBooks.bookId],
-    references: [books.id],
-  }),
+  user: one(users, { fields: [addedBooks.userId], references: [users.id] }),
+  book: one(books, { fields: [addedBooks.bookId], references: [books.id] }),
 }));
 
 export const bookReviewsRelations = relations(bookReviews, ({ one, many }) => ({
-  user: one(users, {
-    fields: [bookReviews.userId],
-    references: [users.id],
-  }),
-  book: one(books, {
-    fields: [bookReviews.bookId],
-    references: [books.id],
-  }),
+  user: one(users, { fields: [bookReviews.userId], references: [users.id] }),
+  book: one(books, { fields: [bookReviews.bookId], references: [books.id] }),
   likes: many(reviewLikes),
 }));
 
@@ -140,17 +182,11 @@ export const reviewLikesRelations = relations(reviewLikes, ({ one }) => ({
     fields: [reviewLikes.reviewId],
     references: [bookReviews.id],
   }),
-  user: one(users, {
-    fields: [reviewLikes.userId],
-    references: [users.id],
-  }),
+  user: one(users, { fields: [reviewLikes.userId], references: [users.id] }),
 }));
 
 export const bookListsRelations = relations(bookLists, ({ one, many }) => ({
-  user: one(users, {
-    fields: [bookLists.userId],
-    references: [users.id],
-  }),
+  user: one(users, { fields: [bookLists.userId], references: [users.id] }),
   items: many(bookListItems),
 }));
 
@@ -159,8 +195,5 @@ export const bookListItemsRelations = relations(bookListItems, ({ one }) => ({
     fields: [bookListItems.listId],
     references: [bookLists.id],
   }),
-  book: one(books, {
-    fields: [bookListItems.bookId],
-    references: [books.id],
-  }),
+  book: one(books, { fields: [bookListItems.bookId], references: [books.id] }),
 }));
