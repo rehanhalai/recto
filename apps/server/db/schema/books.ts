@@ -125,36 +125,11 @@ export const bookGenres = pgTable(
   }),
 );
 
-export const bookAffiliateLinks = pgTable(
-  "book_affiliate_links",
-  {
-    id: varchar("id", { length: 255 })
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    bookId: varchar("book_id", { length: 255 })
-      .references(() => books.id, { onDelete: "cascade" })
-      .notNull(),
-    platform: varchar("platform", { length: 50 }).notNull(),
-    url: text("url").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (t) => ({
-    bookIdIdx: index("book_affiliate_links_book_id_idx").on(t.bookId),
-    uniquePlatformIdx: uniqueIndex("book_affiliate_links_book_platform_idx").on(
-      t.bookId,
-      t.platform,
-    ),
-  }),
-);
-
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const booksRelations = relations(books, ({ many }) => ({
   authors: many(bookAuthors),
   genres: many(bookGenres),
-  affiliateLinks: many(bookAffiliateLinks),
   reviews: many(bookReviews),
   addedBooks: many(addedBooks),
   listItems: many(bookListItems),
@@ -181,13 +156,3 @@ export const bookGenresRelations = relations(bookGenres, ({ one }) => ({
     references: [genres.id],
   }),
 }));
-
-export const bookAffiliateLinksRelations = relations(
-  bookAffiliateLinks,
-  ({ one }) => ({
-    book: one(books, {
-      fields: [bookAffiliateLinks.bookId],
-      references: [books.id],
-    }),
-  }),
-);

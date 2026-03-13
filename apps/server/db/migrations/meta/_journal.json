@@ -15,6 +15,13 @@
       "when": 1773401218444,
       "tag": "0001_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773427610585,
+      "tag": "0002_misty_dakota_north",
+      "breakpoints": true
     }
   ]
 }

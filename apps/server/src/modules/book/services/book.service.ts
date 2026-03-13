@@ -1,13 +1,14 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { DRIZZLE } from '../../../db/db.module';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '../../../db/schema';
-import { addedBooks } from '../../../db/schema';
-import { eq, and } from 'drizzle-orm';
-import { BookQueryService } from './book-query.service';
-import { BookSearchService } from './book-search.service';
-import { BookDatabaseSearchService } from './book-database-search.service';
-import { TbrStatus } from './dto/book.dto';
+import { Injectable, Inject, NotFoundException } from "@nestjs/common";
+import { DRIZZLE } from "../../../../db/db.module";
+import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "../../../../db/schema";
+import { addedBooks, books } from "../../../../db/schema";
+import { eq, and } from "drizzle-orm";
+import { BookQueryService } from "./book-query.service";
+import { BookSearchService } from "./book-search.service";
+import { BookDatabaseSearchService } from "./book-database-search.service";
+import { SearchBooksDto, TbrStatus } from "../dto/book.dto";
+import { AffiliateService } from "./affiliate.service";
 
 @Injectable()
 export class BookService {
@@ -16,19 +17,14 @@ export class BookService {
     private readonly bookQueryService: BookQueryService,
     private readonly bookSearchService: BookSearchService,
     private readonly bookDatabaseSearchService: BookDatabaseSearchService,
+    private readonly affiliateService: AffiliateService,
   ) {}
 
   /**
    * Get Book (OPTIMIZED - Primary Entry Point)
    */
-  async getBook(externalId: string, title?: string, authors?: string[]) {
-    // FAST PATH: Resolve book using optimized query service
-    const book = await this.bookQueryService.resolveBook(
-      externalId,
-      title,
-      authors,
-    );
-    return book;
+  async getBook(volumeId: string) {
+    return this.bookQueryService.resolveBook(volumeId);
   }
 
   async tbrBook(
@@ -84,53 +80,17 @@ export class BookService {
     return deletedData;
   }
 
-  async search(query: any) {
-    const { title, genre, sort, order, page = 1, limit = 10 } = query;
+  async search(query: SearchBooksDto) {
+    const { q, page = 1, limit = 10 } = query;
+    const result = await this.bookSearchService.searchBooks(q, page, limit);
 
-    if (genre && !sort) {
-      const result = await this.bookSearchService.searchByGenre(
-        genre,
-        page,
-        limit,
-      );
-      return {
-        results: result.books,
-        pagination: result.pagination,
-        message: `Found ${result.books.length} books in genre "${genre}"`,
-      };
-    }
-
-    if (sort) {
-      const result = await this.bookDatabaseSearchService.searchBooks({
-        genre,
-        sort,
-        order,
-        limit,
-        skip: (page - 1) * limit,
-      });
-      return {
-        results: result.results,
-        pagination: result.pagination,
-        message: `Found ${result.results.length} books`,
-      };
-    }
-
-    if (title) {
-      const result = await this.bookSearchService.searchBooksByTitle(
-        title,
-        page,
-        limit,
-      );
-      return {
-        ...result,
-        message: `Found ${result.books.length} books matching "${title}"`,
-      };
-    }
-
-    throw new Error('Either title or genre parameter is required');
+    return {
+      ...result,
+      message: `Found ${result.books.length} books matching "${q}"`,
+    };
   }
 
-  async fetchBooksBasedOnStatus(userId: string, status: string) {
+  async fetchBooksBasedOnStatus(userId: string, status: TbrStatus) {
     const userBooks = await this.db.query.addedBooks.findMany({
       where: and(eq(addedBooks.userId, userId), eq(addedBooks.status, status)),
       with: {
@@ -139,7 +99,7 @@ export class BookService {
             id: true,
             title: true,
             coverImage: true,
-            externalId: true,
+            sourceId: true,
           },
           with: {
             authors: {
@@ -156,14 +116,55 @@ export class BookService {
       ...ub,
       bookId: ub.book
         ? {
-            _id: ub.book.id,
+            id: ub.book.id,
             title: ub.book.title,
             authors: ub.book.authors.map((a) => a.authorName),
             coverImage: ub.book.coverImage,
-            externalId: ub.book.externalId,
+            sourceId: ub.book.sourceId,
           }
         : ub.bookId,
       book: undefined, // remove nested relation
     }));
+  }
+
+  async getAffiliateLinks(bookId: string, userCountry?: string) {
+    const book = await this.db.query.books.findFirst({
+      where: eq(books.id, bookId),
+      columns: {
+        id: true,
+        isbn13: true,
+      },
+    });
+
+    if (!book) {
+      throw new NotFoundException("Book not found");
+    }
+
+    if (!book.isbn13) {
+      return {
+        links: {},
+        message: "ISBN not found for this book",
+      };
+    }
+
+    const countryCode = this.affiliateService.getCountryCode(userCountry);
+
+    try {
+      const links = this.affiliateService.generateAffiliateLinksFromIsbn13(
+        book.isbn13,
+        countryCode,
+      );
+
+      return {
+        links,
+        message: "Affiliate links fetched successfully",
+      };
+    } catch (error) {
+      return {
+        links: {},
+        message:
+          error instanceof Error ? error.message : "Failed to generate links",
+      };
+    }
   }
 }

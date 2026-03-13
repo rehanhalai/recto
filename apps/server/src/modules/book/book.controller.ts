@@ -9,52 +9,42 @@ import {
   UseGuards,
   Req,
   BadRequestException,
-} from '@nestjs/common';
-import { BookService } from './book.service';
-import { AffiliateService } from './affiliate.service';
-import { BookSearchService } from './book-search.service';
-import { BookDatabaseSearchService } from './book-database-search.service';
+} from "@nestjs/common";
+import { BookService } from "./services/book.service";
 import {
-  GetBookDto,
   TbrBookDto,
   FetchBooksBasedOnStatusDto,
   SearchBooksDto,
-  SearchBooksByAuthorDto,
-} from './dto/book.dto';
-import { AuthGuard } from '../common';
+} from "./dto/book.dto";
+import { AuthGuard } from "../common";
 
-@Controller('book')
+@Controller("book")
 export class BookController {
-  constructor(
-    private readonly bookService: BookService,
-    private readonly affiliateService: AffiliateService,
-    private readonly bookSearchService: BookSearchService,
-    private readonly bookDatabaseSearchService: BookDatabaseSearchService,
-  ) {}
+  constructor(private readonly bookService: BookService) {}
 
-  @Post('getbook')
-  async getBook(@Body() dto: GetBookDto): Promise<any> {
-    const { externalId, title, authors } = dto;
-    const book = await this.bookService.getBook(externalId, title, authors);
+  @Get("book/:volumeId")
+  async getBook(@Param("volumeId") volumeId: string): Promise<any> {
+    const book = await this.bookService.getBook(volumeId);
     return {
       ...book,
-      message: 'Book fetched successfully',
+      message: "Book fetched successfully",
     };
   }
 
-  @Get('purchase-links/:bookId')
-  async getPurchaseLinks(@Param('bookId') bookId: string): Promise<any> {
-    // In NestJS, we could pass country from headers or query. Defaulting to US.
-    // We would need to fetch the book by ID first.
-    // For simplicity, assuming the old flow: it fetched book from DB and generated links.
-    // Wait, let's inject db into controller or move it to a method in BookService.
+  @Get("affiliate-links/:bookId")
+  async getAffiliateLinks(
+    @Param("bookId") bookId: string,
+    @Query("country") country?: string,
+  ): Promise<any> {
+    const result = await this.bookService.getAffiliateLinks(bookId, country);
     return {
-      message: 'Not fully implemented yet (needs book fetching)',
-      data: null,
+      bookId,
+      links: result.links,
+      message: result.message,
     };
   }
 
-  @Get('search')
+  @Get("search")
   async searchBooks(@Query() query: SearchBooksDto): Promise<any> {
     try {
       return await this.bookService.search(query);
@@ -63,24 +53,8 @@ export class BookController {
     }
   }
 
-  @Get('search/author')
-  async searchBooksByAuthor(
-    @Query() query: SearchBooksByAuthorDto,
-  ): Promise<any> {
-    const { author, page = 1, limit = 10 } = query;
-    const result = await this.bookSearchService.searchBooksByAuthor(
-      author,
-      page,
-      limit,
-    );
-    return {
-      ...result,
-      message: `Found ${result.books.length} books by author "${author}"`,
-    };
-  }
-
   @UseGuards(AuthGuard)
-  @Post('tbrbook')
+  @Post("tbrbook")
   async tbrBook(@Req() req: any, @Body() dto: TbrBookDto): Promise<any> {
     const userId = req.user.id;
     const { bookId, status, startedAt, finishedAt } = dto;
@@ -93,25 +67,25 @@ export class BookController {
     );
     return {
       ...addedBook,
-      message: 'Book added to TBR successfully',
+      message: "Book added to TBR successfully",
     };
   }
 
   @UseGuards(AuthGuard)
-  @Delete('tbrbook/:tbrId')
+  @Delete("tbrbook/:tbrId")
   async removeTbrBook(
     @Req() req: any,
-    @Param('tbrId') tbrId: string,
+    @Param("tbrId") tbrId: string,
   ): Promise<any> {
     const userId = req.user.id;
     await this.bookService.tbrRemoveBook(userId, tbrId);
     return {
-      message: 'Book removed from TBR successfully',
+      message: "Book removed from TBR successfully",
     };
   }
 
   @UseGuards(AuthGuard)
-  @Get('fetch-user-books')
+  @Get("fetch-user-books")
   async fetchBooksBasedOnStatus(
     @Req() req: any,
     @Query() query: FetchBooksBasedOnStatusDto,
@@ -123,7 +97,7 @@ export class BookController {
     );
     return {
       books: userBooks,
-      message: 'Books fetched successfully',
+      message: "Books fetched successfully",
     };
   }
 }

@@ -4,12 +4,12 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
-} from '@nestjs/common';
-import { DRIZZLE } from '../../../db/db.module';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '../../../db/schema';
-import { bookReviews, books } from '../../../db/schema';
-import { eq, and, ne, count, sql } from 'drizzle-orm';
+} from "@nestjs/common";
+import { DRIZZLE } from "../../../db/db.module";
+import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "../../../db/schema";
+import { bookReviews, books } from "../../../db/schema";
+import { eq, and, ne, count, sql } from "drizzle-orm";
 
 @Injectable()
 export class ReviewService {
@@ -33,7 +33,7 @@ export class ReviewService {
       });
 
       if (existingReview) {
-        throw new ConflictException('You have already reviewed this book');
+        throw new ConflictException("You have already reviewed this book");
       }
 
       // Check book exists
@@ -42,7 +42,7 @@ export class ReviewService {
       });
 
       if (!book) {
-        throw new NotFoundException('Book not found');
+        throw new NotFoundException("Book not found");
       }
 
       // Create new review
@@ -57,15 +57,16 @@ export class ReviewService {
         .returning();
 
       // Update book stats
-      const totalRating = (book.averageRating || 0) * (book.ratingsCount || 0);
+      const totalRating =
+        Number(book.averageRating ?? 0) * Number(book.ratingsCount ?? 0);
       const newCount = (book.ratingsCount || 0) + 1;
       const newAverage = (totalRating + rating) / newCount;
 
       await tx
         .update(books)
         .set({
-          averageRating: Math.round(newAverage), // DB average_rating is integer in schema! Wait, schema says integer for average_rating. We need to store integers or change schema. We'll round it.
-          ratingsCount: newCount,
+          averageRating: sql`${Math.round(newAverage)}`,
+          ratingsCount: sql`${newCount}`,
         })
         .where(eq(books.id, bookId));
 
@@ -79,14 +80,14 @@ export class ReviewService {
         where: eq(bookReviews.id, reviewId),
       });
 
-      if (!review) throw new NotFoundException('Review not found');
+      if (!review) throw new NotFoundException("Review not found");
 
       const isOwner = review.userId === userId;
-      const isAdmin = userRole === 'admin' || userRole === 'librarian';
+      const isAdmin = userRole === "admin" || userRole === "librarian";
 
       if (!isOwner && !isAdmin) {
         throw new ForbiddenException(
-          'You are not authorized to delete this review',
+          "You are not authorized to delete this review",
         );
       }
 
@@ -98,7 +99,7 @@ export class ReviewService {
 
       if (book) {
         const totalRating =
-          (book.averageRating || 0) * (book.ratingsCount || 0);
+          Number(book.averageRating ?? 0) * Number(book.ratingsCount ?? 0);
         const newCount = Math.max((book.ratingsCount || 1) - 1, 0);
 
         let newAverage = 0;
@@ -109,7 +110,7 @@ export class ReviewService {
         await tx
           .update(books)
           .set({
-            averageRating: Math.round(newAverage),
+            averageRating: sql`${Math.round(newAverage)}`,
             ratingsCount: newCount,
           })
           .where(eq(books.id, book.id));
@@ -135,7 +136,7 @@ export class ReviewService {
 
       if (!review) {
         throw new NotFoundException(
-          'Review not found or you are not the owner',
+          "Review not found or you are not the owner",
         );
       }
 
@@ -159,14 +160,14 @@ export class ReviewService {
 
         if (book) {
           const currentTotal =
-            (book.averageRating || 0) * (book.ratingsCount || 0);
+            Number(book.averageRating ?? 0) * Number(book.ratingsCount ?? 0);
           const adjustedTotal = currentTotal - oldRating + rating;
           const count = book.ratingsCount || 1;
           const newAverage = adjustedTotal / count;
 
           await tx
             .update(books)
-            .set({ averageRating: Math.round(newAverage) })
+            .set({ averageRating: sql`${Math.round(newAverage)}` })
             .where(eq(books.id, book.id));
         }
       }

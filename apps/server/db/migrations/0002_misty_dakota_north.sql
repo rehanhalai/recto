@@ -1,0 +1,1 @@
+DROP TABLE "book_affiliate_links" CASCADE;

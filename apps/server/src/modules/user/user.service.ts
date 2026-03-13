@@ -3,19 +3,19 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
-} from '@nestjs/common';
-import { StorageService } from '../common/storage.service';
-import { eq, ilike } from 'drizzle-orm';
-import { DRIZZLE } from '../../../db/db.module';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '../../../db/schema';
-import { users } from '../../../db/schema';
+} from "@nestjs/common";
+import { StorageService } from "../common/storage.service";
+import { eq, ilike } from "drizzle-orm";
+import { DRIZZLE } from "../../../db/db.module";
+import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "../../../db/schema";
+import { users } from "../../../db/schema";
 import {
   uniqueNamesGenerator,
   adjectives,
   animals,
-} from 'unique-names-generator';
-import { UpdateProfileDto } from './dto/user.dto';
+} from "unique-names-generator";
+import { UpdateProfileDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService {
@@ -27,8 +27,8 @@ export class UserService {
   generateRandomUsername() {
     const randomName = uniqueNamesGenerator({
       dictionaries: [adjectives, animals],
-      separator: '',
-      style: 'capital',
+      separator: "",
+      style: "capital",
       length: 2,
     });
     const randomNumber = Math.floor(100 + Math.random() * 900);
@@ -46,7 +46,7 @@ export class UserService {
     const user = await this.db.query.users.findFirst({
       where: eq(users.id, userId),
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException("User not found");
     const { googleId, hashedPassword, ...userData } = user;
     return userData;
   }
@@ -55,11 +55,11 @@ export class UserService {
     const user = await this.db.query.users.findFirst({
       where: eq(users.id, userId),
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException("User not found");
 
     if (dto.userName && dto.userName !== user.userName) {
       if (!(await this.userNameAvailability(dto.userName))) {
-        throw new ConflictException('Username already taken');
+        throw new ConflictException("Username already taken");
       }
     }
 
@@ -83,7 +83,7 @@ export class UserService {
     const user = await this.db.query.users.findFirst({
       where: eq(users.id, userId),
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException("User not found");
 
     let newAvatar = user.avatarImage;
     if (removeAvatar && user.avatarImage) {
@@ -94,7 +94,7 @@ export class UserService {
       if (user.avatarImage) {
         await this.storageService.deleteFile(user.avatarImage);
       }
-      newAvatar = await this.storageService.uploadFile(avatarFile, 'avatars');
+      newAvatar = await this.storageService.uploadFile(avatarFile, "avatars");
     }
 
     let newCover = user.coverImage;
@@ -106,7 +106,7 @@ export class UserService {
       if (user.coverImage) {
         await this.storageService.deleteFile(user.coverImage);
       }
-      newCover = await this.storageService.uploadFile(coverFile, 'covers');
+      newCover = await this.storageService.uploadFile(coverFile, "covers");
     }
 
     const [updatedUser] = await this.db
@@ -143,9 +143,8 @@ export class UserService {
         bio: true,
         avatarImage: true,
         coverImage: true,
-        followersCount: true,
+        followerCount: true,
         followingCount: true,
-        postsCount: true,
         role: true,
         createdAt: true,
       },
@@ -156,7 +155,7 @@ export class UserService {
         },
       },
     });
-    if (!user) throw new NotFoundException('No user found matching the query.');
+    if (!user) throw new NotFoundException("No user found matching the query.");
     return user;
   }
 }

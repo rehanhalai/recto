@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { posts, users, postComments } from '../../../db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
-import { DRIZZLE } from 'db/db.module';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '../../../db/schema';
+import { Inject, Injectable } from "@nestjs/common";
+import { posts, users } from "../../../db/schema";
+import { eq, desc } from "drizzle-orm";
+import { DRIZZLE } from "db/db.module";
+import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "../../../db/schema";
 
 @Injectable()
 export class FeedService {
@@ -17,22 +17,19 @@ export class FeedService {
     const result = await this.db
       .select({
         id: posts.id,
-        title: posts.title,
-        content: posts.content, // As per instruction to store single records
-        coverImage: posts.coverImage,
+        content: posts.content,
+        image: posts.image,
+        bookId: posts.bookId,
         createdAt: posts.createdAt,
         author: {
           id: users.id,
           userName: users.userName,
           avatarImage: users.avatarImage,
         },
-        commentCount: sql<number>`count(${postComments.id})::integer`,
+        commentCount: posts.commentsCount,
       })
       .from(posts)
       .leftJoin(users, eq(posts.authorId, users.id))
-      .leftJoin(postComments, eq(posts.id, postComments.postId))
-      .where(eq(posts.status, 'published'))
-      .groupBy(posts.id, users.id)
       .orderBy(desc(posts.createdAt))
       .limit(limit)
       .offset(offset);
@@ -48,23 +45,20 @@ export class FeedService {
     const result = await this.db
       .select({
         id: posts.id,
-        title: posts.title,
         content: posts.content,
-        coverImage: posts.coverImage,
+        image: posts.image,
+        bookId: posts.bookId,
         createdAt: posts.createdAt,
         author: {
           id: users.id,
           userName: users.userName,
           avatarImage: users.avatarImage,
         },
-        commentCount: sql<number>`count(${postComments.id})::integer`,
+        commentCount: posts.commentsCount,
       })
       .from(posts)
       .leftJoin(users, eq(posts.authorId, users.id))
-      .leftJoin(postComments, eq(posts.id, postComments.postId))
-      .where(eq(posts.status, 'published'))
-      .groupBy(posts.id, users.id)
-      .orderBy(desc(sql`count(${postComments.id})`), desc(posts.createdAt))
+      .orderBy(desc(posts.commentsCount), desc(posts.createdAt))
       .limit(limit)
       .offset(offset);
 

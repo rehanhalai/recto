@@ -1,10 +1,10 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
-import { DRIZZLE } from '../../../db/db.module';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '../../../db/schema';
-import { posts, users } from '../../../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { Injectable, Inject, NotFoundException } from "@nestjs/common";
+import { CreatePostDto } from "./dto/create-post.dto";
+import { DRIZZLE } from "../../../db/db.module";
+import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "../../../db/schema";
+import { posts, users } from "../../../db/schema";
+import { eq, desc } from "drizzle-orm";
 
 @Injectable()
 export class PostsService {
@@ -17,11 +17,8 @@ export class PostsService {
       .insert(posts)
       .values({
         authorId: userId,
-        title: createPostDto.title,
         content: createPostDto.content,
-        coverImage: createPostDto.coverImage,
         bookId: createPostDto.bookId,
-        status: 'published',
       })
       .returning();
 
