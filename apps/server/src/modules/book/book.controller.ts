@@ -22,7 +22,7 @@ import { AuthGuard } from "../common";
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
-  @Get("book/:volumeId")
+  @Get(":volumeId")
   async getBook(@Param("volumeId") volumeId: string): Promise<any> {
     const book = await this.bookService.getBook(volumeId);
     return {
