@@ -10,7 +10,7 @@
  * Used in VolumeInfo to identify the book
  */
 export interface GoogleBooksIndustryIdentifier {
-  type: 'ISBN_10' | 'ISBN_13' | 'ISSN' | 'OTHER';
+  type: "ISBN_10" | "ISBN_13" | "ISSN" | "OTHER";
   identifier: string;
 }
 
@@ -42,7 +42,7 @@ export interface GoogleBooksVolumeInfo {
     image: boolean;
   };
   pageCount?: number;
-  printType?: 'BOOK' | 'MAGAZINE';
+  printType?: "BOOK" | "MAGAZINE";
   categories?: string[];
   averageRating?: number;
   ratingsCount?: number;
@@ -68,7 +68,7 @@ export interface GoogleBooksVolume {
   volumeInfo: GoogleBooksVolumeInfo;
   saleInfo?: {
     country?: string;
-    saleability?: 'FOR_SALE' | 'PARTIAL' | 'FREE' | 'NOT_FOR_SALE';
+    saleability?: "FOR_SALE" | "PARTIAL" | "FREE" | "NOT_FOR_SALE";
     isEbook?: boolean;
     listPrice?: {
       amount: number;
@@ -81,7 +81,7 @@ export interface GoogleBooksVolume {
   };
   accessInfo?: {
     country?: string;
-    viewability?: 'FULL' | 'PAGES_PARTIAL' | 'SNIPPET' | 'NO_PAGES';
+    viewability?: "FULL" | "PAGES_PARTIAL" | "SNIPPET" | "NO_PAGES";
     embeddable?: boolean;
     publicDomain?: boolean;
     textToSpeechPermission?: string;
@@ -129,7 +129,7 @@ export interface GoogleBooksSearchResponse {
  */
 export interface NormalizedBook {
   sourceId: string; // Google Books ID
-  source: 'google_books';
+  source: "google_books";
   title: string;
   subtitle?: string;
   description?: string;
@@ -166,8 +166,8 @@ export interface BookResponse extends NormalizedBook {
  */
 export interface PaginationMeta {
   currentPage: number;
-  totalItems: number;
   limit: number;
+  hasMore: boolean;
 }
 
 /**
@@ -183,7 +183,7 @@ export interface SearchResponse {
 /**
  * Union type for book sources
  */
-export type BookSource = 'google_books' | 'open_library' | 'manual';
+export type BookSource = "google_books" | "open_library" | "manual";
 
 /**
  * Type guard to check if a book is from Google Books
@@ -191,12 +191,12 @@ export type BookSource = 'google_books' | 'open_library' | 'manual';
 export function isGoogleBooksVolume(
   volume: unknown,
 ): volume is GoogleBooksVolume {
-  if (!volume || typeof volume !== 'object') return false;
+  if (!volume || typeof volume !== "object") return false;
   const v = volume as Record<string, unknown>;
   return (
-    v.kind === 'books#volume' &&
-    typeof v.id === 'string' &&
-    typeof v.volumeInfo === 'object'
+    v.kind === "books#volume" &&
+    typeof v.id === "string" &&
+    typeof v.volumeInfo === "object"
   );
 }
 
@@ -206,11 +206,11 @@ export function isGoogleBooksVolume(
 export function isGoogleBooksSearchResponse(
   response: unknown,
 ): response is GoogleBooksSearchResponse {
-  if (!response || typeof response !== 'object') return false;
+  if (!response || typeof response !== "object") return false;
   const r = response as Record<string, unknown>;
   return (
-    r.kind === 'books#volumes' &&
-    typeof r.totalItems === 'number' &&
+    r.kind === "books#volumes" &&
+    typeof r.totalItems === "number" &&
     (Array.isArray(r.items) || r.items === undefined)
   );
 }

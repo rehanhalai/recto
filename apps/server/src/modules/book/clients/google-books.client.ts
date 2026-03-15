@@ -80,6 +80,7 @@ export class GoogleBooksClient {
   async search(
     query: string,
     maxResults: number = 20,
+    startIndex: number = 0,
   ): Promise<GoogleBooksSearchResponse> {
     try {
       if (!query || query.trim().length === 0) {
@@ -88,11 +89,13 @@ export class GoogleBooksClient {
 
       // Constrain maxResults to Google's limits
       const constrainedMaxResults = Math.min(Math.max(maxResults, 1), 40);
+      const constrainedStartIndex = Math.max(startIndex, 0);
 
       const params = {
         q: `intitle:${query}`,
         printType: "books",
         maxResults: constrainedMaxResults,
+        startIndex: constrainedStartIndex,
         key: this.apiKey,
       };
 

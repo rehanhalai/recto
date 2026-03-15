@@ -59,6 +59,6 @@ export class SearchBooksDto {
   @Type(() => Number)
   @IsInt()
   @Min(1, { message: "Limit must be greater than 0" })
-  @Max(50, { message: "Limit must not exceed 50" })
+  @Max(40, { message: "Limit must not exceed 40" })
   limit?: number;
 }

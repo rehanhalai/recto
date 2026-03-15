@@ -12,21 +12,34 @@ export class BookSearchService {
     page: number = 1,
     limit: number = 10,
   ): Promise<SearchResponse> {
+    const startIndex = (page - 1) * limit;
+    const requestWindow = Math.min(limit * 3, 40);
+
     const initialResponse = await this.googleBooksClient.search(
       query,
-      limit * 2,
+      requestWindow,
+      startIndex,
     );
-    let books = normalizeSearchResults(initialResponse);
 
-    if (books.length < limit) {
+    let books = normalizeSearchResults(initialResponse);
+    const sourceTotalItems = initialResponse.totalItems;
+
+    if (books.length < limit && startIndex + requestWindow < sourceTotalItems) {
       const retryResponse = await this.googleBooksClient.search(
         query,
-        limit * 3,
+        requestWindow,
+        startIndex + requestWindow,
       );
-      books = normalizeSearchResults(retryResponse);
+
+      const retryBooks = normalizeSearchResults(retryResponse);
+      const deduped = new Map(
+        [...books, ...retryBooks].map((book) => [book.sourceId, book]),
+      );
+      books = Array.from(deduped.values());
     }
 
     const finalBooks = books.slice(0, limit);
+    const hasMore = startIndex + requestWindow < sourceTotalItems;
 
     if (finalBooks.length === 0) {
       throw new NotFoundException("No valid books found for the given query");
@@ -36,8 +49,8 @@ export class BookSearchService {
       books: finalBooks,
       pagination: {
         currentPage: page,
-        totalItems: books.length,
         limit,
+        hasMore,
       },
     };
   }

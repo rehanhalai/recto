@@ -86,7 +86,7 @@ export class BookService {
 
     return {
       ...result,
-      message: `Found ${result.books.length} books matching "${q}"`,
+      message: `Showing ${result.books.length} books for "${q}" on page ${page}`,
     };
   }
 
