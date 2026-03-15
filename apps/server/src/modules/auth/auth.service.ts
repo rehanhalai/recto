@@ -4,19 +4,19 @@ import {
   NotFoundException,
   ConflictException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { eq } from 'drizzle-orm';
-import { DRIZZLE } from '../../../db/db.module';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '../../../db/schema';
-import { users } from '../../../db/schema';
-import { SignUpDto, VerifyOtpDto, SignInDto } from './dto/auth.dto';
-import { USER_SELECT_FIELDS } from '../../constants';
-import { OtpService } from '../otp/otp.service';
-import { MailService } from '../mail/mail.service';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcrypt";
+import * as jwt from "jsonwebtoken";
+import { eq } from "drizzle-orm";
+import { DRIZZLE } from "../../../db/db.module";
+import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "../../../db/schema";
+import { users } from "../../../db/schema";
+import { SignUpDto, VerifyOtpDto, SignInDto } from "./dto/auth.dto";
+import { SESSION_EXPIRE_TIME, USER_SELECT_FIELDS } from "../../constants";
+import { OtpService } from "../otp/otp.service";
+import { MailService } from "../mail/mail.service";
 
 export interface JwtPayload {
   _id: string;
@@ -33,9 +33,9 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  private generateToken(payload: object) {
-    const secret = this.configService.get<string>('refreshToken.secret')!;
-    const expire = this.configService.get<string>('refreshToken.expire')!;
+  private generateSessionToken(payload: { sub: string; sid: string }) {
+    const secret = this.configService.get<string>("refreshToken.secret")!;
+    const expire = this.configService.get<string>("refreshToken.expire")!;
     return jwt.sign(payload, secret, { expiresIn: expire as any });
   }
 
@@ -45,13 +45,8 @@ export class AuthService {
       where: eq(users.email, email),
     });
 
-    if (existingEmail) {
-      if (existingEmail.isVerified) {
-        throw new ConflictException(
-          'User with this email already exists and is verified',
-        );
-      }
-    }
+    if (existingEmail)
+      throw new ConflictException("User with this email already exists ");
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -59,34 +54,57 @@ export class AuthService {
       hashedPassword,
     });
 
-    return { message: 'OTP sent to your email' };
+    return { message: "OTP sent to your email" };
   }
 
-  async verifyOtpAndSignUp(dto: VerifyOtpDto) {
+  async verifyOtpAndSignUp(
+    dto: VerifyOtpDto,
+    meta: { ipAddress: string | null; userAgent: string | null },
+  ) {
     const { email, otp } = dto;
     const pendingOTP = await this.otpService.verifyOtp(email, otp);
 
     const tempUserName =
-      'user_' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+      "user_" + crypto.randomUUID().replace(/-/g, "").slice(0, 10);
 
-    const [insertedUser] = await this.db
-      .insert(users)
-      .values({
-        email,
-        userName: tempUserName,
-        hashedPassword: pendingOTP.hashedPassword,
-        isVerified: true,
-      })
-      .returning(USER_SELECT_FIELDS);
+    const { insertedUser, insertedSession } = await this.db.transaction(
+      async (tx) => {
+        const [insertedUser] = await tx
+          .insert(schema.users)
+          .values({
+            email,
+            userName: tempUserName,
+            hashedPassword: pendingOTP.hashedPassword,
+            isVerified: true,
+          })
+          .returning(USER_SELECT_FIELDS);
 
-    await this.otpService.deleteOtp(pendingOTP.id);
+        const [insertedSession] = await tx
+          .insert(schema.sessions)
+          .values({
+            userId: insertedUser.id,
+            expiresAt: new Date(Date.now() + SESSION_EXPIRE_TIME), // 7 days
+            ipAddress: meta.ipAddress,
+            userAgent: meta.userAgent,
+          })
+          .returning();
 
-    // Send welcome email
-    await this.mailService.sendWelcomeEmail(email, tempUserName);
+        return { insertedUser, insertedSession };
+      },
+    );
 
-    const token = this.generateToken({ _id: insertedUser.id });
-    const { id, ...userData } = insertedUser;
-    return { token, userData };
+    // delete otp and send welcome email
+    await Promise.all([
+      await this.otpService.deleteOtp(pendingOTP.id),
+      await this.mailService.sendWelcomeEmail(email, tempUserName),
+    ]);
+
+    const sessionToken = this.generateSessionToken({
+      sub: insertedUser.id,
+      sid: insertedSession.id,
+    });
+
+    return { sessionToken, userData: insertedUser };
   }
 
   async signIn(dto: SignInDto) {
@@ -95,19 +113,19 @@ export class AuthService {
       where: eq(users.email, email),
     });
 
-    if (!user) throw new NotFoundException('User account not found');
+    if (!user) throw new NotFoundException("User account not found");
 
     if (!user.hashedPassword) {
       throw new UnauthorizedException(
-        'This account uses social login. Please sign in with Google.',
+        "This account uses social login. Please sign in with Google.",
       );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
 
-    if (!isPasswordValid) throw new UnauthorizedException('Invalid password');
+    if (!isPasswordValid) throw new UnauthorizedException("Invalid password");
     if (!user.isVerified)
-      throw new UnauthorizedException('Account is not verified.');
+      throw new UnauthorizedException("Account is not verified.");
 
     const token = this.generateToken({ _id: user.id });
     const userData = {
@@ -126,31 +144,31 @@ export class AuthService {
     const user = await this.db.query.users.findFirst({
       where: eq(users.email, email),
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException("User not found");
 
-    const resetToken = this.generateToken({ email, purpose: 'password-reset' });
+    const resetToken = this.generateToken({ email, purpose: "password-reset" });
     const clientUrl =
-      this.configService.get<string>('clientUrl') || 'http://localhost:3000';
+      this.configService.get<string>("clientUrl") || "http://localhost:3000";
     const resetLink = `${clientUrl}/reset-password?token=${resetToken}`;
 
     await this.mailService.sendResetPasswordEmail(email, resetLink);
-    return 'Password reset link sent to your email';
+    return "Password reset link sent to your email";
   }
 
   async verifyOtpForPasswordReset(email: string, code: string) {
     const pendingOTP = await this.otpService.verifyOtp(email, code);
 
-    const resetToken = this.generateToken({ email, purpose: 'password-reset' });
+    const resetToken = this.generateToken({ email, purpose: "password-reset" });
     await this.otpService.deleteOtp(pendingOTP.id);
     return resetToken;
   }
 
   async resetPassword(resetToken: string, newPassword: string) {
-    const secret = this.configService.get<string>('refreshToken.secret')!;
+    const secret = this.configService.get<string>("refreshToken.secret")!;
     const decoded = jwt.verify(resetToken, secret) as JwtPayload;
 
-    if (decoded.purpose !== 'password-reset' || !decoded.email) {
-      throw new UnauthorizedException('Invalid token type');
+    if (decoded.purpose !== "password-reset" || !decoded.email) {
+      throw new UnauthorizedException("Invalid token type");
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -168,17 +186,17 @@ export class AuthService {
     const user = await this.db.query.users.findFirst({
       where: eq(users.id, userId),
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException("User not found");
 
     if (!user.hashedPassword) {
       throw new UnauthorizedException(
-        'This account uses social login. Use Google to manage your account.',
+        "This account uses social login. Use Google to manage your account.",
       );
     }
 
     const isValid = await bcrypt.compare(oldPassword, user.hashedPassword);
 
-    if (!isValid) throw new UnauthorizedException('Old password incorrect');
+    if (!isValid) throw new UnauthorizedException("Old password incorrect");
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.db
@@ -189,7 +207,7 @@ export class AuthService {
 
   async googleAuthCallback(req: any) {
     if (!req.user) {
-      throw new UnauthorizedException('No user from Google');
+      throw new UnauthorizedException("No user from Google");
     }
 
     const { email, firstName, lastName, picture, googleId } = req.user;
@@ -226,7 +244,7 @@ export class AuthService {
       }
     } else {
       const tempUserName =
-        'user_' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+        "user_" + crypto.randomUUID().replace(/-/g, "").slice(0, 10);
 
       const [insertedUser] = await this.db
         .insert(users)

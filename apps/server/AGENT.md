@@ -22,3 +22,4 @@ You have been equipped with specialized procedural skills defined in `.agent/ski
 - **[dto-validator](./.agent/skills/dto-validator.md)**: Use this skill to auto-generate request validation layers relying heavily on `class-validator` and `class-transformer`.
 - **[sql-normalizer](./.agent/skills/sql-normalizer.md)**: Crucial for the database pivot. Use this skill to convert legacy MongoDB JSON structures into highly normalized (1NF-3NF) relational PostgreSQL schemas using Drizzle ORM.
 - **[run-nestjs-doctor](./.agent/skills/run-nestjs-doctor.md)**: Use this skill to run diagnostic checks via the `nestjs-doctor` CLI to automatically flag and fix hidden anti-patterns in the codebase.
+- **[solid](./.agent/skills/solid.md)**: Use this skill for refactors and new backend logic where SOLID, clean architecture, and test-first workflows improve maintainability.

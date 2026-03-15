@@ -57,11 +57,11 @@ export const sessions = pgTable(
   {
     id: varchar("id", { length: 255 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => crypto.randomUUID()), // this IS your session_id
     userId: varchar("user_id", { length: 255 })
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
-    hashedRefreshToken: text("hashed_refresh_token").notNull(),
+    isRevoked: boolean("is_revoked").default(false).notNull(),
     userAgent: varchar("user_agent", { length: 500 }),
     ipAddress: varchar("ip_address", { length: 50 }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
