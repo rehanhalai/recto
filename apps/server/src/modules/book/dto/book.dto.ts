@@ -1,6 +1,5 @@
 import {
   IsString,
-  IsEnum,
   IsOptional,
   MinLength,
   MaxLength,
@@ -11,37 +10,6 @@ import {
 import { Type } from "class-transformer";
 
 export class GetBookDto {}
-
-export enum TbrStatus {
-  WISHLIST = "wishlist",
-  READING = "reading",
-  FINISHED = "finished",
-}
-
-export class TbrBookDto {
-  @IsString({ message: "bookId is required" })
-  bookId: string;
-
-  @IsEnum(TbrStatus, {
-    message: "status must be wishlist, reading, or finished",
-  })
-  status: TbrStatus;
-
-  @IsOptional()
-  @IsString()
-  startedAt?: string;
-
-  @IsOptional()
-  @IsString()
-  finishedAt?: string;
-}
-
-export class FetchBooksBasedOnStatusDto {
-  @IsEnum(TbrStatus, {
-    message: "status must be wishlist, reading, or finished",
-  })
-  status: TbrStatus;
-}
 
 export class SearchBooksDto {
   @IsString({ message: "Query is required for search" })
