@@ -8,44 +8,44 @@ import {
   UseInterceptors,
   UploadedFiles,
   NotFoundException,
-} from '@nestjs/common';
-import { UserService } from './user.service';
-import type { JwtPayload } from '../auth/auth.service';
+} from "@nestjs/common";
+import { UserService } from "./user.service";
 import {
   UpdateProfileDto,
   UserNameAvailabilityDto,
   SearchUserDto,
-} from './dto/user.dto';
-import { AuthGuard, CurrentUser } from '../common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+} from "./dto/user.dto";
+import { AuthGuard, CurrentUser } from "../common";
+import type { AuthenticatedRequestUser } from "../common";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
 
-@Controller('user')
+@Controller("user")
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(AuthGuard)
-  @Patch('update-profile')
+  @Patch("update-profile")
   async updateProfile(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedRequestUser,
     @Body() dto: UpdateProfileDto,
   ) {
-    const response = await this.userService.updateProfile(user._id, dto);
+    const response = await this.userService.updateProfile(user.id, dto);
     return {
       ...response,
-      message: 'Profile updated successfully',
+      message: "Profile updated successfully",
     };
   }
 
   @UseGuards(AuthGuard)
-  @Patch('update-profileimage')
+  @Patch("update-profileimage")
   @UseInterceptors(
     FileFieldsInterceptor([
-      { name: 'avatarImage', maxCount: 1 },
-      { name: 'coverImage', maxCount: 1 },
+      { name: "avatarImage", maxCount: 1 },
+      { name: "coverImage", maxCount: 1 },
     ]),
   )
   async updateProfileImage(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedRequestUser,
     @UploadedFiles()
     files: {
       avatarImage?: Express.Multer.File[];
@@ -56,11 +56,11 @@ export class UserController {
     const avatarFile = files?.avatarImage?.[0];
     const coverFile = files?.coverImage?.[0];
 
-    const removeAvatar = body.avatarImage === 'remove';
-    const removeCover = body.coverImage === 'remove';
+    const removeAvatar = body.avatarImage === "remove";
+    const removeCover = body.coverImage === "remove";
 
     const response = await this.userService.updateAvatarAndBanner(
-      user._id,
+      user.id,
       avatarFile,
       coverFile,
       removeAvatar,
@@ -68,58 +68,58 @@ export class UserController {
     );
     return {
       ...response,
-      message: 'Avatar and/or Banner updated successfully',
+      message: "Avatar and/or Banner updated successfully",
     };
   }
 
-  @Get('check')
+  @Get("check")
   async checkUsernameAvailability(@Query() dto: UserNameAvailabilityDto) {
     const isAvailable = await this.userService.userNameAvailability(
       dto.userName,
     );
     return {
       isAvailable,
-      message: isAvailable ? 'available' : 'taken',
+      message: isAvailable ? "available" : "taken",
     };
   }
 
-  @Get('generate-username')
+  @Get("generate-username")
   async generateUsername() {
     const username = await this.userService.generateRandomUsername();
     return {
       username,
-      message: 'Generated username',
+      message: "Generated username",
     };
   }
 
   @UseGuards(AuthGuard)
-  @Get('whoami')
-  async whoami(@CurrentUser() user: JwtPayload) {
-    const response = await this.userService.whoAmI(user._id);
+  @Get("whoami")
+  async whoami(@CurrentUser() user: AuthenticatedRequestUser) {
+    const response = await this.userService.whoAmI(user.id);
     return {
       ...response,
-      message: 'User fetched successfully',
+      message: "User fetched successfully",
     };
   }
 
-  @Get('search')
+  @Get("search")
   async searchUsers(@Query() query: SearchUserDto) {
     const users = await this.userService.searchUsers(query.userName);
     if (!users.length) {
-      throw new NotFoundException('No users found matching the query.');
+      throw new NotFoundException("No users found matching the query.");
     }
     return {
       users,
-      message: 'Users fetched successfully.',
+      message: "Users fetched successfully.",
     };
   }
 
-  @Get('profile')
+  @Get("profile")
   async getUserProfile(@Query() query: SearchUserDto) {
     const user = await this.userService.getUserProfile(query.userName);
     return {
       ...user,
-      message: 'User fetched successfully.',
+      message: "User fetched successfully.",
     };
   }
 }

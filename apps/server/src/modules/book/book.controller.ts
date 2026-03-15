@@ -22,15 +22,6 @@ import { AuthGuard } from "../common";
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
-  @Get(":volumeId")
-  async getBook(@Param("volumeId") volumeId: string): Promise<any> {
-    const book = await this.bookService.getBook(volumeId);
-    return {
-      ...book,
-      message: "Book fetched successfully",
-    };
-  }
-
   @Get("affiliate-links/:bookId")
   async getAffiliateLinks(
     @Param("bookId") bookId: string,
@@ -98,6 +89,15 @@ export class BookController {
     return {
       books: userBooks,
       message: "Books fetched successfully",
+    };
+  }
+
+  @Get(":volumeId")
+  async getBook(@Param("volumeId") volumeId: string): Promise<any> {
+    const book = await this.bookService.getBook(volumeId);
+    return {
+      ...book,
+      message: "Book fetched successfully",
     };
   }
 }

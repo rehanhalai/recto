@@ -8,10 +8,10 @@ import {
   Req,
 } from "@nestjs/common";
 import { AuthGuard as NestAuthGuard } from "@nestjs/passport";
-import type { Request, Response } from "express";
+import type { Request, Response, CookieOptions } from "express";
 import { ConfigService } from "@nestjs/config";
 import { AuthService } from "./auth.service";
-import type { JwtPayload } from "./auth.service";
+import type { GoogleAuthUser, RequestMeta } from "./auth.service";
 import {
   SignUpDto,
   SignInDto,
@@ -21,6 +21,8 @@ import {
   ChangePasswordDto,
 } from "./dto/auth.dto";
 import { AuthGuard, CurrentUser } from "../common";
+import type { AuthenticatedRequestUser } from "../common";
+import { SESSION_COOKIE_NAME, SESSION_EXPIRE_TIME } from "../../constants";
 
 @Controller("auth")
 export class AuthController {
@@ -28,6 +30,22 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {}
+
+  private getSessionCookieOptions(): CookieOptions {
+    return {
+      httpOnly: true,
+      secure: this.configService.get<string>("nodeEnv") === "production",
+      sameSite: "lax",
+      maxAge: SESSION_EXPIRE_TIME,
+    };
+  }
+
+  private getRequestMeta(req: Request): RequestMeta {
+    return {
+      ipAddress: req.ip || null,
+      userAgent: req.headers["user-agent"] ?? null,
+    };
+  }
 
   @Post("signup")
   async signup(@Body() dto: SignUpDto) {
@@ -44,18 +62,16 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const meta: { ipAddress: string | null; userAgent: string | null } = {
-      ipAddress: req.ip || null,
-      userAgent: req.headers["user-agent"] ?? null,
-    };
+    const meta = this.getRequestMeta(req);
     const { sessionToken, userData } =
       await this.authService.verifyOtpAndSignUp(dto, meta);
-    res.cookie("session_id", sessionToken, {
-      httpOnly: true,
-      secure: this.configService.get<string>("nodeEnv") === "production",
-      sameSite: "lax" as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+
+    res.cookie(
+      SESSION_COOKIE_NAME,
+      sessionToken,
+      this.getSessionCookieOptions(),
+    );
+
     return {
       user: userData,
       message: "User verified successfully",
@@ -65,15 +81,20 @@ export class AuthController {
   @Post("signin")
   async signin(
     @Body() dto: SignInDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { token, userData } = await this.authService.signIn(dto);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: this.configService.get<string>("nodeEnv") === "production",
-      sameSite: "lax" as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    const { sessionToken, userData } = await this.authService.signIn(
+      dto,
+      this.getRequestMeta(req),
+    );
+
+    res.cookie(
+      SESSION_COOKIE_NAME,
+      sessionToken,
+      this.getSessionCookieOptions(),
+    );
+
     return {
       user: userData,
       message: "User logged in successfully",
@@ -83,14 +104,17 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Post("logout")
   async logout(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedRequestUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    res.clearCookie("session_id", {
+    await this.authService.revokeSession(user.sessionId);
+
+    res.clearCookie(SESSION_COOKIE_NAME, {
       httpOnly: true,
       secure: this.configService.get<string>("nodeEnv") === "production",
-      sameSite: "lax" as const,
+      sameSite: "lax",
     });
+
     return {
       message: "User logged out successfully",
     };
@@ -113,11 +137,11 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Post("change-password")
   async changePassword(
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user: AuthenticatedRequestUser,
     @Body() dto: ChangePasswordDto,
   ) {
     await this.authService.resetPassWithOldPass(
-      user._id,
+      user.id,
       dto.oldPassword,
       dto.newPassword,
     );
@@ -135,17 +159,19 @@ export class AuthController {
   @Get("google/callback")
   @UseGuards(NestAuthGuard("google"))
   async googleAuthCallback(
-    @Req() req: any,
+    @Req() req: Request & { user?: GoogleAuthUser },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { token, userData } = await this.authService.googleAuthCallback(req);
+    const { sessionToken } = await this.authService.googleAuthCallback(
+      req.user as GoogleAuthUser,
+      this.getRequestMeta(req),
+    );
 
-    res.cookie("refreshToken", token, {
-      httpOnly: true,
-      secure: this.configService.get<string>("nodeEnv") === "production",
-      sameSite: "lax" as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(
+      SESSION_COOKIE_NAME,
+      sessionToken,
+      this.getSessionCookieOptions(),
+    );
 
     const clientUrl = this.configService.get<string>("clientUrl") || "/";
     // Redirect back to frontend with some success indicator if needed,

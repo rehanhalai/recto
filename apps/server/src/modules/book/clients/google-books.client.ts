@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   BadRequestException,
+  NotFoundException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { firstValueFrom, catchError } from "rxjs";
@@ -158,9 +159,7 @@ export class GoogleBooksClient {
           .pipe(
             catchError((error: AxiosError) => {
               if (error.response?.status === 404) {
-                throw new InternalServerErrorException(
-                  `Volume not found: ${volumeId}`,
-                );
+                throw new NotFoundException(`Volume not found: ${volumeId}`);
               }
               throw this.handleError(
                 error,
@@ -181,6 +180,7 @@ export class GoogleBooksClient {
     } catch (error) {
       if (
         error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
         error instanceof InternalServerErrorException
       ) {
         throw error;
@@ -211,7 +211,7 @@ export class GoogleBooksClient {
     }
 
     if (status === 404) {
-      return new InternalServerErrorException(`${context}: Resource not found`);
+      return new NotFoundException(`${context}: Resource not found`);
     }
 
     if (status && status >= 500) {

@@ -18,10 +18,27 @@ import { SESSION_EXPIRE_TIME, USER_SELECT_FIELDS } from "../../constants";
 import { OtpService } from "../otp/otp.service";
 import { MailService } from "../mail/mail.service";
 
-export interface JwtPayload {
-  _id: string;
+export interface SessionTokenPayload {
+  sub: string;
+  sid: string;
+}
+
+interface PasswordResetTokenPayload {
   email?: string;
   purpose?: string;
+}
+
+export interface RequestMeta {
+  ipAddress: string | null;
+  userAgent: string | null;
+}
+
+export interface GoogleAuthUser {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  picture?: string;
+  googleId: string;
 }
 
 @Injectable()
@@ -33,10 +50,59 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  private generateSessionToken(payload: { sub: string; sid: string }) {
-    const secret = this.configService.get<string>("refreshToken.secret")!;
-    const expire = this.configService.get<string>("refreshToken.expire")!;
-    return jwt.sign(payload, secret, { expiresIn: expire as any });
+  private get tokenSecret(): string {
+    return this.configService.get<string>("refreshToken.secret")!;
+  }
+
+  private get tokenExpire(): string {
+    return this.configService.get<string>("refreshToken.expire")!;
+  }
+
+  private generateSessionToken(payload: SessionTokenPayload) {
+    return jwt.sign(payload, this.tokenSecret, {
+      expiresIn: this.tokenExpire as jwt.SignOptions["expiresIn"],
+    });
+  }
+
+  private generatePasswordResetToken(email: string) {
+    return jwt.sign({ email, purpose: "password-reset" }, this.tokenSecret, {
+      expiresIn: this.tokenExpire as jwt.SignOptions["expiresIn"],
+    });
+  }
+
+  private getUserData(user: typeof schema.users.$inferSelect) {
+    return {
+      userName: user.userName,
+      fullName: user.fullName,
+      email: user.email,
+      avatarImage: user.avatarImage,
+      coverImage: user.coverImage,
+      role: user.role,
+      isVerified: user.isVerified,
+    };
+  }
+
+  private createTempUserName() {
+    return "user_" + crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+  }
+
+  private async createSession(userId: string, meta: RequestMeta) {
+    const [session] = await this.db
+      .insert(schema.sessions)
+      .values({
+        userId,
+        expiresAt: new Date(Date.now() + SESSION_EXPIRE_TIME),
+        ipAddress: meta.ipAddress,
+        userAgent: meta.userAgent,
+      })
+      .returning({ id: schema.sessions.id });
+
+    return session;
+  }
+
+  private async issueSessionToken(userId: string, meta: RequestMeta) {
+    const session = await this.createSession(userId, meta);
+    return this.generateSessionToken({ sub: userId, sid: session.id });
   }
 
   async signUp(dto: SignUpDto) {
@@ -57,18 +123,22 @@ export class AuthService {
     return { message: "OTP sent to your email" };
   }
 
-  async verifyOtpAndSignUp(
-    dto: VerifyOtpDto,
-    meta: { ipAddress: string | null; userAgent: string | null },
-  ) {
+  async verifyOtpAndSignUp(dto: VerifyOtpDto, meta: RequestMeta) {
     const { email, otp } = dto;
     const pendingOTP = await this.otpService.verifyOtp(email, otp);
 
-    const tempUserName =
-      "user_" + crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+    const tempUserName = this.createTempUserName();
 
     const { insertedUser, insertedSession } = await this.db.transaction(
       async (tx) => {
+        const existingUser = await tx.query.users.findFirst({
+          where: eq(users.email, email),
+          columns: { id: true },
+        });
+
+        if (existingUser)
+          throw new ConflictException("User with this email already exists");
+
         const [insertedUser] = await tx
           .insert(schema.users)
           .values({
@@ -95,8 +165,8 @@ export class AuthService {
 
     // delete otp and send welcome email
     await Promise.all([
-      await this.otpService.deleteOtp(pendingOTP.id),
-      await this.mailService.sendWelcomeEmail(email, tempUserName),
+      this.otpService.deleteOtp(pendingOTP.id),
+      this.mailService.sendWelcomeEmail(email, tempUserName),
     ]);
 
     const sessionToken = this.generateSessionToken({
@@ -107,7 +177,7 @@ export class AuthService {
     return { sessionToken, userData: insertedUser };
   }
 
-  async signIn(dto: SignInDto) {
+  async signIn(dto: SignInDto, meta: RequestMeta) {
     const { email, password } = dto;
     const user = await this.db.query.users.findFirst({
       where: eq(users.email, email),
@@ -127,17 +197,10 @@ export class AuthService {
     if (!user.isVerified)
       throw new UnauthorizedException("Account is not verified.");
 
-    const token = this.generateToken({ _id: user.id });
-    const userData = {
-      userName: user.userName,
-      fullName: user.fullName,
-      email: user.email,
-      avatarImage: user.avatarImage,
-      coverImage: user.coverImage,
-      role: user.role,
-      isVerified: user.isVerified,
-    };
-    return { token, userData };
+    const sessionToken = await this.issueSessionToken(user.id, meta);
+    const userData = this.getUserData(user);
+
+    return { sessionToken, userData };
   }
 
   async forgotPassword(email: string) {
@@ -146,7 +209,7 @@ export class AuthService {
     });
     if (!user) throw new NotFoundException("User not found");
 
-    const resetToken = this.generateToken({ email, purpose: "password-reset" });
+    const resetToken = this.generatePasswordResetToken(email);
     const clientUrl =
       this.configService.get<string>("clientUrl") || "http://localhost:3000";
     const resetLink = `${clientUrl}/reset-password?token=${resetToken}`;
@@ -158,14 +221,16 @@ export class AuthService {
   async verifyOtpForPasswordReset(email: string, code: string) {
     const pendingOTP = await this.otpService.verifyOtp(email, code);
 
-    const resetToken = this.generateToken({ email, purpose: "password-reset" });
+    const resetToken = this.generatePasswordResetToken(email);
     await this.otpService.deleteOtp(pendingOTP.id);
     return resetToken;
   }
 
   async resetPassword(resetToken: string, newPassword: string) {
-    const secret = this.configService.get<string>("refreshToken.secret")!;
-    const decoded = jwt.verify(resetToken, secret) as JwtPayload;
+    const decoded = jwt.verify(
+      resetToken,
+      this.tokenSecret,
+    ) as PasswordResetTokenPayload;
 
     if (decoded.purpose !== "password-reset" || !decoded.email) {
       throw new UnauthorizedException("Invalid token type");
@@ -205,12 +270,19 @@ export class AuthService {
       .where(eq(users.id, userId));
   }
 
-  async googleAuthCallback(req: any) {
-    if (!req.user) {
-      throw new UnauthorizedException("No user from Google");
+  async revokeSession(sessionId: string) {
+    await this.db
+      .update(schema.sessions)
+      .set({ isRevoked: true })
+      .where(eq(schema.sessions.id, sessionId));
+  }
+
+  async googleAuthCallback(googleUser: GoogleAuthUser, meta: RequestMeta) {
+    if (!googleUser?.email || !googleUser.googleId) {
+      throw new UnauthorizedException("Invalid Google account payload");
     }
 
-    const { email, firstName, lastName, picture, googleId } = req.user;
+    const { email, firstName, lastName, picture, googleId } = googleUser;
 
     let user = await this.db.query.users.findFirst({
       where: eq(users.email, email),
@@ -222,7 +294,7 @@ export class AuthService {
       const needsAvatar = !user.avatarImage && picture;
 
       if (needsGoogleId || needsFullName || needsAvatar) {
-        const updatePayload: any = {};
+        const updatePayload: Partial<typeof schema.users.$inferInsert> = {};
         if (needsGoogleId) {
           updatePayload.googleId = googleId;
           updatePayload.isVerified = true;
@@ -243,8 +315,7 @@ export class AuthService {
         user = updatedUser!;
       }
     } else {
-      const tempUserName =
-        "user_" + crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+      const tempUserName = this.createTempUserName();
 
       const [insertedUser] = await this.db
         .insert(users)
@@ -262,14 +333,9 @@ export class AuthService {
       await this.mailService.sendWelcomeEmail(email, tempUserName);
     }
 
-    const token = this.generateToken({ _id: user.id });
-    const userData = {
-      userName: user.userName,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      isVerified: user.isVerified,
-    };
-    return { token, userData };
+    const sessionToken = await this.issueSessionToken(user.id, meta);
+    const userData = this.getUserData(user);
+
+    return { sessionToken, userData };
   }
 }

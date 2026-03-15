@@ -23,14 +23,20 @@ export class BookQueryService {
 
     try {
       volume = await this.googleBooksClient.getVolume(volumeId);
-    } catch {
+    } catch (error) {
       const cachedBook = await this.findBySourceId(volumeId);
 
       if (cachedBook) {
         return this.mapToBookResponse(cachedBook);
       }
 
-      throw new NotFoundException("Book not found");
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(
+          "Book not found in Google Books and no cached version available",
+        );
+      }
+
+      throw error;
     }
 
     const isbn13 = extractIsbn13(volume);
