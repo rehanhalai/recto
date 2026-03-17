@@ -81,6 +81,9 @@ export default function LandingPage() {
         delay: 0.2,
         ease: "power3.out",
       });
+
+      // Recalculate all scroll positions once the landing page is fully mounted and auth is checked
+      ScrollTrigger.refresh();
     });
 
     return () => ctx.revert();

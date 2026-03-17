@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -12,12 +12,24 @@ export function HeroScrollSequence() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isMobileActive, setIsMobileActive] = useState(false);
   const lastDrawnFrame = useRef<number>(-1);
   const milestoneRef = useRef<HTMLDivElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
-  const isMobile = useRef(
-    typeof window !== "undefined" && window.innerWidth < 768,
-  );
+
+  // Sync state to ref for GSAP hooks
+  const isMobile = useRef(false);
+
+  useEffect(() => {
+    isMobile.current = window.innerWidth < 768;
+    setIsMobileActive(isMobile.current);
+
+    // Crucial: The hero height shift from 600vh to 100vh happens when isMobileActive changes.
+    // We must refresh ScrollTrigger after this layout shift to fix markers for paper-section, etc.
+    requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+    });
+  }, []);
 
   const frameSources = useMemo(() => {
     const rawFrames = Array.from(
@@ -38,10 +50,7 @@ export function HeroScrollSequence() {
     const pinElement = pinRef.current;
     const milestoneEl = milestoneRef.current;
 
-    if (!canvas || !container || !pinElement) return;
-
-    const context = canvas.getContext("2d", { alpha: false });
-    if (!context) return;
+    if (!container || !pinElement) return;
 
     const images: HTMLImageElement[] = [];
     const playhead = { frame: 1 };
@@ -62,8 +71,11 @@ export function HeroScrollSequence() {
     };
 
     const updateLayout = (image: HTMLImageElement) => {
+      if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      // Reduce DPR on mobile to improve fill rate performance
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) return;
+
       const maxDpr = isMobile.current ? 1.2 : 2;
       const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
       const nextWidth = Math.max(1, Math.round(rect.width * dpr));
@@ -96,6 +108,10 @@ export function HeroScrollSequence() {
     };
 
     const drawFrame = (frame: number) => {
+      if (!canvas) return;
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) return;
+
       const frameIndex = normalizeFrame(frame);
 
       // Don't redraw if frame hasn't changed
@@ -141,29 +157,26 @@ export function HeroScrollSequence() {
     };
 
     const gsapContext = gsap.context(() => {
-      // Fade in the hero text on load
+      // Fade in the hero text on load - this MUST run on mobile too
       if (heroTextRef.current) {
         gsap.to(heroTextRef.current, {
           opacity: 1,
-          y: -10,
+          y: 0,
           duration: 1.5,
           ease: "power3.out",
-          delay: 0.5, // Slight delay to let canvas breathe
+          delay: 0.5,
         });
       }
 
-      // Disable animation and pinning on mobile
+      // Everything below this point (Sequencing, Pinning) is desktop only
       if (isMobile.current) return;
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container,
           start: "top top",
-          end: () => `+=${window.innerHeight * 5}`,
+          end: "bottom bottom",
           scrub: 2,
-          pin: pinElement,
-          pinSpacing: true,
-          anticipatePin: 1,
           invalidateOnRefresh: true,
         },
       });
@@ -234,9 +247,12 @@ export function HeroScrollSequence() {
           }
         },
       });
-    }, container);
+    }, container || undefined);
 
     const loadImages = async () => {
+      // On mobile, we only need the text fade
+      if (isMobile.current) return;
+
       // Prioritized batch: first 15 frames
       const priorityCount = 15;
       const priorityPromises = frameSources
@@ -303,21 +319,32 @@ export function HeroScrollSequence() {
   }, [frameSources]);
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div
+      ref={containerRef}
+      className={`relative w-full ${isMobileActive ? "h-screen" : "h-[600vh]"}`}
+    >
       <div
         ref={pinRef}
-        className="relative h-screen w-full overflow-hidden bg-black"
+        className="sticky top-0 h-screen w-full overflow-hidden bg-black"
       >
-        <canvas
-          ref={canvasRef}
-          aria-label="Scroll-driven cinematic preview"
-          className="relative z-10 block h-screen w-full"
-        />
+        {isMobileActive ? (
+          <img
+            src={frameSources[0]}
+            alt="Hero Background"
+            className="absolute inset-0 h-screen w-full object-cover z-10"
+          />
+        ) : (
+          <canvas
+            ref={canvasRef}
+            aria-label="Scroll-driven cinematic preview"
+            className="relative z-10 block h-screen w-full"
+          />
+        )}
 
         {/* Hero Text */}
         <div
           ref={heroTextRef}
-          className="absolute -top-[10%] -bottom-[10%] left-0 w-full md:w-3/5 flex flex-col justify-center px-8 md:px-16 lg:px-24 z-20 pointer-events-none bg-gradient-to-r from-black/90 via-black/40 to-transparent opacity-0"
+          className="absolute -top-[10%] -bottom-[10%] left-0 w-full md:w-3/5 flex flex-col justify-center px-8 md:px-16 lg:px-24 z-20 pointer-events-none bg-linear-to-r from-black/90 via-black/40 to-transparent opacity-0"
         >
           <div className="space-y-6 max-w-xl">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.1] tracking-tight text-white drop-shadow-xl">
