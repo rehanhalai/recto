@@ -4,19 +4,19 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadService } from './upload.service';
-import { AuthGuard } from '../common';
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { UploadService } from "./upload.service";
+import { AuthGuard } from "../common";
 
-@Controller('upload')
+@Controller("upload")
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @UseGuards(AuthGuard)
-  @Post('image')
-  @UseInterceptors(FileInterceptor('file')) // key 'file' on the multipart/form-data payload
+  @Post("image")
+  @UseInterceptors(FileInterceptor("file")) // key 'file' on the multipart/form-data payload
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    return await this.uploadService.handleImageUpload(file);
+    return await this.uploadService.handlePostImageUpload(file);
   }
 }

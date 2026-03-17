@@ -1,26 +1,23 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { StorageService } from '../common/storage.service';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { StorageService } from "../storage/storage.service";
+import { UploadAssetType } from "../storage/enums/upload-asset-type.enum";
 
 @Injectable()
 export class UploadService {
   constructor(private readonly storageService: StorageService) {}
 
-  async handleImageUpload(file: Express.Multer.File): Promise<{ url: string }> {
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  async handlePostImageUpload(
+    file: Express.Multer.File,
+  ): Promise<{ url: string; publicId: string }> {
     if (!file) {
-      throw new BadRequestException('File is required');
+      throw new BadRequestException("File is required");
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      throw new BadRequestException('File size exceeds limit');
-    }
+    const result = await this.storageService.upload(
+      file,
+      UploadAssetType.POST_IMAGE,
+    );
 
-    // Validate size or mimetype if necessary
-    if (!file.mimetype.startsWith('image/')) {
-      throw new BadRequestException('Only images are allowed');
-    }
-
-    const fileUrl = await this.storageService.uploadFile(file, 'posts/images');
-    return { url: fileUrl };
+    return { url: result.url, publicId: result.publicId };
   }
 }

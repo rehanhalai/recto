@@ -4,7 +4,8 @@ import {
   NotFoundException,
   ConflictException,
 } from "@nestjs/common";
-import { StorageService } from "../common/storage.service";
+import { StorageService } from "../storage/storage.service";
+import { UploadAssetType } from "../storage/enums/upload-asset-type.enum";
 import { eq, ilike } from "drizzle-orm";
 import { DRIZZLE } from "../../../db/db.module";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
@@ -86,32 +87,59 @@ export class UserService {
     if (!user) throw new NotFoundException("User not found");
 
     let newAvatar = user.avatarImage;
-    if (removeAvatar && user.avatarImage) {
-      await this.storageService.deleteFile(user.avatarImage);
+    let newAvatarPublicId = user.avatarPublicId ?? null;
 
-      newAvatar = null;
-    } else if (avatarFile) {
-      if (user.avatarImage) {
-        await this.storageService.deleteFile(user.avatarImage);
+    if (removeAvatar) {
+      if (user.avatarPublicId) {
+        await this.storageService.delete(user.avatarPublicId);
       }
-      newAvatar = await this.storageService.uploadFile(avatarFile, "avatars");
+      newAvatar = null;
+      newAvatarPublicId = null;
+    } else if (avatarFile) {
+      // Delete the old avatar before uploading the replacement
+      if (user.avatarPublicId) {
+        await this.storageService.delete(user.avatarPublicId);
+      }
+      const result = await this.storageService.upload(
+        avatarFile,
+        UploadAssetType.USER_AVATAR,
+        userId,
+      );
+      newAvatar = result.url;
+      newAvatarPublicId = result.publicId;
     }
 
     let newCover = user.coverImage;
-    if (removeCover && user.coverImage) {
-      await this.storageService.deleteFile(user.coverImage);
+    let newCoverPublicId = user.coverPublicId ?? null;
 
-      newCover = null;
-    } else if (coverFile) {
-      if (user.coverImage) {
-        await this.storageService.deleteFile(user.coverImage);
+    if (removeCover) {
+      if (user.coverPublicId) {
+        await this.storageService.delete(user.coverPublicId);
       }
-      newCover = await this.storageService.uploadFile(coverFile, "covers");
+      newCover = null;
+      newCoverPublicId = null;
+    } else if (coverFile) {
+      // Delete the old cover before uploading the replacement
+      if (user.coverPublicId) {
+        await this.storageService.delete(user.coverPublicId);
+      }
+      const result = await this.storageService.upload(
+        coverFile,
+        UploadAssetType.USER_COVER,
+        userId,
+      );
+      newCover = result.url;
+      newCoverPublicId = result.publicId;
     }
 
     const [updatedUser] = await this.db
       .update(users)
-      .set({ avatarImage: newAvatar, coverImage: newCover })
+      .set({
+        avatarImage: newAvatar,
+        avatarPublicId: newAvatarPublicId,
+        coverImage: newCover,
+        coverPublicId: newCoverPublicId,
+      })
       .where(eq(users.id, userId))
       .returning();
 

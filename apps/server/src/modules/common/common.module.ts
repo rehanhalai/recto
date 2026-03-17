@@ -1,9 +1,6 @@
-import { Module, Global } from '@nestjs/common';
-import { StorageService } from './storage.service';
+import { Module, Global } from "@nestjs/common";
 
+// Guards and decorators live here. Storage has moved to StorageModule.
 @Global()
-@Module({
-  providers: [StorageService],
-  exports: [StorageService],
-})
+@Module({})
 export class CommonModule {}

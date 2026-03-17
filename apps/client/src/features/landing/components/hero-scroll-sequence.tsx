@@ -14,6 +14,7 @@ export function HeroScrollSequence() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lastDrawnFrame = useRef<number>(-1);
   const milestoneRef = useRef<HTMLDivElement>(null);
+  const heroTextRef = useRef<HTMLDivElement>(null);
   const isMobile = useRef(
     typeof window !== "undefined" && window.innerWidth < 768,
   );
@@ -108,9 +109,22 @@ export function HeroScrollSequence() {
 
       context.clearRect(0, 0, layout.width, layout.height);
 
+      // Draw black background beneath
+      context.fillStyle = "black";
+      context.fillRect(0, 0, layout.width, layout.height);
+
       // Performance optimization for mobile: disable high quality smoothing
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
+
+      // Calculate fade to black at the end of the sequence (progress 0.75 to 1.0)
+      const progress = frame / TOTAL_FRAMES;
+      let imageAlpha = 1;
+      if (progress > 0.7) {
+        imageAlpha = Math.max(0, 1 - (progress - 0.7) / 0.25);
+      }
+
+      context.globalAlpha = imageAlpha;
 
       context.drawImage(
         image,
@@ -120,10 +134,24 @@ export function HeroScrollSequence() {
         layout.drawHeight,
       );
 
+      // Restore alpha
+      context.globalAlpha = 1.0;
+
       lastDrawnFrame.current = frameIndex;
     };
 
     const gsapContext = gsap.context(() => {
+      // Fade in the hero text on load
+      if (heroTextRef.current) {
+        gsap.to(heroTextRef.current, {
+          opacity: 1,
+          y: -10,
+          duration: 1.5,
+          ease: "power3.out",
+          delay: 0.5, // Slight delay to let canvas breathe
+        });
+      }
+
       // Disable animation and pinning on mobile
       if (isMobile.current) return;
 
@@ -151,6 +179,25 @@ export function HeroScrollSequence() {
 
           // Milestone logic - optimized to prevent redundant calls
           const progress = playhead.frame / TOTAL_FRAMES;
+
+          if (heroTextRef.current) {
+            const currentOpacity = (heroTextRef.current as HTMLElement).style
+              .opacity;
+            if (progress >= 0.5 && currentOpacity !== "0") {
+              gsap.to(heroTextRef.current, {
+                opacity: 0,
+                duration: 0.5,
+                overwrite: "auto",
+              });
+            } else if (progress < 0.5 && currentOpacity === "0") {
+              gsap.to(heroTextRef.current, {
+                opacity: 1,
+                duration: 0.5,
+                overwrite: "auto",
+              });
+            }
+          }
+
           if (!milestoneEl) return;
 
           const currentText = milestoneEl.textContent;
@@ -266,6 +313,26 @@ export function HeroScrollSequence() {
           aria-label="Scroll-driven cinematic preview"
           className="relative z-10 block h-screen w-full"
         />
+
+        {/* Hero Text */}
+        <div
+          ref={heroTextRef}
+          className="absolute -top-[10%] -bottom-[10%] left-0 w-full md:w-3/5 flex flex-col justify-center px-8 md:px-16 lg:px-24 z-20 pointer-events-none bg-gradient-to-r from-black/90 via-black/40 to-transparent opacity-0"
+        >
+          <div className="space-y-6 max-w-xl">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.1] tracking-tight text-white drop-shadow-xl">
+              A reading life <br />
+              <span className="italic text-gold font-normal">
+                worth showing off.
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-white/80 leading-relaxed font-light max-w-md drop-shadow-md">
+              Track your books, share your taste, and discover what to read next
+              — all in one place designed to actually look good.
+            </p>
+          </div>
+        </div>
+
         <div className="scroll-indicator pointer-events-none absolute bottom-30 left-1/2 z-30 -translate-x-1/2 flex flex-col items-center gap-6">
           {!isMobile.current && (
             <div
@@ -274,7 +341,7 @@ export function HeroScrollSequence() {
             />
           )}
 
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-md">
+          <div className="hidden md:flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-md">
             <span
               aria-hidden="true"
               className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse"

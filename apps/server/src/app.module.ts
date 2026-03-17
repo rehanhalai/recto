@@ -10,6 +10,7 @@ import { ReviewModule } from "./modules/review/review.module";
 import { PostsModule } from "./modules/posts/posts.module";
 import { FeedModule } from "./modules/feed/feed.module";
 import { UploadModule } from "./modules/upload/upload.module";
+import { StorageModule } from "./modules/storage/storage.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { OtpModule } from "./modules/otp/otp.module";
 import { ReadingTrackerModule } from "./modules/reading-tracker/reading-tracker.module";
@@ -32,6 +33,7 @@ import config from "./config/config";
     PostsModule,
     FeedModule,
     UploadModule,
+    StorageModule,
     MailModule,
     OtpModule,
     ReadingTrackerModule,

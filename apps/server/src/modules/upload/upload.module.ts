@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { UploadController } from './upload.controller';
-import { UploadService } from './upload.service';
-import { CommonModule } from '../common/common.module';
+import { Module } from "@nestjs/common";
+import { UploadController } from "./upload.controller";
+import { UploadService } from "./upload.service";
 
+// StorageService is provided globally by StorageModule (registered in AppModule).
+// No need to import StorageModule here.
 @Module({
-  imports: [CommonModule], // To inject StorageService
   controllers: [UploadController],
   providers: [UploadService],
 })

@@ -1,20 +1,18 @@
 export default () => ({
-  nodeEnv: process.env.NODE_ENV || 'development',
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
+  nodeEnv: process.env.NODE_ENV || "development",
+  clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
   database: {
     url: process.env.DATABASE_URL,
   },
   port: process.env.PORT || 8080,
   refreshToken: {
-    secret: process.env.REFRESH_TOKEN_SECRET || 'your-secret-key',
-    expire: process.env.REFRESH_TOKEN_EXPIRE || '30d',
+    secret: process.env.REFRESH_TOKEN_SECRET || "your-secret-key",
+    expire: process.env.REFRESH_TOKEN_EXPIRE || "30d",
   },
-  storage: {
-    bucketName: process.env.R2_BUCKET_NAME || 'my-bucket',
-    endpoint: process.env.R2_ENDPOINT,
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
-    publicUrl: process.env.R2_PUBLIC_URL || 'https://pub-domain.xyz',
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+    apiKey: process.env.CLOUDINARY_API_KEY || "",
+    apiSecret: process.env.CLOUDINARY_API_SECRET || "",
   },
   mail: {
     host: process.env.SMTP_HOST,
