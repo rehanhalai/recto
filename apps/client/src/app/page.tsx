@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/fetch";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { HeroScrollSequence } from "../features/landing/components/hero-scroll-sequence";
+import BookStrip from "../features/landing/components/book-strip";
 import useLenis from "@/utils/lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -98,6 +99,13 @@ export default function LandingPage() {
       <Navbar />
       <main className="relative bg-black">
         <HeroScrollSequence />
+
+        {/* Dynamic Book Strip Transition */}
+        <div className="py-20 bg-black overflow-hidden relative z-20">
+          <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+          <BookStrip />
+          <div className="absolute bottom-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+        </div>
 
         {/* Thematic Content to Carry On the Scroll */}
         <section className="paper-section min-h-screen flex flex-col items-center justify-center px-6 py-32 text-center relative z-10 bg-black text-white">
