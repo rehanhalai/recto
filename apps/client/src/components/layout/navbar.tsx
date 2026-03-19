@@ -33,9 +33,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
 import { LibraryIcon, Menu } from "lucide-react";
 import { useAuth } from "@/features/auth";
-import LightLogo from "@/../public/logoText.webp";
-import DarkLogo from "@/../public/logoDarkTheme.webp";
 import { useTheme } from "next-themes";
+import rectoIcon from "@recto/assets/logos/recto-icon.webp";
+import rectoIconGold from "@recto/assets/logos/recto-icon-gold.webp";
+import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";
+import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -165,15 +167,16 @@ export function Navbar() {
             {/* Logo (Center on Mobile) */}
             <Link
               href="/home"
-              className="flex items-center gap-2 font-bold text-xl text-ink dark:text-ink tracking-tight absolute left-1/2 -translate-x-1/2"
+              className="group flex items-center gap-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-gold p-1"
             >
               <Image
-                src={isDarkMode ? DarkLogo : LightLogo}
-                alt="Recto Logo"
+                src={isDarkMode ? rectoLogoLight : rectoLogoDark}
+                alt="Recto"
                 priority
                 loading="eager"
                 width={100}
                 height={100}
+                className=" transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
               />
             </Link>
 
@@ -198,11 +201,11 @@ export function Navbar() {
               className="flex items-center gap-2 font-bold text-xl text-ink dark:text-ink tracking-tight"
             >
               <Image
-                src={isDarkMode ? DarkLogo : LightLogo}
+                src={isDarkMode ? rectoLogoLight : rectoLogoDark}
                 alt="Recto Logo"
                 priority
-                width={96}
-                height={40}
+                width={124}
+                height={37}
               />
             </Link>
 

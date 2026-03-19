@@ -5,7 +5,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function useLenis() {
   useEffect(() => {
-    const lenis = new Lenis();
+    const lenis = new Lenis({
+      wheelMultiplier: 0.7,
+      touchMultiplier: 1.5,
+    });
 
     // Sync scroll position with ScrollTrigger
     lenis.on("scroll", ScrollTrigger.update);
