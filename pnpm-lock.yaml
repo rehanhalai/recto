@@ -59,6 +59,9 @@ importers:
       '@recto/assets':
         specifier: workspace:*
         version: link:../../packages/assets
+      '@recto/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@tanstack/react-query':
         specifier: ^5.90.20
         version: 5.90.21(react@19.2.3)
@@ -168,6 +171,9 @@ importers:
       '@recto/assets':
         specifier: workspace:*
         version: link:../../packages/assets
+      '@recto/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       axios:
         specifier: ^1.13.6
         version: 1.13.6
@@ -315,6 +321,12 @@ importers:
         version: 8.56.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
 
   packages/assets: {}
+
+  packages/types:
+    devDependencies:
+      drizzle-orm:
+        specifier: '*'
+        version: 0.45.1(postgres@3.4.8)
 
 packages:
 
