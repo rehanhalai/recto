@@ -8,14 +8,20 @@ type ApiEnvelope<T> = {
   data: T;
 };
 
+export type FeedType = "explore" | "following";
+
 async function fetchFeed({
+  type,
   pageParam,
 }: {
+  type: FeedType;
   pageParam?: string;
 }): Promise<PaginatedResponse<PostWithRelations>> {
+  const endpoint = type === "following" ? "/posts/following" : "/posts/feed";
+
   const response = await apiInstance.get<
     ApiEnvelope<PaginatedResponse<PostWithRelations>>
-  >("/posts/feed", {
+  >(endpoint, {
     limit: 10,
     cursor: pageParam,
   });
@@ -23,19 +29,23 @@ async function fetchFeed({
   return response.data;
 }
 
-export function useFeed(initialData?: PaginatedResponse<PostWithRelations>) {
+export function useFeed(
+  type: FeedType = "explore",
+  initialData?: PaginatedResponse<PostWithRelations>,
+) {
   const query = useInfiniteQuery<PaginatedResponse<PostWithRelations>, Error>({
-    queryKey: ["feed", "posts"],
+    queryKey: ["feed", "posts", type],
     queryFn: ({ pageParam }) =>
-      fetchFeed({ pageParam: pageParam as string | undefined }),
+      fetchFeed({ type, pageParam: pageParam as string | undefined }),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    initialData: initialData
-      ? {
-          pages: [initialData],
-          pageParams: [undefined],
-        }
-      : undefined,
+    initialData:
+      type === "explore" && initialData
+        ? {
+            pages: [initialData],
+            pageParams: [undefined],
+          }
+        : undefined,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 

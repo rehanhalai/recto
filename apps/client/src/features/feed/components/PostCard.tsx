@@ -43,8 +43,8 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
     id,
     content,
     image,
-    likeCount,
-    commentCount,
+    likesCount,
+    commentsCount,
     createdAt,
     author,
     book,
@@ -72,7 +72,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
           />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5 text-sm">
-              <span className="font-semibold text-ink line-clamp-1 max-w-[150px]">
+              <span className="font-semibold text-ink line-clamp-1 max-w-[9.375rem]">
                 {authorDisplayName}
               </span>
               <span className="text-ink-muted">·</span>
@@ -108,7 +108,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
       {/* Optional Book Block */}
       {book && (
         <div className="flex items-start gap-4 p-3 rounded-lg border border-border-subtle bg-paper/50">
-          <div className="flex-shrink-0 relative w-16 h-24 rounded-md overflow-hidden bg-paper flex items-center justify-center border border-border-subtle shadow-sm">
+          <div className="shrink-0 relative w-16 h-24 rounded-md overflow-hidden bg-paper flex items-center justify-center border border-border-subtle shadow-sm">
             {book.coverImage ? (
               // Important: Ensure you add 'books.google.com' to your target 'remotePatterns' in 'next.config.ts'
               <Image
@@ -177,7 +177,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
             weight={likedByMe ? "fill" : "regular"}
             className={likedByMe ? "text-gold" : ""}
           />
-          <span className="text-sm font-medium">{likeCount}</span>
+          <span className="text-sm font-medium">{likesCount}</span>
         </button>
 
         <button
@@ -186,7 +186,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
           className="flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors focus:outline-none"
         >
           <ChatCircle size={20} weight="regular" />
-          <span className="text-sm font-medium">{commentCount}</span>
+          <span className="text-sm font-medium">{commentsCount}</span>
         </button>
       </footer>
     </article>

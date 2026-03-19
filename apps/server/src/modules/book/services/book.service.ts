@@ -2,8 +2,8 @@ import { Injectable, Inject, NotFoundException } from "@nestjs/common";
 import { DRIZZLE } from "../../../../db/db.module";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../../../../db/schema";
-import { books } from "../../../../db/schema";
-import { eq } from "drizzle-orm";
+import { books, posts } from "../../../../db/schema";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { BookQueryService } from "./book-query.service";
 import { BookSearchService } from "./book-search.service";
 import { SearchBooksDto } from "../dto/book.dto";
@@ -17,6 +17,45 @@ export class BookService {
     private readonly bookSearchService: BookSearchService,
     private readonly affiliateService: AffiliateService,
   ) {}
+
+  async getTrending(limit = 10) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const popularBookIds = await this.db
+      .select({
+        bookId: posts.bookId,
+        count: sql<number>`count(${posts.id})`.as("mention_count"),
+      })
+      .from(posts)
+      .where(
+        and(
+          gt(posts.createdAt, thirtyDaysAgo),
+          sql`${posts.bookId} IS NOT NULL`,
+        ),
+      )
+      .groupBy(posts.bookId)
+      .orderBy(desc(sql`mention_count`))
+      .limit(limit);
+
+    if (popularBookIds.length === 0) {
+      return this.db.query.books.findMany({
+        limit,
+        with: {
+          authors: true,
+        },
+      });
+    }
+
+    const bookIds = popularBookIds.map((b) => b.bookId!);
+
+    return this.db.query.books.findMany({
+      where: (books, { inArray }) => inArray(books.id, bookIds),
+      with: {
+        authors: true,
+      },
+    });
+  }
 
   /**
    * Get Book (OPTIMIZED - Primary Entry Point)

@@ -21,7 +21,6 @@ const defaultHeaders: Record<string, string> = {
 
 const buildUrl = (endpoint: string, params?: QueryParams): string => {
   const url = new URL(`${config.apiUrl}${endpoint}`);
-  console.log(url);
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {

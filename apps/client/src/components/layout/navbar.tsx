@@ -173,9 +173,8 @@ export function Navbar() {
                 src={isDarkMode ? rectoLogoLight : rectoLogoDark}
                 alt="Recto"
                 priority
-                loading="eager"
-                width={100}
-                height={100}
+                width={124}
+                height={40}
                 className=" transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
               />
             </Link>

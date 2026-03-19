@@ -1,17 +1,17 @@
 export type UserBookStatus = "wishlist" | "reading" | "finished";
 
 export interface Book {
-  _id: string;
+  id: string;
   externalId?: string;
   title: string;
   subtitle?: string;
-  authors: string[];
+  authors?: { id: string; bookId: string; authorName: string }[];
   genres: string[];
   releaseDate?: string;
   description?: string;
   averageRating?: number;
   ratingsCount?: number;
-  languages?: string[];
+  language?: string;
   coverImage?: string;
   cover_i?: number;
   pageCount?: number;
@@ -48,7 +48,7 @@ export interface AuthorSearchResponse {
 }
 
 export interface UserBook {
-  _id: string;
+  id: string;
   bookId: string;
   book?: Book;
   status: UserBookStatus;
@@ -59,10 +59,10 @@ export interface UserBook {
 }
 
 export interface Review {
-  _id: string;
+  id: string;
   bookId: string;
   user: {
-    _id?: string;
+    id?: string;
     name?: string;
     userName?: string;
     avatarImage?: string;
@@ -82,11 +82,11 @@ export interface BookListItem {
 }
 
 export interface BookList {
-  _id: string;
+  id: string;
   user_id:
     | string
     | {
-        _id: string;
+        id: string;
         userName?: string;
         fullName?: string;
         avatarImage?: string;

@@ -12,6 +12,15 @@ import { SearchBooksDto } from "./dto/book.dto";
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
+  @Get("trending")
+  async getTrending(@Query("limit") limit?: number): Promise<any> {
+    const books = await this.bookService.getTrending(limit ?? 10);
+    return {
+      data: books,
+      message: "Trending books fetched successfully",
+    };
+  }
+
   @Get("affiliate-links/:bookId")
   async getAffiliateLinks(
     @Param("bookId") bookId: string,

@@ -4,5 +4,6 @@ export { FeedSection } from "./components/FeedSection";
 export { HeroStrip } from "./components/HeroStrip";
 export { FeedClient } from "./components/FeedClient";
 export { FeedHome } from "./components/FeedHome";
+export { getExplorePosts } from "./api/get-explore-posts";
 export { useFeed } from "./hooks/useFeed";
 export { useCurrentRead } from "./hooks/useCurrentRead";

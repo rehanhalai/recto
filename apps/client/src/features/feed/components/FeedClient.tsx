@@ -11,15 +11,16 @@ import {
 import type { PostWithRelations, PaginatedResponse } from "@recto/types";
 import { apiInstance } from "@/lib/api";
 
-import { useFeed } from "../hooks/useFeed";
+import { useFeed, type FeedType } from "../hooks/useFeed";
 import { PostCard } from "./PostCard";
 import { PostCardSkeleton } from "./PostCardSkeleton";
 
 type FeedClientProps = {
   initialData?: PaginatedResponse<PostWithRelations>;
+  type?: FeedType;
 };
 
-export function FeedClient({ initialData }: FeedClientProps) {
+export function FeedClient({ initialData, type = "explore" }: FeedClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -30,7 +31,7 @@ export function FeedClient({ initialData }: FeedClientProps) {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useFeed(initialData);
+  } = useFeed(type, initialData);
 
   const { ref, inView } = useInView({
     rootMargin: "200px",
@@ -74,9 +75,9 @@ export function FeedClient({ initialData }: FeedClientProps) {
                 return {
                   ...post,
                   isLikedByMe: !isLikedByMe,
-                  likeCount: isLikedByMe
-                    ? Math.max(0, post.likeCount - 1)
-                    : post.likeCount + 1,
+                  likesCount: isLikedByMe
+                    ? Math.max(0, post.likesCount - 1)
+                    : post.likesCount + 1,
                 };
               }
               return post;

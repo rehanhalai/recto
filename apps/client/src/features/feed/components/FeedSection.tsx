@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+"use client";
 import Link from "next/link";
 import React from "react";
 import { ArrowRight } from "@phosphor-icons/react";
