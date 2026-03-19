@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/fetch";
+import { apiInstance } from "@/lib/api";
 import {
   ApiResponse,
   AuthorSearchResponse,
@@ -50,10 +50,7 @@ interface UpdateReviewPayload {
 }
 
 export const fetchBook = (payload: GetBookPayload) =>
-  apiFetch<ApiResponse<Book>>("/books/getbook", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  apiInstance.post<ApiResponse<Book>>("/books/getbook", payload);
 
 // export const searchBooks = (params: SearchBooksParams) =>
 //   apiClient.get<

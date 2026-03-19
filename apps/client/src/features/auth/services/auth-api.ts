@@ -3,7 +3,8 @@
  * Handles all authentication-related API calls matching the server endpoints
  */
 
-import { apiFetch, getBaseUrl } from "@/lib/fetch";
+import { apiInstance } from "@/lib/api";
+import { config } from "@/config";
 import {
   LoginCredentials,
   SignupCredentials,
@@ -30,10 +31,10 @@ import {
 export const signupRequest = async (
   credentials: SignupCredentials,
 ): Promise<SignupOTPResponse> => {
-  const response = await apiFetch<SignupOTPResponse>("/auth/signup", {
-    method: "POST",
-    body: JSON.stringify(credentials),
-  });
+  const response = await apiInstance.post<SignupOTPResponse>(
+    "/auth/signup",
+    credentials,
+  );
   return response;
 };
 
@@ -43,12 +44,9 @@ export const signupRequest = async (
 export const verifySignupOTP = async (
   verification: OTPVerification,
 ): Promise<ApiResponse<SignupVerifyResponse>> => {
-  const response = await apiFetch<ApiResponse<SignupVerifyResponse>>(
+  const response = await apiInstance.post<ApiResponse<SignupVerifyResponse>>(
     "/auth/signup-verify",
-    {
-      method: "POST",
-      body: JSON.stringify(verification),
-    },
+    verification,
   );
   return response;
 };
@@ -63,10 +61,10 @@ export const verifySignupOTP = async (
 export const loginRequest = async (
   credentials: LoginCredentials,
 ): Promise<AuthResponse> => {
-  const response = await apiFetch<AuthResponse>("/auth/signin", {
-    method: "POST",
-    body: JSON.stringify(credentials),
-  });
+  const response = await apiInstance.post<AuthResponse>(
+    "/auth/signin",
+    credentials,
+  );
 
   return response;
 };
@@ -79,9 +77,9 @@ export const loginRequest = async (
  * Refresh access token using refresh token from response
  */
 export const refreshAccessToken = async (): Promise<AuthResponse> => {
-  const response = await apiFetch<AuthResponse>("/user/refresh-accesstoken", {
-    method: "POST",
-  });
+  const response = await apiInstance.post<AuthResponse>(
+    "/user/refresh-accesstoken",
+  );
 
   return response;
 };
@@ -95,7 +93,7 @@ export const refreshAccessToken = async (): Promise<AuthResponse> => {
  */
 export const logoutRequest = async (): Promise<void> => {
   try {
-    await apiFetch<ApiResponse<{}>>("/auth/logout", { method: "POST" });
+    await apiInstance.post<ApiResponse<{}>>("/auth/logout");
   } catch (error) {
     console.error("Logout request failed:", error);
   } finally {
@@ -111,7 +109,7 @@ export const logoutRequest = async (): Promise<void> => {
  * Get current authenticated user
  */
 export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
-  return apiFetch<ApiResponse<User>>("/user/whoami");
+  return apiInstance.get<ApiResponse<User>>("/user/whoami");
 };
 
 // ============================================
@@ -123,7 +121,7 @@ export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
  * User should be redirected to this URL
  */
 export const getGoogleAuthUrl = (): string => {
-  return `${getBaseUrl()}/auth/google`;
+  return `${config.apiUrl}/auth/google`;
 };
 
 /**
@@ -167,10 +165,7 @@ export const handleGoogleCallback = async (): Promise<
 export const forgotPasswordRequest = async (
   data: ForgotPasswordRequest,
 ): Promise<ApiResponse<{}>> => {
-  return apiFetch<ApiResponse<{}>>("/auth/forgot-password", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  return apiInstance.post<ApiResponse<{}>>("/auth/forgot-password", data);
 };
 
 /**
@@ -179,12 +174,9 @@ export const forgotPasswordRequest = async (
 export const verifyPasswordResetOTP = async (
   data: PasswordResetOTPVerification,
 ): Promise<ApiResponse<{ resetToken: string }>> => {
-  return apiFetch<ApiResponse<{ resetToken: string }>>(
+  return apiInstance.post<ApiResponse<{ resetToken: string }>>(
     "/auth/password-otp-verify",
-    {
-      method: "POST",
-      body: JSON.stringify(data),
-    },
+    data,
   );
 };
 
@@ -194,10 +186,7 @@ export const verifyPasswordResetOTP = async (
 export const setNewPassword = async (
   data: NewPasswordRequest,
 ): Promise<ApiResponse<{}>> => {
-  return apiFetch<ApiResponse<{}>>("/auth/reset-password", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  return apiInstance.post<ApiResponse<{}>>("/auth/reset-password", data);
 };
 
 // ============================================
@@ -210,10 +199,7 @@ export const setNewPassword = async (
 export const changePassword = async (
   data: ChangePasswordRequest,
 ): Promise<ApiResponse<{}>> => {
-  return apiFetch<ApiResponse<{}>>("/auth/change-password", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  return apiInstance.post<ApiResponse<{}>>("/auth/change-password", data);
 };
 
 /**
@@ -222,10 +208,7 @@ export const changePassword = async (
 export const updateProfile = async (
   data: ProfileUpdate,
 ): Promise<ApiResponse<User>> => {
-  return apiFetch<ApiResponse<User>>("/user/update-profile", {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
+  return apiInstance.patch<ApiResponse<User>>("/user/update-profile", data);
 };
 
 /**
@@ -234,7 +217,7 @@ export const updateProfile = async (
 export const checkUsernameAvailability = async (
   userName: string,
 ): Promise<ApiResponse<{ isAvailable: boolean }>> => {
-  return apiFetch<ApiResponse<{ isAvailable: boolean }>>(
+  return apiInstance.get<ApiResponse<{ isAvailable: boolean }>>(
     `/user/check?userName=${encodeURIComponent(userName)}`,
   );
 };

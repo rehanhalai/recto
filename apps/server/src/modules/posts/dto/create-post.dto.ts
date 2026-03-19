@@ -1,19 +1,13 @@
-import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
-
-  @IsString()
-  @IsNotEmpty()
+  @MaxLength(500)
   content: string;
 
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  coverImage?: string;
-
-  @IsUUID()
-  @IsOptional()
+  @MaxLength(255)
   bookId?: string;
 }

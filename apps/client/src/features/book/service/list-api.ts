@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/fetch";
+import { apiInstance } from "@/lib/api";
 import { ApiResponse, BookList } from "../types";
 
 interface CreateListPayload {
@@ -30,53 +30,38 @@ interface ReorderPayload {
 }
 
 export const createList = (payload: CreateListPayload) =>
-  apiFetch<ApiResponse<BookList>>("/lists", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  apiInstance.post<ApiResponse<BookList>>("/lists", payload);
 
 export const updateList = (payload: UpdateListPayload) =>
-  apiFetch<ApiResponse<BookList>>(`/lists/${payload.listId}`, {
-    method: "PATCH",
-    body: JSON.stringify({
-      name: payload.name,
-      description: payload.description,
-      is_public: payload.is_public,
-    }),
+  apiInstance.patch<ApiResponse<BookList>>(`/lists/${payload.listId}`, {
+    name: payload.name,
+    description: payload.description,
+    is_public: payload.is_public,
   });
 
 export const deleteList = (listId: string) =>
-  apiFetch<ApiResponse<null>>(`/lists/${listId}`, {
-    method: "DELETE",
-  });
+  apiInstance.delete<ApiResponse<null>>(`/lists/${listId}`);
 
 export const addBookToList = (payload: AddBookPayload) =>
-  apiFetch<ApiResponse<BookList>>(`/lists/${payload.listId}/books`, {
-    method: "POST",
-    body: JSON.stringify({
-      book_id: payload.book_id,
-    }),
+  apiInstance.post<ApiResponse<BookList>>(`/lists/${payload.listId}/books`, {
+    book_id: payload.book_id,
   });
 
 export const removeBookFromList = (payload: RemoveBookPayload) =>
-  apiFetch<ApiResponse<BookList>>(
+  apiInstance.delete<ApiResponse<BookList>>(
     `/lists/${payload.listId}/books/${payload.bookId}`,
-    { method: "DELETE" },
   );
 
 export const reorderBooks = (payload: ReorderPayload) =>
-  apiFetch<ApiResponse<BookList>>(`/lists/${payload.listId}/reorder`, {
-    method: "PATCH",
-    body: JSON.stringify({
-      bookIds: payload.bookIds,
-    }),
+  apiInstance.patch<ApiResponse<BookList>>(`/lists/${payload.listId}/reorder`, {
+    bookIds: payload.bookIds,
   });
 
 export const getUserLists = () =>
-  apiFetch<ApiResponse<BookList[]>>("/lists/user/my-lists");
+  apiInstance.get<ApiResponse<BookList[]>>("/lists/user/my-lists");
 
 export const getPublicLists = (params?: { limit?: number; skip?: number }) =>
-  apiFetch<ApiResponse<BookList[]>>(
+  apiInstance.get<ApiResponse<BookList[]>>(
     "/lists/public" +
       (params
         ? "?" +

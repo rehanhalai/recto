@@ -1,6 +1,5 @@
 export const config = {
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api",
-  socketUrl: process.env.NEXT_PUBLIC_SOCKET_URL || "ws://localhost:3001",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api",
 };
 
 export const getRandomGenres = (count: number = 5): string[] => {

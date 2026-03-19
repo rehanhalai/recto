@@ -39,23 +39,3 @@ export const deleteCookie = (name: string): void => {
 export const hasCookie = (name: string): boolean => {
   return getCookie(name) !== null;
 };
-
-/**
- * Extract access token from httpOnly cookie and move to localStorage
- * Then delete the cookie (keeps refresh token cookie)
- *
- * Used when server sends both tokens as httpOnly cookies
- * and we want access token in localStorage for easy API access
- */
-export const extractAndMoveAccessToken = (): string | null => {
-  const accessToken = getCookie("accessToken");
-
-  if (accessToken) {
-    // Move to localStorage
-    localStorage.setItem("accessToken", accessToken);
-    // Delete the cookie
-    deleteCookie("accessToken");
-  }
-
-  return accessToken;
-};

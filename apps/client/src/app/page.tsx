@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/fetch";
+import { apiInstance } from "@/lib/api";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { HeroScrollSequence } from "../features/landing/components/hero-scroll-sequence";
@@ -29,7 +29,7 @@ export default function LandingPage() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await apiFetch<{ success: boolean }>("/user/whoami");
+      const res = await apiInstance.get<{ success: boolean }>("/user/whoami");
       if (res.success) {
         router.replace("/home");
       } else {
