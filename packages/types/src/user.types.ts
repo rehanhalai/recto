@@ -3,11 +3,7 @@
  */
 
 import { InferSelectModel } from "drizzle-orm";
-import {
-  users,
-  sessions,
-  followers,
-} from "../../../apps/server/db/schema/users";
+import { users, sessions, followers } from "@recto/server/db/schema/users";
 
 // ─── Raw Inferred Types ───────────────────────────────────────────────────────
 

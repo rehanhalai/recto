@@ -10,7 +10,7 @@ import {
   reviewLikes,
   bookLists,
   bookListItems,
-} from "../../../apps/server/db/schema/interactions";
+} from "@recto/server/db/schema/interactions";
 
 // ─── Raw Inferred Types ───────────────────────────────────────────────────────
 

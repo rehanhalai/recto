@@ -8,7 +8,7 @@ import {
   bookAuthors,
   genres,
   bookGenres,
-} from "../../../apps/server/db/schema/books";
+} from "@recto/server/db/schema/books";
 
 // ─── Raw Inferred Types ───────────────────────────────────────────────────────
 

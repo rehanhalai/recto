@@ -10,7 +10,7 @@ import {
   postComments,
   postCommentLikes,
   blogs,
-} from "../../../apps/server/db/schema/content";
+} from "@recto/server/db/schema/content";
 
 // ─── Raw Inferred Types ───────────────────────────────────────────────────────
 
