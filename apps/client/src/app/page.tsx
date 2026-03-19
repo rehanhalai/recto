@@ -31,7 +31,7 @@ export default function LandingPage() {
     try {
       const res = await apiInstance.get<{ success: boolean }>("/user/whoami");
       if (res.success) {
-        router.replace("/home");
+        router.replace("/feed");
       } else {
         setCheckingAuth(false);
       }

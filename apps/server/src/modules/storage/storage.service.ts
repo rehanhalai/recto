@@ -13,29 +13,7 @@ import type {
   UploadResult,
 } from "./interfaces/upload-options.interface";
 
-// ---------------------------------------------------------------------------
-// Per-asset validation constraints
-// ---------------------------------------------------------------------------
-
-interface AssetConstraints {
-  maxSizeBytes: number;
-  allowedMimeTypes: string[];
-}
-
-const ASSET_CONSTRAINTS: Record<UploadAssetType, AssetConstraints> = {
-  [UploadAssetType.USER_AVATAR]: {
-    maxSizeBytes: 5 * 1024 * 1024, // 5 MB
-    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
-  },
-  [UploadAssetType.USER_COVER]: {
-    maxSizeBytes: 8 * 1024 * 1024, // 8 MB
-    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
-  },
-  [UploadAssetType.POST_IMAGE]: {
-    maxSizeBytes: 10 * 1024 * 1024, // 10 MB
-    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
-  },
-};
+import { ASSET_CONSTRAINTS } from "./constants/asset-constraints";
 
 // ---------------------------------------------------------------------------
 

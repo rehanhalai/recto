@@ -463,7 +463,7 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
         </div>
 
         <Button
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/feed")}
           className="w-full bg-black hover:bg-gray-900 text-white font-medium py-2.5"
           size="lg"
         >

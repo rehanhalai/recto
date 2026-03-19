@@ -42,7 +42,7 @@ export function LoginForm() {
     try {
       await login({ email: data.email, password: data.password });
       toast.success("Login successful!");
-      router.push("/home");
+      router.push("/feed");
     } catch (error: any) {
       const errorMessage =
         error?.data?.message ||

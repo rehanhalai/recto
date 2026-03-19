@@ -15,7 +15,7 @@ import {
   UserNameAvailabilityDto,
   SearchUserDto,
 } from "./dto/user.dto";
-import { AuthGuard, CurrentUser } from "../common";
+import { AuthGuard, OptionalAuthGuard, CurrentUser } from "../common";
 import type { AuthenticatedRequestUser } from "../common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 
@@ -120,6 +120,16 @@ export class UserController {
     return {
       ...user,
       message: "User fetched successfully.",
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get("me/current-read")
+  async getCurrentRead(@CurrentUser() user: AuthenticatedRequestUser) {
+    const currentRead = await this.userService.getCurrentRead(user.id);
+    return {
+      data: currentRead,
+      message: "Current read fetched successfully",
     };
   }
 }

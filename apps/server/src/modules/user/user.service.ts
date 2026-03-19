@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { StorageService } from "../storage/storage.service";
 import { UploadAssetType } from "../storage/enums/upload-asset-type.enum";
-import { eq, ilike } from "drizzle-orm";
+import { eq, ilike, and, desc } from "drizzle-orm";
 import { DRIZZLE } from "../../../db/db.module";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../../../db/schema";
@@ -179,11 +179,36 @@ export class UserService {
       with: {
         posts: {
           limit: 10,
-          orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+          orderBy: (posts) => [desc(posts.createdAt)],
         },
       },
     });
     if (!user) throw new NotFoundException("No user found matching the query.");
     return user;
+  }
+
+  async getCurrentRead(userId: string) {
+    const currentRead = await this.db.query.addedBooks.findFirst({
+      where: (addedBooks) =>
+        and(eq(addedBooks.userId, userId), eq(addedBooks.status, "reading")),
+      with: {
+        book: {
+          columns: {
+            id: true,
+            title: true,
+            coverImage: true,
+            sourceId: true,
+          },
+          with: {
+            authors: {
+              columns: {
+                authorName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return currentRead || null;
   }
 }

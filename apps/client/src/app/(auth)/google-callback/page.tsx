@@ -18,7 +18,7 @@ export default function GoogleCallbackPage() {
         console.log("Google OAuth callback response:", response);
         // Store user in auth store
         setUser(response.data?.user ?? null);
-        router.push("/home");
+        router.push("/feed");
       } catch (err) {
         console.error("Google authentication failed:", err);
         setError(err instanceof Error ? err.message : "Authentication failed");

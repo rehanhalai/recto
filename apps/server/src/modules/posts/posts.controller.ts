@@ -6,18 +6,21 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req,
   Patch,
   Query,
-  UploadedFile,
+  ParseIntPipe,
   UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { PostsService } from "./posts.service";
 import { CreatePostDto } from "./dto/create-post.dto";
 import { GetFeedDto } from "./dto/get-feed.dto";
 import { UpdatePostDto } from "./dto/update-post.dto";
-import { AuthGuard, OptionalAuthGuard } from "../common";
+import { AuthGuard, OptionalAuthGuard, CurrentUser } from "../common";
+import type { AuthenticatedRequestUser } from "../common/guards/auth.guard";
+import { FileValidatorPipe } from "../common/pipes/file-validator.pipeline";
+import { UploadAssetType } from "../storage/enums/upload-asset-type.enum";
 
 @Controller("posts")
 export class PostsController {
@@ -27,26 +30,26 @@ export class PostsController {
   @Post()
   @UseInterceptors(FileInterceptor("image"))
   async create(
-    @Req() req: any,
+    @CurrentUser() user: AuthenticatedRequestUser,
     @Body() createPostDto: CreatePostDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFile(new FileValidatorPipe(UploadAssetType.POST_IMAGE))
+    file?: Express.Multer.File,
   ) {
-    const post = await this.postsService.create(
-      req.user.id,
-      createPostDto,
-      file,
-    );
+    const post = await this.postsService.create(user.id, createPostDto, file);
     return {
       data: post,
       message: "Post created successfully",
     };
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @Get("feed")
-  async getFeed(@Req() req: any, @Query() query: GetFeedDto) {
+  async getFeed(
+    @CurrentUser() user: AuthenticatedRequestUser | null,
+    @Query() query: GetFeedDto,
+  ) {
     const result = await this.postsService.getFeed(
-      req.user.id,
+      user?.id,
       query.cursor,
       query.limit ?? 10,
     );
@@ -57,10 +60,86 @@ export class PostsController {
     };
   }
 
+  @UseGuards(AuthGuard)
+  @Get("following")
+  async getFollowingFeed(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Query() query: GetFeedDto,
+  ) {
+    const result = await this.postsService.getFollowingFeed(
+      user.id,
+      query.cursor,
+      query.limit ?? 10,
+    );
+
+    return {
+      data: result,
+      message: "Following feed fetched successfully",
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get("me")
+  async getMyPosts(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Query() query: GetFeedDto,
+  ) {
+    const result = await this.postsService.getUserPosts(
+      user.id,
+      user.id,
+      query.cursor,
+      query.limit ?? 10,
+    );
+
+    return {
+      data: result,
+      message: "Your posts fetched successfully",
+    };
+  }
+
+  @UseGuards(OptionalAuthGuard)
+  @Get("user/:authorId")
+  async getUserPosts(
+    @CurrentUser() user: AuthenticatedRequestUser | null,
+    @Param("authorId") authorId: string,
+    @Query() query: GetFeedDto,
+  ) {
+    const result = await this.postsService.getUserPosts(
+      authorId,
+      user?.id,
+      query.cursor,
+      query.limit ?? 10,
+    );
+
+    return {
+      data: result,
+      message: "User's posts fetched successfully",
+    };
+  }
+
+  @UseGuards(OptionalAuthGuard)
+  @Get("trending")
+  async getTrendingFeed(
+    @CurrentUser() user: AuthenticatedRequestUser | null,
+    @Query("page", new ParseIntPipe({ optional: true })) page = 1,
+    @Query("limit", new ParseIntPipe({ optional: true })) limit = 10,
+  ) {
+    const result = await this.postsService.getTrendingFeed(
+      user?.id,
+      page,
+      limit,
+    );
+
+    return {
+      data: result,
+      message: "Trending feed fetched successfully",
+    };
+  }
+
   @UseGuards(OptionalAuthGuard)
   @Get()
-  async findAll(@Req() req: any) {
-    const posts = await this.postsService.findAll(req.user?.id);
+  async findAll(@CurrentUser() user: AuthenticatedRequestUser | null) {
+    const posts = await this.postsService.findAll(user?.id);
     return {
       data: posts,
       message: "Posts fetched successfully",
@@ -69,8 +148,11 @@ export class PostsController {
 
   @UseGuards(OptionalAuthGuard)
   @Get(":id")
-  async findOne(@Req() req: any, @Param("id") id: string) {
-    const post = await this.postsService.findOneById(id, req.user?.id);
+  async findOne(
+    @CurrentUser() user: AuthenticatedRequestUser | null,
+    @Param("id") id: string,
+  ) {
+    const post = await this.postsService.findOneById(id, user?.id);
     return {
       data: post,
       message: "Post fetched successfully",
@@ -81,14 +163,15 @@ export class PostsController {
   @Patch(":id")
   @UseInterceptors(FileInterceptor("image"))
   async update(
-    @Req() req: any,
+    @CurrentUser() user: AuthenticatedRequestUser,
     @Param("id") id: string,
     @Body() updatePostDto: UpdatePostDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFile(new FileValidatorPipe(UploadAssetType.POST_IMAGE))
+    file?: Express.Multer.File,
   ) {
     const post = await this.postsService.update(
       id,
-      req.user.id,
+      user.id,
       updatePostDto,
       file,
     );
@@ -100,8 +183,11 @@ export class PostsController {
 
   @UseGuards(AuthGuard)
   @Post(":id/like")
-  async like(@Req() req: any, @Param("id") id: string) {
-    const result = await this.postsService.like(id, req.user.id);
+  async like(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("id") id: string,
+  ) {
+    const result = await this.postsService.like(id, user.id);
     return {
       data: result,
       message: "Post liked successfully",
@@ -110,8 +196,11 @@ export class PostsController {
 
   @UseGuards(AuthGuard)
   @Delete(":id/like")
-  async unlike(@Req() req: any, @Param("id") id: string) {
-    const result = await this.postsService.unlike(id, req.user.id);
+  async unlike(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("id") id: string,
+  ) {
+    const result = await this.postsService.unlike(id, user.id);
     return {
       data: result,
       message: "Post unliked successfully",
@@ -120,10 +209,39 @@ export class PostsController {
 
   @UseGuards(AuthGuard)
   @Delete(":id")
-  async remove(@Req() req: any, @Param("id") id: string) {
-    await this.postsService.remove(id, req.user.id);
+  async remove(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("id") id: string,
+  ) {
+    await this.postsService.remove(id, user.id);
     return {
       message: "Post removed successfully",
+    };
+  }
+
+  @Get(":id/likes")
+  async getPostLikes(
+    @Param("id") id: string,
+    @Query("page", new ParseIntPipe({ optional: true })) page = 1,
+    @Query("limit", new ParseIntPipe({ optional: true })) limit = 20,
+  ) {
+    const result = await this.postsService.getPostLikes(id, page, limit);
+    return {
+      data: result,
+      message: "Likes fetched successfully",
+    };
+  }
+
+  @Get(":id/comments")
+  async getPostComments(
+    @Param("id") id: string,
+    @Query("page", new ParseIntPipe({ optional: true })) page = 1,
+    @Query("limit", new ParseIntPipe({ optional: true })) limit = 20,
+  ) {
+    const result = await this.postsService.getPostComments(id, page, limit);
+    return {
+      data: result,
+      message: "Comments fetched successfully",
     };
   }
 }

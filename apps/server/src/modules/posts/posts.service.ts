@@ -10,8 +10,15 @@ import { UpdatePostDto } from "./dto/update-post.dto";
 import { DRIZZLE } from "../../../db/db.module";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../../../db/schema";
-import { books, postLikes, posts, users } from "../../../db/schema";
-import { and, desc, eq, inArray, lt } from "drizzle-orm";
+import {
+  books,
+  postLikes,
+  posts,
+  users,
+  followers,
+  postComments,
+} from "../../../db/schema";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { StorageService } from "../storage/storage.service";
 import { UploadAssetType } from "../storage/enums/upload-asset-type.enum";
 
@@ -40,31 +47,7 @@ export class PostsService {
     return new Set(likedRows.map((row) => row.postId));
   }
 
-  private toPostWithRelations(
-    row: {
-      id: string;
-      authorId: string;
-      bookId: string | null;
-      content: string;
-      image: string | null;
-      likesCount: number;
-      commentsCount: number;
-      createdAt: Date;
-      updatedAt: Date;
-      author: {
-        id: string | null;
-        userName: string | null;
-        fullName: string | null;
-        avatarImage: string | null;
-      } | null;
-      book: {
-        id: string | null;
-        title: string | null;
-        coverImage: string | null;
-      } | null;
-    },
-    isLikedByMe: boolean,
-  ) {
+  private toPostWithRelations(row: any, isLikedByMe: boolean) {
     return {
       id: row.id,
       authorId: row.authorId,
@@ -75,24 +58,25 @@ export class PostsService {
       commentsCount: row.commentsCount,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
-      likeCount: row.likesCount,
-      commentCount: row.commentsCount,
       isLikedByMe,
-      author: row.author?.id
-        ? {
-            id: row.author.id,
-            userName: row.author.userName ?? "unknown",
-            fullName: row.author.fullName,
-            avatarImage: row.author.avatarImage,
-          }
-        : undefined,
-      book: row.book?.id
-        ? {
-            id: row.book.id,
-            title: row.book.title ?? "Untitled",
-            coverImage: row.book.coverImage,
-          }
-        : null,
+      author:
+        row.author?.id || row.authorId
+          ? {
+              id: row.author?.id || row.authorId,
+              userName:
+                row.author?.userName || row.author_userName || "unknown",
+              fullName: row.author?.fullName || row.author_fullName,
+              avatarImage: row.author?.avatarImage || row.author_avatarImage,
+            }
+          : undefined,
+      book:
+        row.book?.id || row.bookId
+          ? {
+              id: row.book?.id || row.bookId,
+              title: row.book?.title || row.book_title || "Untitled",
+              coverImage: row.book?.coverImage || row.book_coverImage,
+            }
+          : null,
     };
   }
 
@@ -112,13 +96,15 @@ export class PostsService {
       }
     }
 
-    const uploadResult = file
-      ? await this.storageService.upload(
-          file,
-          UploadAssetType.POST_IMAGE,
-          userId,
-        )
-      : null;
+    let imageUrl: string | null = null;
+    if (file) {
+      const uploadResult = await this.storageService.upload(
+        file,
+        UploadAssetType.POST_IMAGE,
+        userId,
+      );
+      imageUrl = uploadResult.url;
+    }
 
     const [newPost] = await this.db
       .insert(posts)
@@ -126,7 +112,7 @@ export class PostsService {
         authorId: userId,
         content: createPostDto.content,
         bookId: createPostDto.bookId ?? null,
-        image: uploadResult?.url ?? null,
+        image: imageUrl,
       })
       .returning();
 
@@ -160,7 +146,8 @@ export class PostsService {
       .from(posts)
       .leftJoin(users, eq(posts.authorId, users.id))
       .leftJoin(books, eq(posts.bookId, books.id))
-      .orderBy(desc(posts.createdAt));
+      .orderBy(desc(posts.createdAt))
+      .limit(50);
 
     const likedSet = await this.getLikedPostIdSet(
       currentUserId,
@@ -210,16 +197,15 @@ export class PostsService {
     return this.toPostWithRelations(row, likedSet.has(row.id));
   }
 
-  async getFeed(userId: string, cursor?: string, limit = 10) {
+  async getFeed(userId: string | undefined, cursor?: string, limit = 10) {
     const safeLimit = Math.min(Math.max(limit || 10, 1), 50);
 
     let cursorDate: Date | undefined;
     if (cursor) {
       const parsed = new Date(cursor);
-      if (Number.isNaN(parsed.getTime())) {
-        throw new BadRequestException("Invalid cursor value");
+      if (!Number.isNaN(parsed.getTime())) {
+        cursorDate = parsed;
       }
-      cursorDate = parsed;
     }
 
     const baseQuery = this.db
@@ -271,7 +257,7 @@ export class PostsService {
     );
 
     const nextCursor = hasMore
-      ? (pageRows[pageRows.length - 1]?.createdAt?.toISOString?.() ?? null)
+      ? (pageRows[pageRows.length - 1]?.createdAt?.toISOString() ?? null)
       : null;
 
     return {
@@ -279,6 +265,117 @@ export class PostsService {
       nextCursor,
       hasMore,
     };
+  }
+
+  async getFollowingFeed(userId: string, cursor?: string, limit = 10) {
+    const safeLimit = Math.min(Math.max(limit || 10, 1), 50);
+
+    let cursorDate: Date | undefined;
+    if (cursor) {
+      const parsed = new Date(cursor);
+      if (!Number.isNaN(parsed.getTime())) {
+        cursorDate = parsed;
+      }
+    }
+
+    const baseQuery = this.db
+      .select({
+        id: posts.id,
+        authorId: posts.authorId,
+        bookId: posts.bookId,
+        content: posts.content,
+        image: posts.image,
+        likesCount: posts.likesCount,
+        commentsCount: posts.commentsCount,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
+        author: {
+          id: users.id,
+          userName: users.userName,
+          fullName: users.fullName,
+          avatarImage: users.avatarImage,
+        },
+        book: {
+          id: books.id,
+          title: books.title,
+          coverImage: books.coverImage,
+        },
+      })
+      .from(posts)
+      .innerJoin(followers, eq(posts.authorId, followers.followingId))
+      .leftJoin(users, eq(posts.authorId, users.id))
+      .leftJoin(books, eq(posts.bookId, books.id));
+
+    const rows = await (cursorDate
+      ? baseQuery
+          .where(
+            and(
+              eq(followers.followerId, userId),
+              lt(posts.createdAt, cursorDate),
+            ),
+          )
+          .orderBy(desc(posts.createdAt), desc(posts.id))
+          .limit(safeLimit + 1)
+      : baseQuery
+          .where(eq(followers.followerId, userId))
+          .orderBy(desc(posts.createdAt), desc(posts.id))
+          .limit(safeLimit + 1));
+
+    const hasMore = rows.length > safeLimit;
+    const pageRows = hasMore ? rows.slice(0, safeLimit) : rows;
+
+    const likedSet = await this.getLikedPostIdSet(
+      userId,
+      pageRows.map((row) => row.id),
+    );
+
+    const data = pageRows.map((row) =>
+      this.toPostWithRelations(row, likedSet.has(row.id)),
+    );
+
+    const nextCursor = hasMore
+      ? (pageRows[pageRows.length - 1]?.createdAt?.toISOString() ?? null)
+      : null;
+
+    return {
+      data,
+      nextCursor,
+      hasMore,
+    };
+  }
+
+  async getTrendingFeed(
+    currentUserId: string | undefined,
+    page = 1,
+    limit = 10,
+  ) {
+    const offset = (page - 1) * limit;
+
+    const trendingQuery = sql`
+      SELECT 
+        p.id, p.author_id as "authorId", p.book_id as "bookId", p.content, p.image, 
+        p.likes_count as "likesCount", p.comments_count as "commentsCount", 
+        p.created_at as "createdAt", p.updated_at as "updatedAt",
+        u.user_name as "author_userName", u.full_name as "author_fullName", u.avatar_image as "author_avatarImage",
+        b.title as "book_title", b.cover_image as "book_coverImage"
+      FROM posts p
+      LEFT JOIN users u ON p.author_id = u.id
+      LEFT JOIN books b ON p.book_id = b.id
+      WHERE p.created_at > NOW() - INTERVAL '7 days'
+      ORDER BY (p.likes_count * 3 + p.comments_count * 2 + 0) / POWER(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2, 1.8) DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const rows = (await this.db.execute(trendingQuery)) as any[];
+
+    const likedSet = await this.getLikedPostIdSet(
+      currentUserId,
+      rows.map((row) => row.id),
+    );
+
+    return rows.map((row) =>
+      this.toPostWithRelations(row, likedSet.has(row.id)),
+    );
   }
 
   async update(
@@ -324,7 +421,7 @@ export class PostsService {
       updateData.image = uploadResult.url;
     }
 
-    if (dto.content !== undefined) updateData.content = dto.content;
+    if (dto.content !== undefined) updateData.content = dto.content as string;
     if (dto.bookId !== undefined) updateData.bookId = dto.bookId;
 
     if (Object.keys(updateData).length === 1) {
@@ -387,5 +484,130 @@ export class PostsService {
 
     await this.db.delete(posts).where(eq(posts.id, id));
     return { success: true };
+  }
+
+  async getUserPosts(
+    authorId: string,
+    currentUserId?: string,
+    cursor?: string,
+    limit = 10,
+  ) {
+    const safeLimit = Math.min(Math.max(limit || 10, 1), 50);
+
+    let cursorDate: Date | undefined;
+    if (cursor) {
+      const parsed = new Date(cursor);
+      if (!Number.isNaN(parsed.getTime())) {
+        cursorDate = parsed;
+      }
+    }
+
+    const baseQuery = this.db
+      .select({
+        id: posts.id,
+        authorId: posts.authorId,
+        bookId: posts.bookId,
+        content: posts.content,
+        image: posts.image,
+        likesCount: posts.likesCount,
+        commentsCount: posts.commentsCount,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
+        author: {
+          id: users.id,
+          userName: users.userName,
+          fullName: users.fullName,
+          avatarImage: users.avatarImage,
+        },
+        book: {
+          id: books.id,
+          title: books.title,
+          coverImage: books.coverImage,
+        },
+      })
+      .from(posts)
+      .leftJoin(users, eq(posts.authorId, users.id))
+      .leftJoin(books, eq(posts.bookId, books.id));
+
+    const rows = await (cursorDate
+      ? baseQuery
+          .where(
+            and(eq(posts.authorId, authorId), lt(posts.createdAt, cursorDate)),
+          )
+          .orderBy(desc(posts.createdAt), desc(posts.id))
+          .limit(safeLimit + 1)
+      : baseQuery
+          .where(eq(posts.authorId, authorId))
+          .orderBy(desc(posts.createdAt), desc(posts.id))
+          .limit(safeLimit + 1));
+
+    const hasMore = rows.length > safeLimit;
+    const pageRows = hasMore ? rows.slice(0, safeLimit) : rows;
+
+    const likedSet = await this.getLikedPostIdSet(
+      currentUserId,
+      pageRows.map((row) => row.id),
+    );
+
+    const data = pageRows.map((row) =>
+      this.toPostWithRelations(row, likedSet.has(row.id)),
+    );
+
+    const nextCursor = hasMore
+      ? (pageRows[pageRows.length - 1]?.createdAt?.toISOString() ?? null)
+      : null;
+
+    return {
+      data,
+      nextCursor,
+      hasMore,
+    };
+  }
+
+  async getPostLikes(postId: string, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
+
+    const rows = await this.db
+      .select({
+        id: users.id,
+        userName: users.userName,
+        fullName: users.fullName,
+        avatarImage: users.avatarImage,
+        createdAt: postLikes.createdAt,
+      })
+      .from(postLikes)
+      .innerJoin(users, eq(postLikes.userId, users.id))
+      .where(eq(postLikes.postId, postId))
+      .orderBy(desc(postLikes.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return rows;
+  }
+
+  async getPostComments(postId: string, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
+
+    const rows = await this.db
+      .select({
+        id: postComments.id,
+        content: postComments.content,
+        likesCount: postComments.likesCount,
+        createdAt: postComments.createdAt,
+        user: {
+          id: users.id,
+          userName: users.userName,
+          fullName: users.fullName,
+          avatarImage: users.avatarImage,
+        },
+      })
+      .from(postComments)
+      .innerJoin(users, eq(postComments.userId, users.id))
+      .where(eq(postComments.postId, postId))
+      .orderBy(desc(postComments.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return rows;
   }
 }

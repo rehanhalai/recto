@@ -166,7 +166,7 @@ export function Navbar() {
 
             {/* Logo (Center on Mobile) */}
             <Link
-              href="/home"
+              href="/feed"
               className="group flex items-center gap-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-gold p-1"
             >
               <Image
@@ -197,7 +197,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center justify-between w-full">
             {/* Left: Logo */}
             <Link
-              href="/home"
+              href="/feed"
               className="flex items-center gap-2 font-bold text-xl text-ink dark:text-ink tracking-tight"
             >
               <Image

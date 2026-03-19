@@ -19,7 +19,6 @@ export interface AuthenticatedRequestUser {
   id: string;
   sessionId: string;
   role: "user" | "admin" | "moderator";
-  email: string;
 }
 
 @Injectable()
@@ -65,7 +64,6 @@ export class AuthGuard implements CanActivate {
       where: eq(schema.users.id, payload.sub),
       columns: {
         id: true,
-        email: true,
         role: true,
       },
     });
@@ -78,7 +76,6 @@ export class AuthGuard implements CanActivate {
       id: user.id,
       sessionId: session.id,
       role: user.role,
-      email: user.email,
     } satisfies AuthenticatedRequestUser;
 
     return true;

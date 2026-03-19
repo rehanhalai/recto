@@ -35,7 +35,7 @@ const ASSET_CONFIG: Record<UploadAssetType, AssetConfig> = {
         crop: "fill",
         gravity: "face",
         quality: "auto:good",
-        fetch_format: "auto",
+        format: "webp",
       },
     ],
   },
@@ -49,7 +49,7 @@ const ASSET_CONFIG: Record<UploadAssetType, AssetConfig> = {
         crop: "fill",
         gravity: "auto",
         quality: "auto:good",
-        fetch_format: "auto",
+        format: "webp",
       },
     ],
   },
@@ -61,7 +61,7 @@ const ASSET_CONFIG: Record<UploadAssetType, AssetConfig> = {
         width: 1200,
         crop: "limit",
         quality: "auto:eco",
-        fetch_format: "auto",
+        format: "webp",
       },
     ],
   },
@@ -103,6 +103,7 @@ export class CloudinaryStorageProvider
         transformation: config.transformation,
         resource_type: "image",
         overwrite: true,
+        format: "webp",
       });
 
       return {
