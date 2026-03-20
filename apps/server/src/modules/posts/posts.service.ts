@@ -18,7 +18,7 @@ import {
   followers,
   postComments,
 } from "../../../db/schema";
-import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, or } from "drizzle-orm";
 import { StorageService } from "../storage/storage.service";
 import { UploadAssetType } from "../storage/enums/upload-asset-type.enum";
 
@@ -201,10 +201,13 @@ export class PostsService {
     const safeLimit = Math.min(Math.max(limit || 10, 1), 50);
 
     let cursorDate: Date | undefined;
+    let cursorId: string | undefined;
     if (cursor) {
-      const parsed = new Date(cursor);
+      const [rawDate, rawId] = cursor.split("|");
+      const parsed = new Date(rawDate);
       if (!Number.isNaN(parsed.getTime())) {
         cursorDate = parsed;
+        cursorId = rawId || undefined;
       }
     }
 
@@ -236,10 +239,20 @@ export class PostsService {
       .leftJoin(books, eq(posts.bookId, books.id));
 
     const rows = await (cursorDate
-      ? baseQuery
-          .where(lt(posts.createdAt, cursorDate))
-          .orderBy(desc(posts.createdAt), desc(posts.id))
-          .limit(safeLimit + 1)
+      ? cursorId
+        ? baseQuery
+            .where(
+              or(
+                lt(posts.createdAt, cursorDate),
+                and(eq(posts.createdAt, cursorDate), lt(posts.id, cursorId)),
+              ),
+            )
+            .orderBy(desc(posts.createdAt), desc(posts.id))
+            .limit(safeLimit + 1)
+        : baseQuery
+            .where(lt(posts.createdAt, cursorDate))
+            .orderBy(desc(posts.createdAt), desc(posts.id))
+            .limit(safeLimit + 1)
       : baseQuery
           .orderBy(desc(posts.createdAt), desc(posts.id))
           .limit(safeLimit + 1));
@@ -256,9 +269,11 @@ export class PostsService {
       this.toPostWithRelations(row, likedSet.has(row.id)),
     );
 
-    const nextCursor = hasMore
-      ? (pageRows[pageRows.length - 1]?.createdAt?.toISOString() ?? null)
-      : null;
+    const lastRow = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && lastRow
+        ? `${lastRow.createdAt.toISOString()}|${lastRow.id}`
+        : null;
 
     return {
       data,
@@ -342,40 +357,6 @@ export class PostsService {
       nextCursor,
       hasMore,
     };
-  }
-
-  async getTrendingFeed(
-    currentUserId: string | undefined,
-    page = 1,
-    limit = 10,
-  ) {
-    const offset = (page - 1) * limit;
-
-    const trendingQuery = sql`
-      SELECT 
-        p.id, p.author_id as "authorId", p.book_id as "bookId", p.content, p.image, 
-        p.likes_count as "likesCount", p.comments_count as "commentsCount", 
-        p.created_at as "createdAt", p.updated_at as "updatedAt",
-        u.user_name as "author_userName", u.full_name as "author_fullName", u.avatar_image as "author_avatarImage",
-        b.title as "book_title", b.cover_image as "book_coverImage"
-      FROM posts p
-      LEFT JOIN users u ON p.author_id = u.id
-      LEFT JOIN books b ON p.book_id = b.id
-      WHERE p.created_at > NOW() - INTERVAL '7 days'
-      ORDER BY (p.likes_count * 3 + p.comments_count * 2 + 0) / POWER(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2, 1.8) DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
-
-    const rows = (await this.db.execute(trendingQuery)) as any[];
-
-    const likedSet = await this.getLikedPostIdSet(
-      currentUserId,
-      rows.map((row) => row.id),
-    );
-
-    return rows.map((row) =>
-      this.toPostWithRelations(row, likedSet.has(row.id)),
-    );
   }
 
   async update(

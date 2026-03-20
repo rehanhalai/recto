@@ -91,8 +91,23 @@ export class GoogleBooksClient {
       const constrainedMaxResults = Math.min(Math.max(maxResults, 1), 40);
       const constrainedStartIndex = Math.max(startIndex, 0);
 
+      // Only prefix with intitle: if no other search keywords are present
+      const searchKeywords = [
+        "intitle:",
+        "inauthor:",
+        "inpublisher:",
+        "subject:",
+        "isbn:",
+        "lccn:",
+        "oclc:",
+      ];
+      const hasKeyword = searchKeywords.some((keyword) =>
+        query.toLowerCase().includes(keyword),
+      );
+      const finalQuery = hasKeyword ? query : `intitle:${query}`;
+
       const params = {
-        q: `intitle:${query}`,
+        q: finalQuery,
         printType: "books",
         maxResults: constrainedMaxResults,
         startIndex: constrainedStartIndex,

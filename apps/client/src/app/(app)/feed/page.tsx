@@ -1,7 +1,8 @@
-import { FeedHome, getExplorePosts } from "@/features/feed";
+import { getExplorePosts } from "@/features/feed";
+import { FeedPageClient } from "@/features/feed/components/feed-page-client";
 
-export default async function HomePage() {
+export default async function FeedPage() {
   const initialPosts = await getExplorePosts({ limit: 15 });
 
-  return <FeedHome initialPosts={initialPosts} />;
+  return <FeedPageClient initialPosts={initialPosts} />;
 }

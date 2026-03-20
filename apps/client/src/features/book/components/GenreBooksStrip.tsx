@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
-import { useTrendingBooks } from "../hooks/useTrendingBooks";
+import { useGenreBooks } from "../hooks/useGenreBooks";
 import { TrendingBookCard } from "./TrendingBookCard";
 import {
   Carousel,
@@ -12,8 +12,18 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-export function TrendingBooksStrip() {
-  const { data: books, isLoading } = useTrendingBooks(8);
+interface GenreBooksStripProps {
+  genre: string;
+  title: string;
+  subtitle: string;
+}
+
+export function GenreBooksStrip({
+  genre,
+  title,
+  subtitle,
+}: GenreBooksStripProps) {
+  const { data: books, isLoading } = useGenreBooks(genre, 8);
 
   return (
     <section className="flex flex-col gap-6 mb-12 w-full">
@@ -21,14 +31,14 @@ export function TrendingBooksStrip() {
       <div className="flex items-center justify-between px-1">
         <div className="space-y-1">
           <h2 className="font-serif italic text-2xl text-ink font-semibold tracking-tight">
-            Trending Books
+            {title}
           </h2>
           <p className="text-xs text-ink-muted font-mono tracking-widest uppercase">
-            Currently popular
+            {subtitle}
           </p>
         </div>
         <Link
-          href="/books"
+          href={`/books?q=subject:${encodeURIComponent(genre)}`}
           className="group flex items-center gap-1.5 font-sans text-sm font-medium text-ink-muted hover:text-ink transition-colors focus:outline-none focus:ring-2 focus:ring-border-subtle rounded-sm py-1 px-2 border border-border-subtle hover:border-ink hover:bg-card-surface"
         >
           See All
@@ -65,7 +75,7 @@ export function TrendingBooksStrip() {
                     </div>
                   </CarouselItem>
                 ))
-              : books?.map((book) => (
+              : books?.map((book, _) => (
                   <CarouselItem
                     key={book.id}
                     className="pl-4 basis-40 md:basis-48 lg:basis-52"

@@ -41,7 +41,7 @@ export function FeedSection({
           ? Array.from({ length: skeletonCount }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-[280px] w-[85vw] md:w-auto snap-start flex-shrink-0"
+                className="min-w-70 w-[85vw] md:w-auto snap-start shrink-0"
               >
                 {skeleton}
               </div>
@@ -49,7 +49,7 @@ export function FeedSection({
           : React.Children.map(children, (child, i) => (
               <div
                 key={i}
-                className="min-w-[280px] w-[85vw] md:w-auto snap-start flex-shrink-0 flex items-stretch"
+                className="min-w-70 w-[85vw] md:w-auto snap-start shrink-0 flex items-stretch"
               >
                 {child}
               </div>

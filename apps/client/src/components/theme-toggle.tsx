@@ -23,7 +23,7 @@ export function ThemeToggle() {
         disabled
         className="rounded-full hover:bg-border-subtle dark:hover:bg-border-white transition-colors"
       >
-        <SunIcon className="h-[1.2rem] w-[1.2rem]" />
+        <SunIcon className="h-[1.4rem] w-[1.4rem]" />
         <span className="sr-only">Toggle theme</span>
       </Button>
     );
@@ -39,13 +39,13 @@ export function ThemeToggle() {
       <div
         className={`transition-all duration-300 ${theme === "dark" ? "scale-0 rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100"}`}
       >
-        <SunIcon className="h-[1.2rem] w-[1.2rem]" />
+        <SunIcon className="h-[1.4rem] w-[1.4rem]" />
       </div>
 
       <div
         className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${theme === "dark" ? "scale-100 rotate-0 opacity-100" : "scale-0 -rotate-90 opacity-0"}`}
       >
-        <MoonIcon className="h-[1.2rem] w-[1.2rem]" />
+        <MoonIcon className="h-[1.4rem] w-[1.4rem]" />
       </div>
       <span className="sr-only">Toggle theme</span>
     </Button>

@@ -1,9 +1,17 @@
+// Feed feature — barrel exports
 export { PostCard } from "./components/PostCard";
 export { PostCardSkeleton } from "./components/PostCardSkeleton";
 export { FeedSection } from "./components/FeedSection";
 export { HeroStrip } from "./components/HeroStrip";
 export { FeedClient } from "./components/FeedClient";
 export { FeedHome } from "./components/FeedHome";
+export { FeedLayout } from "./components/feed-layout";
+export { FeedTabs } from "./components/feed-tabs";
+export { ExploreFeed } from "./components/explore-feed";
+export { FollowingFeed } from "./components/following-feed";
+export { FeedPageClient } from "./components/feed-page-client";
 export { getExplorePosts } from "./api/get-explore-posts";
 export { useFeed } from "./hooks/useFeed";
 export { useCurrentRead } from "./hooks/useCurrentRead";
+export { useExploreFeed } from "./hooks/use-explore-feed";
+export { useFollowingFeed } from "./hooks/use-following-feed";

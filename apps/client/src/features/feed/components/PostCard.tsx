@@ -3,7 +3,14 @@
 import { useState } from "react";
 import type { PostWithRelations } from "@recto/types";
 import Image from "next/image";
-import { Heart, ChatCircle, DotsThree } from "@phosphor-icons/react";
+import Link from "next/link";
+import {
+  Heart,
+  ChatCircle,
+  DotsThree,
+  ShareFat,
+  BookmarkSimple,
+} from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,34 +18,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/UserAvatar";
+import { formatRelativeTime } from "@/lib/format-relative-time";
+import { apiInstance } from "@/lib/api";
 
 type PostCardProps = {
   post: PostWithRelations;
-  onLike: (postId: string) => void;
-  onComment: (postId: string) => void;
+  onLike?: (postId: string) => void;
+  onComment?: (postId: string) => void;
 };
 
-function formatRelativeTime(value: Date | string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "now";
-  }
-
-  const now = Date.now();
-  const diffMs = Math.max(0, now - date.getTime());
-  const minute = 60 * 1000;
-  const hour = 60 * minute;
-  const day = 24 * hour;
-
-  if (diffMs < minute) return "now";
-  if (diffMs < hour) return `${Math.floor(diffMs / minute)}m ago`;
-  if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
-  return `${Math.floor(diffMs / day)}d ago`;
-}
-
 export function PostCard({ post, onLike, onComment }: PostCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const {
     id,
     content,
@@ -51,18 +40,45 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
     isLikedByMe,
   } = post;
 
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [liked, setLiked] = useState(Boolean(isLikedByMe));
+  const [localLikeCount, setLocalLikeCount] = useState(likesCount ?? 0);
+  // const [saved, setSaved] = useState(false);
+
   const timeAgo = formatRelativeTime(createdAt);
   const authorUserName = author?.userName ?? "unknown";
   const authorDisplayName =
     author?.fullName ?? author?.userName ?? "Deleted user";
   const authorAvatarImage = author?.avatarImage ?? null;
-  const likedByMe = Boolean(isLikedByMe);
 
-  const handleLike = () => onLike(id);
-  const handleComment = () => onComment(id);
+  const handleLike = async () => {
+    // Optimistic update
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLocalLikeCount((c) => (wasLiked ? c - 1 : c + 1));
+
+    try {
+      if (wasLiked) {
+        await apiInstance.delete(`/posts/${id}/like`);
+      } else {
+        await apiInstance.post(`/posts/${id}/like`);
+      }
+    } catch {
+      // Revert on error
+      setLiked(wasLiked);
+      setLocalLikeCount((c) => (wasLiked ? c + 1 : c - 1));
+    }
+
+    onLike?.(id);
+  };
+
+  const handleComment = () => onComment?.(id);
+  // const handleSave = () => setSaved((s) => !s);
+
+  const shouldTruncate = content.length > 200;
 
   return (
-    <article className="flex flex-col bg-card-surface border border-border-subtle rounded-xl p-4 gap-4 w-full">
+    <article className="flex flex-col bg-card-surface border border-border-subtle rounded-xl p-4 gap-4 w-full transition-colors hover:border-border-subtle/80">
       {/* Header */}
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -72,7 +88,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
           />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5 text-sm">
-              <span className="font-semibold text-ink line-clamp-1 max-w-[9.375rem]">
+              <span className="font-semibold text-ink line-clamp-1 max-w-37.5">
                 {authorDisplayName}
               </span>
               <span className="text-ink-muted">·</span>
@@ -86,17 +102,15 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-border-subtle/30 focus:outline-none transition-colors">
-            <DotsThree size={24} weight="bold" />
+            <DotsThree size={28} weight="bold" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
             className="w-40 bg-paper border-border-subtle"
           >
+            <DropdownMenuItem className="cursor-pointer">Edit</DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer">
-              View post
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              Share
+              Delete
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30">
               Report
@@ -105,18 +119,20 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
         </DropdownMenu>
       </header>
 
-      {/* Optional Book Block */}
+      {/* Optional Book Mention */}
       {book && (
-        <div className="flex items-start gap-4 p-3 rounded-lg border border-border-subtle bg-paper/50">
-          <div className="shrink-0 relative w-16 h-24 rounded-md overflow-hidden bg-paper flex items-center justify-center border border-border-subtle shadow-sm">
+        <Link
+          href={`/books/${book.id}`}
+          className="flex items-start gap-4 p-3 rounded-lg border border-border-subtle bg-paper/50 hover:bg-paper/80 transition-colors"
+        >
+          <div className="shrink-0 relative w-12 h-18 rounded-md overflow-hidden bg-paper flex items-center justify-center border border-border-subtle shadow-sm">
             {book.coverImage ? (
-              // Important: Ensure you add 'books.google.com' to your target 'remotePatterns' in 'next.config.ts'
               <Image
                 src={book.coverImage}
                 alt={`Cover of ${book.title}`}
                 fill
                 className="object-cover"
-                sizes="64px"
+                sizes="48px"
               />
             ) : (
               <div className="flex flex-col gap-1 w-full px-2 py-4 h-full items-center justify-center opacity-30">
@@ -127,20 +143,22 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
             )}
           </div>
           <div className="flex flex-col py-1 overflow-hidden min-w-0 flex-1">
-            <h3 className="font-serif text-lg font-semibold text-ink leading-tight truncate">
+            <h3 className="font-serif text-base font-semibold text-ink leading-tight truncate">
               {book.title}
             </h3>
-            <p className="text-sm text-ink-muted truncate mt-0.5">
+            <p className="text-xs text-ink-muted mt-0.5 font-mono uppercase tracking-wider">
               Book mention
             </p>
           </div>
-        </div>
+        </Link>
       )}
 
       {/* Content */}
       <div className="text-ink font-sans text-sm leading-relaxed whitespace-pre-wrap">
-        <p className={!isExpanded ? "line-clamp-3" : ""}>{content}</p>
-        {content.length > 150 && !isExpanded && (
+        <p className={!isExpanded && shouldTruncate ? "line-clamp-3" : ""}>
+          {content}
+        </p>
+        {shouldTruncate && !isExpanded && (
           <button
             onClick={() => setIsExpanded(true)}
             className="text-ink-muted text-sm font-medium hover:text-ink hover:underline transition-colors mt-1"
@@ -152,42 +170,63 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
 
       {/* Optional Post Image */}
       {image && (
-        <div className="relative w-full max-h-72 rounded-lg overflow-hidden border border-border-subtle">
-          {/* If images come from external URLs, update next.config.ts remotePatterns accordingly */}
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border-subtle">
           <Image
             src={image}
             alt="Post image"
-            width={600}
-            height={400}
-            className="object-cover w-full h-full max-h-72 scale-100 transition-transform"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 560px"
           />
         </div>
       )}
 
       {/* Actions Footer */}
-      <footer className="flex items-center gap-5 pt-1">
-        <button
-          onClick={handleLike}
-          aria-label={`Like post by ${authorUserName}`}
-          aria-pressed={likedByMe}
-          className="flex items-center gap-1.5 text-ink-muted hover:text-gold transition-colors focus:outline-none"
-        >
-          <Heart
-            size={20}
-            weight={likedByMe ? "fill" : "regular"}
-            className={likedByMe ? "text-gold" : ""}
-          />
-          <span className="text-sm font-medium">{likesCount}</span>
-        </button>
+      <footer className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-5">
+          <button
+            onClick={handleLike}
+            aria-label={`Like post by ${authorUserName}`}
+            aria-pressed={liked}
+            className="flex items-center gap-1.5 text-ink-muted hover:text-gold transition-colors focus:outline-none"
+          >
+            <Heart
+              size={20}
+              weight={liked ? "fill" : "regular"}
+              className={liked ? "text-gold" : ""}
+            />
+            <span className="text-sm font-medium">{localLikeCount}</span>
+          </button>
 
-        <button
-          onClick={handleComment}
-          aria-label={`Comment on post by ${authorUserName}`}
-          className="flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors focus:outline-none"
+          <button
+            onClick={handleComment}
+            aria-label={`Comment on post by ${authorUserName}`}
+            className="flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors focus:outline-none"
+          >
+            <ChatCircle size={20} weight="regular" />
+            <span className="text-sm font-medium">{commentsCount}</span>
+          </button>
+
+          <button
+            aria-label="Share post"
+            className="flex items-center text-ink-muted hover:text-ink transition-colors focus:outline-none"
+          >
+            <ShareFat size={20} weight="regular" />
+          </button>
+        </div>
+
+        {/* <button
+          onClick={handleSave}
+          aria-label={saved ? "Unsave post" : "Save post"}
+          aria-pressed={saved}
+          className="flex items-center text-ink-muted hover:text-gold transition-colors focus:outline-none"
         >
-          <ChatCircle size={20} weight="regular" />
-          <span className="text-sm font-medium">{commentsCount}</span>
-        </button>
+          <BookmarkSimple
+            size={20}
+            weight={saved ? "fill" : "regular"}
+            className={saved ? "text-gold" : ""}
+          />
+        </button> */}
       </footer>
     </article>
   );

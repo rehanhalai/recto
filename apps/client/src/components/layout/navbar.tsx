@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   MagnifyingGlassIcon,
-  BookmarkIcon,
-  PencilSimpleIcon,
   GearIcon,
   UserIcon,
   SignOutIcon,
+  CaretDownIcon,
+  Bell,
+  X,
+  List as ListIcon,
+  House,
+  Binoculars,
+  ListBullets,
 } from "@phosphor-icons/react";
 import {
   Button,
@@ -25,273 +31,312 @@ import {
   Sheet,
   SheetTrigger,
   SheetContent,
-  SheetHeader,
   SheetTitle,
-  Separator,
+  SheetDescription,
 } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
-import { LibraryIcon, Menu } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useTheme } from "next-themes";
-import rectoIcon from "@recto/assets/logos/recto-icon.webp";
-import rectoIconGold from "@recto/assets/logos/recto-icon-gold.webp";
+import { cn } from "@/lib/utils";
 import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";
 import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 
 export function Navbar() {
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, systemTheme } = useTheme();
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const currentTheme = theme === "system" ? systemTheme : theme;
   const isDarkMode = currentTheme === "dark";
+  const isLandingPage = pathname === "/";
+  const useDarkNavbarTheme = isLandingPage || isDarkMode;
+
+  const logoSrc = !mounted
+    ? rectoLogoLight
+    : useDarkNavbarTheme
+      ? rectoLogoLight
+      : rectoLogoDark;
+
+  const NavLinks = [
+    { href: "/feed", label: "Home", icon: House },
+    { href: "/books", label: "Browse", icon: Binoculars },
+    { href: "/lists", label: "Lists", icon: ListBullets },
+    { href: "/posts", label: "Posts", icon: ListIcon },
+  ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-paper dark:bg-card md:backdrop-blur border-b border-border-subtle dark:border-border-subtle shadow-sm">
+    <nav
+      className={cn(
+        "sticky top-0 z-50 backdrop-blur-md transition-colors",
+        isLandingPage
+          ? "dark bg-black/90 border-b border-gold/25"
+          : "bg-paper/85 dark:bg-card/85 border-b border-border-subtle shadow-xs",
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Mobile: Hamburger + Logo + Search Icon */}
-          <div className="flex items-center gap-4 md:hidden w-full">
-            {/* Hamburger Menu */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
+        <div className="flex justify-between items-center h-16 relative">
+          {/* LEFT: LOGO (Now left-aligned on all screens) */}
+          <Link
+            href="/feed"
+            className="shrink-0 group z-20 flex items-center gap-2"
+          >
+            <Image
+              src={logoSrc}
+              alt="Recto"
+              priority
+              width={110}
+              height={34}
+              className="h-8 w-auto transition-transform group-hover:scale-102"
+            />
+          </Link>
+
+          {/* MIDDLE: DESKTOP NAVIGATION (Hidden on Mobile) */}
+          <div
+            className={cn(
+              "hidden md:flex items-center gap-2 lg:gap-8 mx-auto transition-all duration-300",
+              isSearchExpanded
+                ? "opacity-0 invisible scale-95 pointer-events-none"
+                : "opacity-100 visible scale-100",
+            )}
+          >
+            {NavLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "px-1 py-2 text-sm font-medium transition-colors relative group",
+                  isLandingPage
+                    ? "text-white/70 hover:text-gold"
+                    : "text-ink-muted hover:text-accent",
+                )}
+              >
+                {link.label}
+                <span
+                  className={cn(
+                    "absolute bottom-0 left-0 w-full h-0.5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left",
+                    isLandingPage ? "bg-gold" : "bg-accent",
+                  )}
+                />
+              </Link>
+            ))}
+          </div>
+
+          {/* RIGHT: ACTIONS + MOBILE MENU */}
+          <div className="flex items-center gap-1 sm:gap-3 z-20 shrink-0">
+            {/* SEARCH */}
+            <div
+              className={cn(
+                "flex items-center transition-all duration-300 ease-in-out md:relative",
+                isSearchExpanded
+                  ? "absolute inset-x-0 mx-0 md:mx-0 md:inset-auto w-full md:w-64 lg:w-80 bg-paper dark:bg-card md:bg-transparent z-50 h-16 md:h-auto px-4 md:px-0"
+                  : "w-10",
+              )}
+            >
+              {!isSearchExpanded ? (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50"
-                >
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="left"
-                className="w-80 flex flex-col bg-paper dark:bg-paper border-r border-border-subtle dark:border-border-subtle p-0"
-              >
-                {/* Header: User Profile */}
-                <div className="bg-linear-to-b from-orange-50 to-transparent dark:from-orange-950/20 dark:to-transparent border-b border-border-subtle dark:border-border-subtle p-6">
-                  {isAuthenticated ? (
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-16 h-16 ring-2 ring-orange-200 dark:ring-orange-900">
-                        <AvatarImage
-                          src={
-                            user?.avatarImage || "https://github.com/shadcn.png"
-                          }
-                        />
-                        <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100">
-                          {user?.userName.slice(0, 1).toUpperCase() || "JD"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left">
-                        <SheetTitle className="text-lg font-bold text-ink dark:text-ink tracking-tight">
-                          {user?.userName || "John Doe"}
-                        </SheetTitle>
-                        <p className="text-sm text-ink-muted dark:text-ink-muted">
-                          Book lover & avid reader
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-2 w-full">
-                      <Link href="/login" className="w-full">
-                        <Button
-                          variant="ghost"
-                          className="w-full text-sm font-medium text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50"
-                        >
-                          Log In
-                        </Button>
-                      </Link>
-                      <Link href="/signup" className="w-full">
-                        <Button
-                          variant="default"
-                          className="w-full text-sm font-medium bg-accent dark:bg-accent text-paper dark:text-paper hover:bg-accent-dark dark:hover:bg-accent-dark"
-                        >
-                          Sign Up
-                        </Button>
-                      </Link>
-                    </div>
+                  className={cn(
+                    "h-10 w-10",
+                    isLandingPage
+                      ? "text-white/75 hover:text-gold"
+                      : "text-ink-muted hover:text-accent",
                   )}
-                </div>
-
-                {/* Body: Navigation Links */}
-                <div className="flex flex-col flex-1 gap-1 px-4 py-6 overflow-y-auto">
+                  onClick={() => setIsSearchExpanded(true)}
+                >
+                  <MagnifyingGlassIcon size={22} weight="bold" />
+                </Button>
+              ) : (
+                <div
+                  className={cn(
+                    "flex items-center w-full bg-card-surface border border-border-subtle rounded-full px-3 py-1.5 shadow-sm focus-within:ring-2 transition-all",
+                    isLandingPage
+                      ? "focus-within:ring-gold/40"
+                      : "focus-within:ring-orange-200 dark:focus-within:ring-orange-950/40",
+                  )}
+                >
+                  <MagnifyingGlassIcon className="w-4.5 h-4.5 text-ink-muted shrink-0" />
+                  <Input
+                    autoFocus
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 h-7 text-sm flex-1 font-sans"
+                  />
                   <Button
                     variant="ghost"
-                    className="justify-start text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50 font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
+                    size="icon"
+                    className="h-6 w-6 text-ink-muted hover:text-ink shrink-0"
+                    onClick={() => {
+                      setIsSearchExpanded(false);
+                      setSearchQuery("");
+                    }}
                   >
-                    <BookmarkIcon className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-500" />
-                    Readings
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50 font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <MagnifyingGlassIcon className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-500" />
-                    Browse Books
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50 font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <LibraryIcon className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-500" />
-                    Lists
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50 font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <PencilSimpleIcon className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-500" />
-                    Blogs
+                    <X size={18} weight="bold" />
                   </Button>
                 </div>
-
-                {/* Footer: Settings Button */}
-                <div className="border-t border-border-subtle dark:border-border-subtle p-4">
-                  <Button
-                    variant="ghost"
-                    className="justify-start w-full text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50 font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <GearIcon className="w-5 h-5 mr-3 text-orange-600 dark:text-orange-500" />
-                    Settings
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            {/* Logo (Center on Mobile) */}
-            <Link
-              href="/feed"
-              className="group flex items-center gap-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-gold p-1"
-            >
-              <Image
-                src={isDarkMode ? rectoLogoLight : rectoLogoDark}
-                alt="Recto"
-                priority
-                width={124}
-                height={40}
-                className=" transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
-              />
-            </Link>
-
-            {/* Search Icon */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ml-auto text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50"
-            >
-              <MagnifyingGlassIcon className="w-5 h-5" />
-            </Button>
-
-            {/* Theme Toggle */}
-            <ThemeToggle />
-          </div>
-
-          {/* Desktop: Logo + Center Nav + Profile */}
-          <div className="hidden md:flex items-center justify-between w-full">
-            {/* Left: Logo */}
-            <Link
-              href="/feed"
-              className="flex items-center gap-2 font-bold text-xl text-ink dark:text-ink tracking-tight"
-            >
-              <Image
-                src={isDarkMode ? rectoLogoLight : rectoLogoDark}
-                alt="Recto Logo"
-                priority
-                width={124}
-                height={37}
-              />
-            </Link>
-
-            {/* Center: Nav Links + Search */}
-            <div className="flex items-center gap-6">
-              <Link
-                href="/browse"
-                className="text-sm font-medium text-ink-muted dark:text-ink-muted hover:text-accent-dark dark:hover:text-accent transition-colors"
-              >
-                Browse
-              </Link>
-              <Link
-                href="/lists"
-                className="text-sm font-medium text-ink-muted dark:text-ink-muted hover:text-accent-dark dark:hover:text-accent transition-colors"
-              >
-                Lists
-              </Link>
-              <Link
-                href="/blogs"
-                className="text-sm font-medium text-ink-muted dark:text-ink-muted hover:text-accent-dark dark:hover:text-accent transition-colors"
-              >
-                Blogs
-              </Link>
-
-              {/* Search Bar */}
-              <div className="relative w-64">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted dark:text-ink-muted" />
-                <Input
-                  type="text"
-                  placeholder="Search books..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-card-surface dark:bg-card-surface border-border-subtle dark:border-border-subtle text-ink dark:text-ink placeholder:text-ink-muted dark:placeholder:text-ink-muted"
-                />
-              </div>
+              )}
             </div>
 
-            {/* Right: Theme Toggle & Profile */}
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
+            {/* NOTIFICATIONS (Visible on all screens) */}
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "relative text-ink-muted hover:text-ink h-10 w-10 transition-opacity",
+                  isSearchExpanded &&
+                    "opacity-0 invisible md:opacity-100 md:visible",
+                )}
+              >
+                <Bell size={24} weight="regular" />
+                <span
+                  className={cn(
+                    "absolute top-2.5 right-2.5 w-2 h-2 rounded-full border-2 border-paper",
+                    isLandingPage ? "bg-gold" : "bg-accent",
+                  )}
+                />
+              </Button>
+            )}
 
+            {/* DESKTOP THEME TOGGLE */}
+            {!isLandingPage && (
+              <div className="hidden lg:block">
+                <ThemeToggle />
+              </div>
+            )}
+
+            {/* DESKTOP AVATAR / AUTH */}
+            <div
+              className={cn(
+                "hidden md:block transition-opacity",
+                isSearchExpanded &&
+                  "opacity-0 invisible md:opacity-100 md:visible",
+              )}
+            >
               {isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-2 h-auto py-2 text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50"
+                      className={cn(
+                        "group h-10 px-1.5 flex items-center gap-1.5 rounded-full border transition-all duration-300",
+                        isLandingPage
+                          ? "border-white/15 hover:border-gold/40 hover:bg-white/5 data-[state=open]:border-gold/50 data-[state=open]:bg-white/5"
+                          : "border-border-subtle/70 hover:border-border-subtle hover:bg-card-surface data-[state=open]:border-border-subtle data-[state=open]:bg-card-surface",
+                      )}
                     >
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage
-                          src={
-                            user?.avatarImage || "https://github.com/shadcn.png"
-                          }
-                        />
-                        <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100 text-xs">
-                          {user?.userName?.slice(0, 1).toUpperCase() || "U"}
+                      <Avatar
+                        className={cn(
+                          "w-8 h-8 transition-transform duration-300 group-hover:scale-105 group-data-[state=open]:scale-105",
+                          isLandingPage
+                            ? "ring-1 ring-white/20"
+                            : "ring-1 ring-border-subtle",
+                        )}
+                      >
+                        <AvatarImage src={user?.avatarImage || ""} />
+                        <AvatarFallback className="bg-orange-100 text-orange-900 text-[10px] font-bold">
+                          {user?.userName?.slice(0, 1).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">
-                        {user?.userName || "User"}
-                      </span>
+                      <CaretDownIcon
+                        size={14}
+                        weight="bold"
+                        className="text-ink-muted transition-transform duration-300 group-data-[state=open]:rotate-180"
+                      />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-48 bg-paper dark:bg-card border-border-subtle dark:border-border-subtle"
+                    sideOffset={8}
+                    className="w-72 rounded-xl border border-border-subtle/60 bg-paper/95 dark:bg-card/95 p-2 shadow-2xl backdrop-blur-xl relative overflow-hidden"
                   >
-                    <DropdownMenuLabel className="text-ink dark:text-ink">
-                      My Account
+                    {/* Decorative literary artifact glow */}
+                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-gold/10 rounded-full blur-3xl pointer-events-none" />
+
+                    <DropdownMenuLabel className="p-1 relative z-10">
+                      <div className="flex items-center gap-3.5 rounded-lg border border-border-subtle/40 bg-card-surface/40 p-3 transition-colors hover:bg-card-surface/60">
+                        <Avatar className="w-11 h-11 ring-1 ring-gold/30 shadow-sm">
+                          <AvatarImage src={user?.avatarImage || ""} />
+                          <AvatarFallback className="bg-orange-50 text-gold text-lg font-serif italic">
+                            {user?.userName?.slice(0, 1).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[17px] font-serif font-medium text-ink tracking-tight truncate leading-none">
+                            {user?.fullName || user?.userName}
+                          </p>
+                          <p className="text-xs text-ink-muted truncate font-mono mt-1.5 opacity-90">
+                            @{user?.userName}
+                          </p>
+                        </div>
+                      </div>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-ink dark:text-ink focus:bg-paper/50 dark:focus:bg-card/50 cursor-pointer">
-                      <UserIcon className="w-4 h-4 mr-2 text-orange-600 dark:text-orange-500" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-ink dark:text-ink focus:bg-paper/50 dark:focus:bg-card/50 cursor-pointer">
-                      <GearIcon className="w-4 h-4 mr-2 text-orange-600 dark:text-orange-500" />
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => logout()}
-                      className="text-accent-dark dark:text-accent focus:bg-paper/50 dark:focus:bg-card/50 cursor-pointer"
-                    >
-                      <SignOutIcon className="w-4 h-4 mr-2" />
-                      Log Out
-                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator className="my-1.5 bg-border-subtle/50 relative z-10" />
+
+                    <div className="px-1 space-y-0.5 relative z-10">
+                      <DropdownMenuItem
+                        className="cursor-pointer py-2.5 px-3 gap-3 rounded-md text-ink-muted focus:text-ink focus:bg-gold/10 transition-all duration-200 group"
+                        asChild
+                      >
+                        <Link href={`/user/${user?.userName}`}>
+                          <UserIcon
+                            size={18}
+                            weight="duotone"
+                            className="group-focus:text-gold transition-colors"
+                          />
+                          <span className="font-medium text-sm">Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer py-2.5 px-3 gap-3 rounded-md text-ink-muted focus:text-ink focus:bg-gold/10 transition-all duration-200 group"
+                        asChild
+                      >
+                        <Link href="/settings">
+                          <GearIcon
+                            size={18}
+                            weight="duotone"
+                            className="group-focus:text-gold transition-colors"
+                          />
+                          <span className="font-medium text-sm">Settings</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className="my-1.5 bg-border-subtle/50 relative z-10" />
+
+                    <div className="px-1 relative z-10">
+                      <DropdownMenuItem
+                        onClick={() => logout()}
+                        className="cursor-pointer py-2.5 px-3 gap-3 rounded-md text-red-500/80 focus:text-red-600 focus:bg-red-500/10 transition-all duration-200 group"
+                      >
+                        <SignOutIcon
+                          size={18}
+                          weight="duotone"
+                          className="group-focus:text-red-500 transition-colors"
+                        />
+                        <span className="font-medium text-sm">Log Out</span>
+                      </DropdownMenuItem>
+                    </div>
+
+                    {/* Archival library card footer */}
+                    <div className="mt-2 pt-2.5 pb-1 border-t border-border-subtle/40 flex justify-between items-center px-3 relative z-10">
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-ink-muted/60 font-mono font-medium">
+                        Active Reader
+                      </span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-gold shadow-[0_0_6px_rgba(201,169,110,0.6)]" />
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
@@ -299,7 +344,7 @@ export function Navbar() {
                   <Link href="/login">
                     <Button
                       variant="ghost"
-                      className="text-sm font-medium text-ink dark:text-ink hover:bg-paper/50 dark:hover:bg-card/50"
+                      className="text-sm font-medium px-4"
                     >
                       Log In
                     </Button>
@@ -307,13 +352,154 @@ export function Navbar() {
                   <Link href="/signup">
                     <Button
                       variant="default"
-                      className="text-sm font-medium bg-accent dark:bg-accent text-paper dark:text-paper hover:bg-accent-dark dark:hover:bg-accent-dark"
+                      className="text-sm font-medium bg-accent text-paper hover:bg-accent-dark px-4"
                     >
                       Sign Up
                     </Button>
                   </Link>
                 </div>
               )}
+            </div>
+
+            {/* MOBILE MENU TRIGGER */}
+            <div
+              className={cn(
+                "md:hidden transition-opacity",
+                isSearchExpanded && "opacity-0 invisible",
+              )}
+            >
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-ink-muted"
+                  >
+                    <ListIcon size={28} weight="bold" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="right"
+                  className="w-[85vw] max-w-sm p-0 flex flex-col bg-paper"
+                >
+                  <SheetTitle className="sr-only">Menu</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Open the main navigation, account shortcuts, and appearance
+                    controls.
+                  </SheetDescription>
+                  {/* User Card at Top */}
+                  <div className="p-6 bg-linear-to-b from-orange-50/50 dark:from-orange-950/10 to-transparent border-b border-border-subtle">
+                    {isAuthenticated ? (
+                      <div className="flex items-center gap-4">
+                        <Avatar className="w-14 h-14 ring-2 ring-orange-100 dark:ring-orange-900/30">
+                          <AvatarImage src={user?.avatarImage || ""} />
+                          <AvatarFallback className="bg-orange-100 text-orange-900 font-bold text-xl">
+                            {user?.userName?.slice(0, 1).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-lg font-bold text-ink truncate">
+                            {user?.fullName}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/40 text-[10px] font-bold text-orange-700 dark:text-orange-300">
+                              @{user?.userName}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-lg font-bold text-ink">
+                          Welcome to Recto
+                        </p>
+                        <div className="flex gap-2">
+                          <Link
+                            href="/login"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex-1"
+                          >
+                            <Button variant="ghost" className="w-full">
+                              Log In
+                            </Button>
+                          </Link>
+                          <Link
+                            href="/signup"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex-1"
+                          >
+                            <Button className="w-full bg-accent text-paper">
+                              Sign Up
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Nav Links */}
+                  <div className="flex-1 overflow-y-auto py-4 px-3">
+                    <div className="space-y-1">
+                      {NavLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-4 h-12 text-base font-medium text-ink-muted hover:text-accent hover:bg-orange-50 dark:hover:bg-orange-950/20"
+                          >
+                            <link.icon
+                              size={26}
+                              weight="duotone"
+                              className="text-accent"
+                            />
+                            {link.label}
+                          </Button>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Footer Section */}
+                  <div className="p-4 border-t border-border-subtle space-y-2">
+                    {!isLandingPage && (
+                      <div className="flex items-center justify-between px-2 py-2">
+                        <span className="text-sm font-medium text-ink-muted">
+                          Appearance
+                        </span>
+                        <ThemeToggle />
+                      </div>
+                    )}
+                    <Link
+                      href="/settings"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-4 text-ink-muted"
+                      >
+                        <GearIcon size={22} />
+                        Settings
+                      </Button>
+                    </Link>
+                    {isAuthenticated && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          logout();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full justify-start gap-4 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                      >
+                        <SignOutIcon size={22} />
+                        Log Out
+                      </Button>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>

@@ -8,7 +8,6 @@ import { CommonModule } from "./modules/common/common.module";
 import { BookModule } from "./modules/book/book.module";
 import { ReviewModule } from "./modules/review/review.module";
 import { PostsModule } from "./modules/posts/posts.module";
-import { FeedModule } from "./modules/feed/feed.module";
 import { UploadModule } from "./modules/upload/upload.module";
 import { StorageModule } from "./modules/storage/storage.module";
 import { MailModule } from "./modules/mail/mail.module";
@@ -31,7 +30,6 @@ import config from "./config/config";
     CommonModule,
     ReviewModule,
     PostsModule,
-    FeedModule,
     UploadModule,
     StorageModule,
     MailModule,

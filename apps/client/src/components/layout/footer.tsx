@@ -78,7 +78,7 @@ export function Footer() {
                     aria-label={social.label}
                     className="p-1.5 sm:p-2 rounded-full hover:bg-border-subtle dark:hover:bg-border-white transition-colors text-text-secondary dark:text-text-secondary-dark hover:text-ink dark:hover:text-ink-light"
                   >
-                    <Icon size={16} weight="fill" className="sm:w-5 sm:h-5" />
+                    <Icon size={20} weight="fill" className="sm:w-6 sm:h-6" />
                   </Link>
                 );
               })}

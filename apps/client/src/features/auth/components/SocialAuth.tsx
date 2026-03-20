@@ -33,7 +33,11 @@ export function SocialAuth({ actionText }: SocialAuthProps) {
         className="flex w-full items-center justify-center space-x-2 py-2.5 border border-input hover:bg-muted"
         size="lg"
       >
-        <GoogleLogoIcon size={18} weight="bold" className="text-black" />
+        <GoogleLogoIcon
+          size={22}
+          weight="bold"
+          className="text-black dark:text-white"
+        />
         <span className="text-sm font-medium">{actionText}</span>
       </Button>
     </>

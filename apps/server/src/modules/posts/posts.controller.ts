@@ -118,25 +118,6 @@ export class PostsController {
   }
 
   @UseGuards(OptionalAuthGuard)
-  @Get("trending")
-  async getTrendingFeed(
-    @CurrentUser() user: AuthenticatedRequestUser | null,
-    @Query("page", new ParseIntPipe({ optional: true })) page = 1,
-    @Query("limit", new ParseIntPipe({ optional: true })) limit = 10,
-  ) {
-    const result = await this.postsService.getTrendingFeed(
-      user?.id,
-      page,
-      limit,
-    );
-
-    return {
-      data: result,
-      message: "Trending feed fetched successfully",
-    };
-  }
-
-  @UseGuards(OptionalAuthGuard)
   @Get()
   async findAll(@CurrentUser() user: AuthenticatedRequestUser | null) {
     const posts = await this.postsService.findAll(user?.id);

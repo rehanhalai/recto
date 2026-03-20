@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTrendingBooks } from "../api/get-trending-books";
+import { getTrendingBooks } from "../../feed/api/get-trending-books";
 
 export function useTrendingBooks(limit = 10) {
   return useQuery({

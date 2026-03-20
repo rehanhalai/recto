@@ -188,7 +188,7 @@ export class UserService {
   }
 
   async getCurrentRead(userId: string) {
-    const currentRead = await this.db.query.addedBooks.findFirst({
+    const currentRead = await this.db.query.addedBooks.findMany({
       where: (addedBooks) =>
         and(eq(addedBooks.userId, userId), eq(addedBooks.status, "reading")),
       with: {
