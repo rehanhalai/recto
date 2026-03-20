@@ -95,16 +95,14 @@ export class ReadingTrackerService {
 
     return entries.map((entry) => ({
       ...entry,
-      bookId: entry.book
+      book: entry.book
         ? {
-            id: entry.book.id,
             title: entry.book.title,
             authors: entry.book.authors.map((author) => author.authorName),
             coverImage: entry.book.coverImage,
             sourceId: entry.book.sourceId,
           }
         : entry.bookId,
-      book: undefined,
     }));
   }
 

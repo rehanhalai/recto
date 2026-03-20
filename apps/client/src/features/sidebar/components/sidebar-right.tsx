@@ -7,14 +7,14 @@ import { ArrowRight } from "@phosphor-icons/react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/UserAvatar";
-import { useTrendingBooks } from "../hooks/use-trending-books";
+import { useTrendingBooks } from "@/features/book/hooks/useTrendingBooks";
 import { useSuggestedUsers } from "../hooks/use-suggested-users";
 import { useFeaturedList } from "../hooks/use-featured-list";
 import { cn } from "@/lib/utils";
 
 export function SidebarRight() {
   return (
-    <div className="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto py-4 space-y-5 scrollbar-hide">
+    <div className="sticky top-16 py-2 space-y-5 overflow-y-hidden ">
       <TrendingSection />
       <Separator className="bg-border-subtle/60" />
       <ReadersToFollowSection />
@@ -44,8 +44,8 @@ function TrendingSection() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-4 gap-2">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-3 gap-2">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="space-y-1.5">
               <Skeleton className="aspect-2/3 w-full rounded" />
               <Skeleton className="h-2.5 w-full" />
@@ -53,8 +53,8 @@ function TrendingSection() {
           ))}
         </div>
       ) : books && books.length > 0 ? (
-        <div className="grid grid-cols-4 gap-2">
-          {books.map((book, index) => (
+        <div className="grid grid-cols-3 gap-2">
+          {books.slice(0, 6).map((book, index) => (
             <Link
               key={book.id}
               href={`/books/${book.id}`}
@@ -81,7 +81,7 @@ function TrendingSection() {
                   #{index + 1}
                 </span>
               </div>
-              <p className="text-[10px] text-ink-muted leading-tight line-clamp-2 group-hover:text-ink transition-colors">
+              <p className="text-[12px] text-ink-muted leading-tight line-clamp-2 group-hover:text-ink transition-colors">
                 {book.title}
               </p>
             </Link>
@@ -130,7 +130,7 @@ function ReadersToFollowSection() {
         </div>
       ) : users && users.length > 0 ? (
         <div className="space-y-3">
-          {users.map((user) => (
+          {users.slice(0, 5).map((user) => (
             <UserSuggestionCard key={user.id} user={user} />
           ))}
         </div>

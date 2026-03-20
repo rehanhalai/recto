@@ -1,5 +1,6 @@
 import { apiInstance } from "@/lib/api";
 import type { PostWithRelations, PaginatedResponse } from "@recto/types";
+import { Post } from "@/../../packages/types/src";
 
 type ApiEnvelope<T> = {
   statusCode: number;
@@ -20,6 +21,17 @@ export async function getExplorePosts({
     limit,
     cursor,
   });
+
+  return response.data;
+}
+
+export async function getTrendingPosts(limit = 10): Promise<Post[]> {
+  const response = await apiInstance.get<ApiEnvelope<Post[]>>(
+    "/posts/trendings",
+    {
+      limit,
+    },
+  );
 
   return response.data;
 }

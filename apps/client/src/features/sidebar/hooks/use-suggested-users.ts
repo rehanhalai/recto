@@ -10,7 +10,7 @@ export type SuggestedUser = {
 };
 
 type SearchResponse = {
-  users: SuggestedUser[];
+  data: SuggestedUser[];
   message: string;
 };
 
@@ -20,10 +20,10 @@ export function useSuggestedUsers() {
     queryFn: async () => {
       // Use the search endpoint to get suggested users
       const response = await apiInstance.get<SearchResponse>("/user/search", {
-        userName: "a",
+        userName: "r",
         limit: 3,
       });
-      return response.users ?? [];
+      return response.data;
     },
     staleTime: 1000 * 60 * 5,
   });

@@ -186,29 +186,4 @@ export class UserService {
     if (!user) throw new NotFoundException("No user found matching the query.");
     return user;
   }
-
-  async getCurrentRead(userId: string) {
-    const currentRead = await this.db.query.addedBooks.findMany({
-      where: (addedBooks) =>
-        and(eq(addedBooks.userId, userId), eq(addedBooks.status, "reading")),
-      with: {
-        book: {
-          columns: {
-            id: true,
-            title: true,
-            coverImage: true,
-            sourceId: true,
-          },
-          with: {
-            authors: {
-              columns: {
-                authorName: true,
-              },
-            },
-          },
-        },
-      },
-    });
-    return currentRead || null;
-  }
 }

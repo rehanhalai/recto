@@ -119,7 +119,7 @@ export function SidebarLeft() {
               key={read.id}
               bookId={read.bookId}
               title={read.book.title}
-              author={read.book.authors?.[0]?.authorName ?? "Unknown"}
+              authors={read.book.authors}
               coverUrl={read.book.coverImage}
               // progress={42}
             />
@@ -142,13 +142,13 @@ export function SidebarLeft() {
 function CurrentReadingCard({
   bookId,
   title,
-  author,
+  authors,
   coverUrl,
   //   progress,
 }: {
   bookId: string;
   title: string;
-  author: string;
+  authors: string[];
   coverUrl: string | null;
   //   progress: number;
 }) {
@@ -172,7 +172,9 @@ function CurrentReadingCard({
           <p className="text-sm font-medium text-ink truncate leading-tight group-hover:text-accent-dark transition-colors">
             {title}
           </p>
-          <p className="text-xs text-ink-muted truncate mt-0.5">{author}</p>
+          <p className="text-xs text-ink-muted truncate mt-0.5">
+            {authors.join(", ")}
+          </p>
         </div>
       </div>
       {/* Progress bar */}

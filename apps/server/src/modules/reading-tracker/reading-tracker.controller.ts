@@ -16,19 +16,43 @@ import {
 } from "./dto/reading-tracker.dto";
 import { ReadingTrackerService } from "./reading-tracker.service";
 
-@Controller("book")
+@Controller("tracker")
 @UseGuards(AuthGuard)
 export class ReadingTrackerController {
   constructor(private readonly readingTrackerService: ReadingTrackerService) {}
+
+  @Get()
+  async listEntries(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Query() query: GetReadingTrackerEntriesDto,
+  ): Promise<any> {
+    const data = await this.readingTrackerService.listEntries(user.id, query);
+    return {
+      data,
+      message: "Reading tracker entries fetched successfully",
+    };
+  }
+
+  @Get("user/:userId")
+  async listEntriesForUser(
+    @Param("userId") userId: string,
+    @Query() query: GetReadingTrackerEntriesDto,
+  ): Promise<any> {
+    const data = await this.readingTrackerService.listEntries(userId, query);
+    return {
+      data,
+      message: "Reading tracker entries fetched successfully",
+    };
+  }
 
   @Post("tbrbook")
   async saveEntry(
     @CurrentUser() user: AuthenticatedRequestUser,
     @Body() dto: SaveReadingTrackerEntryDto,
   ): Promise<any> {
-    const entry = await this.readingTrackerService.saveEntry(user.id, dto);
+    const data = await this.readingTrackerService.saveEntry(user.id, dto);
     return {
-      ...entry,
+      ...data,
       message: "Reading tracker entry saved successfully",
     };
   }
@@ -41,18 +65,6 @@ export class ReadingTrackerController {
     await this.readingTrackerService.removeEntry(user.id, tbrId);
     return {
       message: "Reading tracker entry removed successfully",
-    };
-  }
-
-  @Get("fetch-user-books")
-  async listEntries(
-    @CurrentUser() user: AuthenticatedRequestUser,
-    @Query() query: GetReadingTrackerEntriesDto,
-  ): Promise<any> {
-    const books = await this.readingTrackerService.listEntries(user.id, query);
-    return {
-      books,
-      message: "Reading tracker entries fetched successfully",
     };
   }
 }

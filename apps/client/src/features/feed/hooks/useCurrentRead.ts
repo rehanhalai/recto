@@ -1,24 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiInstance } from "@/lib/api";
+import { ReadingStatus } from "@recto/types";
 
-export type CurrentRead =
-  | {
-      userId: string;
-      bookId: string;
-      createdAt: string;
-      finishedAt: string;
-      id: string;
-      startedAt: string;
-      status: string;
-      updatedAt: string;
-      book: {
-        id: string;
-        title: string;
-        coverImage: string | null;
-        authors: { authorName: string }[];
-      };
-    }[]
-  | null;
+type CurrentReadItem = {
+  id: string;
+  userId: string;
+  bookId: string;
+  createdAt: string;
+  finishedAt: string;
+  startedAt: string;
+  status: ReadingStatus;
+  updatedAt: string;
+  book: {
+    id: string;
+    title: string;
+    authors: string[];
+    coverImage: string | null;
+    sourceId: string;
+  };
+};
+
+export type CurrentRead = CurrentReadItem[] | null;
 
 export function useCurrentRead() {
   return useQuery<CurrentRead>({
@@ -27,7 +29,8 @@ export function useCurrentRead() {
       const response = await apiInstance.get<{
         data: CurrentRead;
         message: string;
-      }>("/user/me/current-read");
+      }>("/tracker", { status: "reading" });
+
       return response.data;
     },
     staleTime: 1000 * 60 * 2,

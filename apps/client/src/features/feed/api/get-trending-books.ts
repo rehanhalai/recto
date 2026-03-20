@@ -10,18 +10,7 @@ type ApiEnvelope<T> = {
 
 export async function getTrendingBooks(limit = 10): Promise<Book[]> {
   const response = await apiInstance.get<ApiEnvelope<Book[]>>(
-    "/book/trending/books",
-    {
-      limit,
-    },
-  );
-
-  return response.data;
-}
-
-export async function getTrendingPosts(limit = 10): Promise<Post[]> {
-  const response = await apiInstance.get<ApiEnvelope<Post[]>>(
-    "/book/trending/posts",
+    "/book/trending",
     {
       limit,
     },

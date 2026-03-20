@@ -104,12 +104,12 @@ export class UserController {
 
   @Get("search")
   async searchUsers(@Query() query: SearchUserDto) {
-    const users = await this.userService.searchUsers(query.userName);
-    if (!users.length) {
+    const data = await this.userService.searchUsers(query.userName);
+    if (!data.length) {
       throw new NotFoundException("No users found matching the query.");
     }
     return {
-      users,
+      data,
       message: "Users fetched successfully.",
     };
   }
@@ -120,16 +120,6 @@ export class UserController {
     return {
       ...user,
       message: "User fetched successfully.",
-    };
-  }
-
-  @UseGuards(AuthGuard)
-  @Get("me/current-read")
-  async getCurrentRead(@CurrentUser() user: AuthenticatedRequestUser) {
-    const currentRead = await this.userService.getCurrentRead(user.id);
-    return {
-      data: currentRead,
-      message: "Current read fetched successfully",
     };
   }
 }
