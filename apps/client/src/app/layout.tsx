@@ -6,7 +6,6 @@ import {
   DM_Sans,
 } from "next/font/google";
 import "./globals.css";
-import { ToasterProvider } from "@/components/providers/toaster-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Providers from "@/provider";
 
@@ -69,10 +68,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Providers>
-            {children}
-            <ToasterProvider />
-          </Providers>
+          <Providers>{children}</Providers>
         </ThemeProvider>
       </body>
     </html>
