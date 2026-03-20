@@ -26,6 +26,7 @@
     "@recto/types": "workspace:*",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.3",
+    "@types/sanitize-html": "^2.16.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
@@ -39,6 +40,7 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
     "react-intersection-observer": "^10.0.3",
+    "sanitize-html": "^2.17.2",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.5",
     "zustand": "^5.0.10"

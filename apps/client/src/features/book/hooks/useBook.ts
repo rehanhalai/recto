@@ -5,6 +5,7 @@ import type { Book } from "../types";
 
 interface FetchBookPayload {
   volumeId: string;
+  initialData?: Book;
 }
 
 export const useBookByCard = (payload: FetchBookPayload) => {
@@ -22,6 +23,7 @@ export const useBookByCard = (payload: FetchBookPayload) => {
       return book;
     },
     enabled: Boolean(payload.volumeId),
+    initialData: payload.initialData,
     retry: 2,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });

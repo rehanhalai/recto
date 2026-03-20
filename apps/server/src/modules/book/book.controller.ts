@@ -34,6 +34,15 @@ export class BookController {
     };
   }
 
+  @Get("stats/:bookId")
+  async getStats(@Param("bookId") bookId: string): Promise<any> {
+    const data = await this.bookService.getStats(bookId);
+    return {
+      ...data,
+      message: "Book stats fetched successfully",
+    };
+  }
+
   @Get("search")
   async searchBooks(@Query() query: SearchBooksDto): Promise<any> {
     try {

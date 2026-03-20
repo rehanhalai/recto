@@ -2,7 +2,13 @@ import { Injectable, Inject, NotFoundException } from "@nestjs/common";
 import { DRIZZLE } from "../../../../db/db.module";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../../../../db/schema";
-import { books, posts } from "../../../../db/schema";
+import {
+  addedBooks,
+  bookListItems,
+  bookReviews,
+  books,
+  posts,
+} from "../../../../db/schema";
 import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { BookQueryService } from "./book-query.service";
 import { BookSearchService } from "./book-search.service";
@@ -71,6 +77,69 @@ export class BookService {
     return {
       ...result,
       message: `Showing ${result.books.length} books for "${q}" on page ${page}`,
+    };
+  }
+
+  async getStats(bookId: string) {
+    const book = await this.db.query.books.findFirst({
+      where: eq(books.id, bookId),
+      columns: {
+        id: true,
+        averageRating: true,
+        ratingsCount: true,
+      },
+    });
+
+    if (!book) {
+      throw new NotFoundException("Book not found");
+    }
+
+    const [readersCountRow] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(addedBooks)
+      .where(eq(addedBooks.bookId, bookId));
+
+    const [reviewsCountRow] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(bookReviews)
+      .where(eq(bookReviews.bookId, bookId));
+
+    const [listsCountRow] = await this.db
+      .select({ count: sql<number>`count(distinct ${bookListItems.listId})` })
+      .from(bookListItems)
+      .where(eq(bookListItems.bookId, bookId));
+
+    const ratingsRows = await this.db
+      .select({
+        rating: bookReviews.rating,
+        count: sql<number>`count(*)`,
+      })
+      .from(bookReviews)
+      .where(eq(bookReviews.bookId, bookId))
+      .groupBy(bookReviews.rating);
+
+    const totalRatings = Number(reviewsCountRow?.count || 0);
+    const map = new Map<number, number>();
+    ratingsRows.forEach((row) => {
+      map.set(Number(row.rating), Number(row.count));
+    });
+
+    const toPct = (value: number) =>
+      totalRatings > 0 ? Math.round((value / totalRatings) * 100) : 0;
+
+    return {
+      readers: Number(readersCountRow?.count || 0),
+      reviews: totalRatings,
+      lists: Number(listsCountRow?.count || 0),
+      averageRating: Number(book.averageRating ?? 0),
+      ratingsCount: Number(book.ratingsCount ?? 0),
+      distribution: {
+        five: toPct(map.get(5) || 0),
+        four: toPct(map.get(4) || 0),
+        three: toPct(map.get(3) || 0),
+        two: toPct(map.get(2) || 0),
+        one: toPct(map.get(1) || 0),
+      },
     };
   }
 

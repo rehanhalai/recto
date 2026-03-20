@@ -5,7 +5,7 @@ export interface Book {
   sourceId?: string;
   title: string;
   subtitle?: string;
-  authors?: { id: string; bookId: string; authorName: string }[];
+  authors?: (string | { id?: string; bookId?: string; authorName: string })[];
   genres: string[];
   releaseDate?: string;
   description?: string;

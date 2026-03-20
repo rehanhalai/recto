@@ -13,6 +13,7 @@ import { StorageModule } from "./modules/storage/storage.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { OtpModule } from "./modules/otp/otp.module";
 import { ReadingTrackerModule } from "./modules/reading-tracker/reading-tracker.module";
+import { ListsModule } from "./modules/lists/lists.module";
 
 import { DbModule } from "../db/db.module";
 import config from "./config/config";
@@ -35,6 +36,7 @@ import config from "./config/config";
     MailModule,
     OtpModule,
     ReadingTrackerModule,
+    ListsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

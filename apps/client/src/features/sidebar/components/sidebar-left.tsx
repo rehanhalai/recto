@@ -43,7 +43,11 @@ const NAV_ITEMS: Array<{
   },
 ];
 
-export function SidebarLeft() {
+export function SidebarLeft({
+  showCurrentReading = true,
+}: {
+  showCurrentReading?: boolean;
+}) {
   const pathname = usePathname();
   const { user } = useAuth();
   const { data: currentRead, isLoading: isLoadingRead } = useCurrentRead();
@@ -159,45 +163,47 @@ export function SidebarLeft() {
       </ul>
 
       {/* ═══ CURRENTLY READING (Desktop only) ═══ */}
-      <div className="hidden lg:block px-4 py-4 border-y border-border-subtle/30">
-        <p className="text-xs font-mono uppercase tracking-widest text-ink-muted mb-3">
-          Currently Reading
-        </p>
+      {showCurrentReading && (
+        <div className="hidden lg:block px-4 py-4 border-y border-border-subtle/30">
+          <p className="text-xs font-mono uppercase tracking-widest text-ink-muted mb-3">
+            Currently Reading
+          </p>
 
-        {isLoadingRead ? (
-          <div className="space-y-3">
-            <Skeleton className="h-3 w-20" />
-            <div className="flex items-start gap-2.5">
-              <Skeleton className="w-6 h-8 rounded" />
-              <div className="space-y-1 flex-1">
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-2.5 w-2/3" />
+          {isLoadingRead ? (
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <div className="flex items-start gap-2.5">
+                <Skeleton className="w-6 h-8 rounded" />
+                <div className="space-y-1 flex-1">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-2.5 w-2/3" />
+                </div>
               </div>
             </div>
-          </div>
-        ) : currentRead && currentRead.length > 0 ? (
-          <div className="space-y-2.5 max-h-[120px] overflow-y-auto">
-            {currentRead.slice(0, 2).map((read: (typeof currentRead)[0]) => (
-              <CurrentReadingCard
-                key={read.id}
-                bookId={read.bookId}
-                title={read.book.title}
-                authors={read.book.authors}
-                coverUrl={read.book.coverImage}
-              />
-            ))}
-          </div>
-        ) : (
-          <div>
-            <Link
-              href="/books"
-              className="text-sm text-ink-muted hover:text-ink transition-colors font-medium"
-            >
-              Start tracking →
-            </Link>
-          </div>
-        )}
-      </div>
+          ) : currentRead && currentRead.length > 0 ? (
+            <div className="space-y-2.5 max-h-[120px] overflow-y-auto">
+              {currentRead.slice(0, 2).map((read: (typeof currentRead)[0]) => (
+                <CurrentReadingCard
+                  key={read.id}
+                  bookId={read.bookId}
+                  title={read.book.title}
+                  authors={read.book.authors}
+                  coverUrl={read.book.coverImage}
+                />
+              ))}
+            </div>
+          ) : (
+            <div>
+              <Link
+                href="/books"
+                className="text-sm text-ink-muted hover:text-ink transition-colors font-medium"
+              >
+                Start tracking →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ═══ FOOTER: THEME & USER ═══ */}
       <div className="hidden lg:flex flex-col gap-3 mt-auto pt-4 px-2">
