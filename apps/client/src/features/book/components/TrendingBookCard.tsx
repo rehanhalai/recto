@@ -16,7 +16,7 @@ export function TrendingBookCard({ book }: TrendingBookCardProps) {
 
   return (
     <Link
-      href={`/books/${book.id}`}
+      href={`/book/${book.id}/${book.title.replaceAll(" ", "-")}`}
       className="group flex flex-col gap-3 w-full h-full focus:outline-none"
     >
       {/* Cover Image Container */}

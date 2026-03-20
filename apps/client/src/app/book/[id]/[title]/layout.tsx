@@ -1,4 +1,4 @@
-import { Footer, Navbar } from "@/components/layout";
+import { Footer } from "@/components/layout";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,7 +14,6 @@ export default function bookLayout({
 }>) {
   return (
     <>
-      <Navbar />
       {children}
       <Footer />
     </>

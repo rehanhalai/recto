@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Navbar } from "@/components/layout";
+import { BottomNav } from "@/features/navigation";
 
 export default async function AppLayout({
   children,
@@ -16,8 +16,8 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-paper flex flex-col">
-      <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-20 lg:pb-0 overflow-y-auto">{children}</main>
+      <BottomNav />
     </div>
   );
 }

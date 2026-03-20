@@ -1,55 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import {
-  StarIcon,
-  BookOpenIcon,
-  ChecksIcon,
-  HeartIcon,
-  ShareNetworkIcon,
-} from "@phosphor-icons/react";
+import { useState } from "react";
+import { StarIcon, ShareNetworkIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useBookByCard } from "../hooks/useBook";
-import { UserBookStatus } from "../types";
 import { BookDetailSkeleton } from "./book-detail-skeleton";
-import { useBookStore } from "../store/book-store";
 
 interface BookDetailProps {
-  workId: string;
+  volumeId: string;
   title: string;
   authors?: string[];
 }
 
-const STATUSES: UserBookStatus[] = ["wishlist", "reading", "finished"];
-
-export function BookDetail({ workId, title, authors }: BookDetailProps) {
+export function BookDetail({ volumeId, title, authors }: BookDetailProps) {
   const [coverError, setCoverError] = useState(false);
-  const searchParams = useSearchParams();
-
-  // Get payload from store or construct from props
-  const fetchBookPayload = useBookStore((state) => state.fetchBookPayload);
-
-  const decodedTitle = useMemo(() => title.replace(/-/g, " "), [title]);
-
-  // Use store payload if available, otherwise construct from props/url
-  const bookPayload = fetchBookPayload || {
-    externalId: workId,
-    title: decodedTitle,
-    authors: authors
-      ? authors
-      : (searchParams.get("authors")?.split(",") ?? undefined),
-  };
 
   const {
     data: currentBook,
     isLoading: isBookLoading,
     error: bookError,
-  } = useBookByCard(bookPayload);
+  } = useBookByCard({ volumeId });
 
   // Show loading skeleton while fetching or before book data arrives
   if (isBookLoading) {
@@ -81,6 +54,11 @@ export function BookDetail({ workId, title, authors }: BookDetailProps) {
   }
 
   const pages = currentBook.pageCount || 0;
+  const firstAuthor = Array.isArray(currentBook.authors)
+    ? typeof currentBook.authors[0] === "string"
+      ? currentBook.authors[0]
+      : currentBook.authors[0]?.authorName
+    : undefined;
   // const ratingCount = currentBook.ratingsCount ?? reviews.length;
 
   return (
@@ -107,7 +85,7 @@ export function BookDetail({ workId, title, authors }: BookDetailProps) {
             <p className="text-sm md:text-xl text-muted-foreground mb-2 md:mb-4">
               by{" "}
               <span className="font-medium text-foreground">
-                {currentBook.authors?.[0]}
+                {firstAuthor || authors?.[0] || "Unknown"}
               </span>
             </p>
 
@@ -120,7 +98,7 @@ export function BookDetail({ workId, title, authors }: BookDetailProps) {
               </div>
               <span className="text-muted-foreground">•</span>
               <span className="text-muted-foreground">
-                {currentBook.languages?.[0] || "Unknown"}
+                {currentBook.language || "Unknown"}
               </span>
               {pages > 0 && (
                 <>
@@ -239,7 +217,7 @@ export function BookDetail({ workId, title, authors }: BookDetailProps) {
             <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border">
               <DetailItem
                 label="Languages"
-                value={(currentBook.languages || []).join(", ") || "Unknown"}
+                value={currentBook.language || "Unknown"}
               />
               <DetailItem
                 label="Genres"

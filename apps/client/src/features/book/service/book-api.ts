@@ -1,56 +1,8 @@
 import { apiInstance } from "@/lib/api";
-import {
-  ApiResponse,
-  AuthorSearchResponse,
-  Book,
-  Review,
-  SearchResponse,
-  UserBook,
-  UserBookStatus,
-} from "../types";
+import { Book } from "../types";
 
-interface GetBookPayload {
-  externalId: string;
-  title?: string;
-  authors?: string[];
-}
-
-interface SearchBooksParams {
-  title?: string;
-  genre?: string;
-  sort?: "averageRating" | "releaseDate" | "createdAt";
-  order?: "asc" | "desc";
-  page?: number;
-  limit?: number;
-}
-
-interface SearchByAuthorParams {
-  author: string;
-  page?: number;
-  limit?: number;
-}
-
-interface SetStatusPayload {
-  bookId: string;
-  status: UserBookStatus;
-  startedAt?: string;
-  finishedAt?: string;
-}
-
-interface AddReviewPayload {
-  bookId: string;
-  rating: number;
-  content: string;
-}
-
-interface UpdateReviewPayload {
-  reviewId: string;
-  rating?: number;
-  content?: string;
-}
-
-export const fetchBook = (payload: GetBookPayload) =>
-  apiInstance.post<ApiResponse<Book>>("/books/getbook", payload);
+export const fetchBook = (volumeId: string) =>
+  apiInstance.get<Book & { message?: string }>(`/book/${volumeId}`);
 
 // export const searchBooks = (params: SearchBooksParams) =>
 //   apiClient.get<

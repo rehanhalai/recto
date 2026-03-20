@@ -65,7 +65,7 @@ export function FeedHome({ initialPosts }: FeedHomeProps) {
             currentRead.map((read: (typeof currentRead)[0]) => (
               <Link
                 key={read.id}
-                href={`/books/${read.book.id}`}
+                href={`/book/${read.book.id}/${read.book.title.replaceAll(" ", "-")}`}
                 className="group relative shrink-0 transition-transform hover:scale-105 active:scale-95"
               >
                 <div className="w-32 md:w-40 aspect-2/3 rounded shadow-xl overflow-hidden border-2 border-white/50 bg-card-surface">

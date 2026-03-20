@@ -19,17 +19,18 @@ export class BookQueryService {
   ) {}
 
   async resolveBook(volumeId: string): Promise<BookResponse> {
+    const cachedBySourceId = await this.findBySourceId(volumeId);
+
+    if (cachedBySourceId) {
+      return this.mapToBookResponse(cachedBySourceId);
+    }
+
+    // STEP 2: Fetch from Google Books API
     let volume;
 
     try {
       volume = await this.googleBooksClient.getVolume(volumeId);
     } catch (error) {
-      const cachedBook = await this.findBySourceId(volumeId);
-
-      if (cachedBook) {
-        return this.mapToBookResponse(cachedBook);
-      }
-
       if (error instanceof NotFoundException) {
         throw new NotFoundException(
           "Book not found in Google Books and no cached version available",
@@ -39,6 +40,7 @@ export class BookQueryService {
       throw error;
     }
 
+    // STEP 3: Try ISBN cache (secondary lookup for duplicate detection)
     const isbn13 = extractIsbn13(volume);
 
     if (isbn13) {
@@ -49,12 +51,7 @@ export class BookQueryService {
       }
     }
 
-    const cachedBySource = await this.findBySourceId(volumeId);
-
-    if (cachedBySource) {
-      return this.mapToBookResponse(cachedBySource);
-    }
-
+    // STEP 4: No cache hit - create new book record
     const normalizedBook = normalizeVolume(volume);
     const matchedGenreIds = await this.findMatchingGenreIds(
       normalizedBook.categories,

@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { apiInstance } from "@/lib/api";
-import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 import { HeroScrollSequence } from "../features/landing/components/hero-scroll-sequence";
 import BookStrip from "../features/landing/components/book-strip";
 import useLenis from "@/utils/lenis";
@@ -25,6 +27,7 @@ if (typeof window !== "undefined") {
 export default function LandingPage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
   useLenis();
 
   const checkAuth = useCallback(async () => {
@@ -45,49 +48,81 @@ export default function LandingPage() {
   }, [checkAuth]);
 
   useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const onChange = () => setIsDesktop(media.matches);
+    onChange();
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
     if (checkingAuth) return;
 
+    const section = document.querySelector<HTMLElement>(".paper-section");
+    if (!section) return;
+
+    const heading = section.querySelector<HTMLElement>("h2");
+    const subtitle = section.querySelector<HTMLElement>(".paper-subtitle");
+    const featureCards = Array.from(
+      section.querySelectorAll<HTMLElement>(".paper-feature"),
+    );
+
+    if (!heading || !subtitle || featureCards.length === 0) return;
+
     const ctx = gsap.context(() => {
-      gsap.to("nav", {
-        scrollTrigger: {
-          trigger: "main",
-          start: "top top",
-          end: "+=200",
-          scrub: true,
-        },
-        opacity: 0,
-        pointerEvents: "none",
-        duration: 0.3,
-      });
-      gsap.from(".paper-section h2", {
-        scrollTrigger: {
-          trigger: ".paper-section",
-          start: "top 80%",
-        },
-        opacity: 0,
-        y: 40,
-        duration: 1,
-        ease: "power3.out",
-      });
+      if (!isDesktop) {
+        // Mobile/tablet fallback: keep content visible and skip entrance effects.
+        gsap.set([subtitle, heading, ...featureCards], {
+          opacity: 1,
+          y: 0,
+          clearProps: "transform",
+        });
+        return;
+      }
 
-      gsap.from(".paper-section p", {
-        scrollTrigger: {
-          trigger: ".paper-section",
-          start: "top 70%",
-        },
-        opacity: 0,
-        y: 20,
-        duration: 1,
-        delay: 0.2,
-        ease: "power3.out",
-      });
+      gsap.set([subtitle, heading, ...featureCards], { opacity: 0, y: 26 });
 
-      // Recalculate all scroll positions once the landing page is fully mounted and auth is checked
-      ScrollTrigger.refresh();
-    });
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top 78%",
+            toggleActions: "play none none reverse",
+          },
+        })
+        .to(subtitle, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          ease: "power2.out",
+        })
+        .to(
+          heading,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power3.out",
+          },
+          "-=0.1",
+        )
+        .to(
+          featureCards,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: "power2.out",
+          },
+          "-=0.15",
+        );
+    }, section);
+
+    ScrollTrigger.refresh();
 
     return () => ctx.revert();
-  }, [checkingAuth]);
+  }, [checkingAuth, isDesktop]);
 
   if (checkingAuth) {
     return (
@@ -99,7 +134,19 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-gold/30 selection:text-white">
-      <Navbar />
+      {/* Floating Logo */}
+      <div className="fixed top-6 left-6 z-50">
+        <Link href="/feed" className="flex items-center group">
+          <Image
+            src={rectoLogoLight}
+            alt="Recto"
+            width={100}
+            height={32}
+            className="h-7 w-auto opacity-90 hover:opacity-100 transition-opacity duration-200"
+          />
+        </Link>
+      </div>
+
       <main className="relative bg-black">
         <HeroScrollSequence />
 
@@ -111,22 +158,22 @@ export default function LandingPage() {
         </div>
 
         {/* Thematic Content to Carry On the Scroll */}
-        <section className="paper-section min-h-screen flex flex-col items-center justify-center px-6 py-32 text-center relative z-10 bg-black text-white">
+        <section className="paper-section min-h-screen flex flex-col items-center justify-center px-5 sm:px-6 py-20 md:py-32 text-center relative z-10 bg-black text-white">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-linear-to-b from-gold/40 to-transparent" />
 
-          <span className="text-xs uppercase tracking-[0.4em] text-white/60 mb-8 block font-medium">
+          <span className="paper-subtitle text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.4em] text-white/60 mb-6 sm:mb-8 block font-medium">
             The Digital Library Reimagined
           </span>
 
-          <h2 className="text-5xl md:text-7xl lg:text-8xl max-w-6xl tracking-tight leading-[0.9] mb-16 font-serif">
+          <h2 className="text-5xl md:text-7xl lg:text-8xl max-w-6xl tracking-tight leading-[0.95] sm:leading-[0.9] mb-10 sm:mb-16 font-serif">
             Where every story <br />
             <span className="italic text-gold px-4 font-normal">finds</span>
             <br />
             its rightful space.
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mt-12 text-left border-t border-white/10 pt-16">
-            <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mt-10 md:mt-12 text-left border-t border-white/10 pt-10 md:pt-16">
+            <div className="paper-feature space-y-4">
               <span className="text-gold font-serif italic text-2xl">01</span>
               <h3 className="text-xl font-semibold">Tactile Feel</h3>
               <p className="text-white/60 text-sm leading-relaxed">
@@ -134,7 +181,7 @@ export default function LandingPage() {
                 crafted digital interface that respects the medium.
               </p>
             </div>
-            <div className="space-y-4">
+            <div className="paper-feature space-y-4">
               <span className="text-gold font-serif italic text-2xl">02</span>
               <h3 className="text-xl font-semibold">Pure Focus</h3>
               <p className="text-white/60 text-sm leading-relaxed">
@@ -142,7 +189,7 @@ export default function LandingPage() {
                 the words take center stage.
               </p>
             </div>
-            <div className="space-y-4">
+            <div className="paper-feature space-y-4">
               <span className="text-gold font-serif italic text-2xl">03</span>
               <h3 className="text-xl font-semibold">Deep Archival</h3>
               <p className="text-white/60 text-sm leading-relaxed">

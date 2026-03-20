@@ -9,6 +9,9 @@ import {
   Bell,
   UserCircle,
   Gear,
+  MagnifyingGlass,
+  SunIcon,
+  MoonIcon,
 } from "@phosphor-icons/react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,116 +19,176 @@ import { useAuth } from "@/features/auth";
 import { useCurrentRead } from "@/features/feed/hooks/useCurrentRead";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useTheme } from "next-themes";
+import { UserAvatar } from "@/components/UserAvatar";
+import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
+import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";
+import { useState, useEffect } from "react";
 
-const NAV_ITEMS = [
+const NAV_ITEMS: Array<{
+  href: string;
+  label: string;
+  icon: any;
+  hasNotificationDot?: boolean;
+}> = [
   { href: "/feed", label: "Feed", icon: House },
   { href: "/books", label: "Browse", icon: Binoculars },
   { href: "/lists", label: "Lists", icon: ListBullets },
+  { href: "/search", label: "Search", icon: MagnifyingGlass },
   {
     href: "/notifications",
     label: "Notifications",
     icon: Bell,
     hasNotificationDot: true,
   },
-  // Profile href is dynamic — handled separately
-  { href: "/settings", label: "Settings", icon: Gear },
-] as const;
+];
 
 export function SidebarLeft() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { data: currentRead, isLoading: isLoadingRead } = useCurrentRead();
+  const { theme, systemTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentTheme = theme === "system" ? systemTheme : theme;
+  const isDarkMode = currentTheme === "dark";
+  const logoSrc = !mounted
+    ? rectoLogoLight
+    : isDarkMode
+      ? rectoLogoLight
+      : rectoLogoDark;
 
   const profileHref = user ? `/user/${user.userName}` : "/profile";
 
-  const allNavItems = [
-    ...NAV_ITEMS.slice(0, 4),
-    {
-      href: profileHref,
-      label: "Profile",
-      icon: UserCircle,
-      hasNotificationDot: false,
-    },
-    ...NAV_ITEMS.slice(4),
-  ];
-
   const isActive = (href: string) => {
     if (href === "/feed") return pathname === "/feed";
+    if (href === "/search") return pathname === "/search";
     return pathname.startsWith(href);
   };
 
   return (
-    <nav className="sticky top-16 h-[calc(100vh-4rem)] flex flex-col py-4 overflow-y-auto">
-      {/* Navigation Links */}
-      <ul className="flex flex-col gap-1">
-        {allNavItems.map((item) => {
+    <nav className="h-full flex flex-col py-4 overflow-y-auto border-r border-border-subtle/30">
+      {/* ═══ LOGO (Desktop only) ═══ */}
+      <div className="hidden lg:flex items-center justify-center px-4 pb-6">
+        <Link href="/feed" className="flex items-center">
+          <Image
+            src={logoSrc}
+            alt="Recto"
+            width={140}
+            height={40}
+            className="h-8 w-auto"
+          />
+        </Link>
+      </div>
+
+      {/* ═══ MAIN NAVIGATION ═══ */}
+      <ul className="flex flex-col gap-2 px-2 overflow-y-auto flex-1">
+        {NAV_ITEMS.map((item) => {
           const active = isActive(item.href);
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
-                title={item.label}
+                // aria-label for better a11y
+                aria-label={item.label}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group",
-                  "lg:justify-start md:justify-center",
+                  "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-150 group",
+                  "lg:justify-start md:justify-center min-h-[48px]",
                   active
                     ? "bg-card-surface border border-border-subtle text-ink font-semibold"
                     : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border border-transparent",
                 )}
               >
-                <span className="relative">
+                <span className="relative flex-shrink-0">
                   <item.icon
-                    size={22}
+                    size={20}
                     weight={active ? "fill" : "regular"}
-                    className={
+                    className={cn(
+                      "transition-colors",
                       active
                         ? "text-ink"
-                        : "text-ink-muted group-hover:text-ink"
-                    }
+                        : "text-ink-muted group-hover:text-ink",
+                    )}
                   />
-                  {/* {item.hasNotificationDot && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-gold border-2 border-paper" />
-                  )} */}
+                  {item.hasNotificationDot && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-gold border-2 border-paper dark:border-card" />
+                  )}
                 </span>
-                <span className="hidden lg:inline">{item.label}</span>
+                <span className="hidden lg:inline text-base font-medium">
+                  {item.label}
+                </span>
               </Link>
             </li>
           );
         })}
+
+        {/* Profile item */}
+        <li>
+          <Link
+            href={profileHref}
+            aria-label="Profile"
+            className={cn(
+              "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-150 group",
+              "lg:justify-start md:justify-center min-h-[48px]",
+              isActive(profileHref)
+                ? "bg-card-surface border border-border-subtle text-ink font-semibold"
+                : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border border-transparent",
+            )}
+          >
+            <span className="flex-shrink-0">
+              <UserCircle
+                size={20}
+                weight={isActive(profileHref) ? "fill" : "regular"}
+                className={cn(
+                  "transition-colors",
+                  isActive(profileHref)
+                    ? "text-ink"
+                    : "text-ink-muted group-hover:text-ink",
+                )}
+              />
+            </span>
+            <span className="hidden lg:inline text-base font-medium">
+              Profile
+            </span>
+          </Link>
+        </li>
       </ul>
 
-      {/* Divider + Currently Reading (desktop only) */}
-      <div className="hidden lg:block mt-4">
-        <Separator className="bg-border-subtle/60 mb-4" />
-        <p className="text-[10px] font-mono uppercase tracking-widest text-ink-muted mb-2">
-          Currently reading
+      {/* ═══ CURRENTLY READING (Desktop only) ═══ */}
+      <div className="hidden lg:block px-4 py-4 border-y border-border-subtle/30">
+        <p className="text-xs font-mono uppercase tracking-widest text-ink-muted mb-3">
+          Currently Reading
         </p>
 
         {isLoadingRead ? (
-          <div className="px-3 space-y-3">
-            <Skeleton className="h-3 w-24" />
-            <div className="flex items-start gap-3">
-              <Skeleton className="w-7 h-9.5 rounded" />
-              <div className="space-y-1.5 flex-1">
-                <Skeleton className="h-3.5 w-full" />
-                <Skeleton className="h-3 w-2/3" />
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-20" />
+            <div className="flex items-start gap-2.5">
+              <Skeleton className="w-6 h-8 rounded" />
+              <div className="space-y-1 flex-1">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-2.5 w-2/3" />
               </div>
             </div>
-            <Skeleton className="h-0.75 w-full rounded-full" />
           </div>
-        ) : currentRead ? (
-          currentRead.slice(0, 5).map((read: (typeof currentRead)[0]) => (
-            <CurrentReadingCard
-              key={read.id}
-              bookId={read.bookId}
-              title={read.book.title}
-              authors={read.book.authors}
-              coverUrl={read.book.coverImage}
-              // progress={42}
-            />
-          ))
+        ) : currentRead && currentRead.length > 0 ? (
+          <div className="space-y-2.5 max-h-[120px] overflow-y-auto">
+            {currentRead.slice(0, 2).map((read: (typeof currentRead)[0]) => (
+              <CurrentReadingCard
+                key={read.id}
+                bookId={read.bookId}
+                title={read.book.title}
+                authors={read.book.authors}
+                coverUrl={read.book.coverImage}
+              />
+            ))}
+          </div>
         ) : (
-          <div className="px-3">
+          <div>
             <Link
               href="/books"
               className="text-sm text-ink-muted hover:text-ink transition-colors font-medium"
@@ -135,7 +198,117 @@ export function SidebarLeft() {
           </div>
         )}
       </div>
+
+      {/* ═══ FOOTER: THEME & USER ═══ */}
+      <div className="hidden lg:flex flex-col gap-3 mt-auto pt-4 px-2">
+        {/* Theme Toggle + Settings */}
+        <div className="flex gap-2">
+          <ThemeToggleButton />
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            className={cn(
+              "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-150 group flex-1",
+              "min-h-[48px]",
+              isActive("/settings")
+                ? "bg-card-surface border border-border-subtle text-ink"
+                : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border border-transparent",
+            )}
+          >
+            <Gear
+              size={20}
+              weight={isActive("/settings") ? "fill" : "regular"}
+              className="flex-shrink-0 transition-colors"
+            />
+            <span className="text-base font-medium">Settings</span>
+          </Link>
+        </div>
+
+        {/* User Profile Card */}
+        {user && (
+          <UserProfileCard user={user} currentRead={currentRead || []} />
+        )}
+      </div>
     </nav>
+  );
+}
+
+function ThemeToggleButton() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <button
+        aria-label="Toggle theme"
+        disabled
+        className="flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border border-transparent text-ink-muted min-h-[48px] flex-1"
+      >
+        <SunIcon size={20} className="flex-shrink-0" />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      className="flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border border-border-subtle text-ink-muted hover:text-ink hover:bg-card-surface/50 transition-all duration-150 min-h-[48px] flex-1"
+    >
+      {theme === "dark" ? (
+        <MoonIcon size={20} className="flex-shrink-0" />
+      ) : (
+        <SunIcon size={20} className="flex-shrink-0" />
+      )}
+    </button>
+  );
+}
+
+function UserProfileCard({
+  user,
+  currentRead,
+}: {
+  user: {
+    avatarImage?: string | null;
+    fullName?: string | null;
+    userName: string;
+  };
+  currentRead?: any[];
+}) {
+  return (
+    <Link
+      href={`/user/${user.userName}`}
+      className="group flex items-start gap-3 px-4 py-3.5 rounded-xl border border-border-subtle/40 bg-card-surface/40 hover:bg-card-surface/60 transition-colors duration-150"
+    >
+      {/* Avatar */}
+      <UserAvatar
+        src={user.avatarImage || null}
+        fallbackName={user.fullName ?? user.userName}
+        className="w-10 h-10 flex-shrink-0 ring-1 ring-border-subtle"
+      />
+
+      {/* User Info */}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-ink truncate group-hover:text-accent transition-colors">
+          {user.fullName || user.userName}
+        </p>
+        <p className="text-xs text-ink-muted truncate font-mono">
+          @{user.userName}
+        </p>
+
+        {/* Currently Reading hint */}
+        {currentRead && currentRead.length > 0 && (
+          <p className="text-xs text-ink-muted mt-1.5 line-clamp-1">
+            Reading:{" "}
+            <span className="font-medium">{currentRead[0].book.title}</span>
+          </p>
+        )}
+      </div>
+    </Link>
   );
 }
 
@@ -144,51 +317,40 @@ function CurrentReadingCard({
   title,
   authors,
   coverUrl,
-  //   progress,
 }: {
   bookId: string;
   title: string;
   authors: string[];
   coverUrl: string | null;
-  //   progress: number;
 }) {
   return (
-    <Link href={`/books/${bookId}`} className="block my-3 group">
-      <div className="flex items-start gap-3">
-        <div className="relative w-7 h-9.5 rounded overflow-hidden shrink-0 bg-card-surface border border-border-subtle">
+    <Link
+      href={`/book/${bookId}/${title.replaceAll(" ", "-")}`}
+      className="block group"
+    >
+      <div className="flex items-start gap-2.5">
+        <div className="relative w-6 h-8 rounded overflow-hidden shrink-0 bg-card-surface border border-border-subtle">
           {coverUrl ? (
             <Image
               src={coverUrl}
               alt={title}
               fill
               className="object-cover"
-              sizes="28px"
+              sizes="24px"
             />
           ) : (
             <div className="w-full h-full bg-border-subtle/50" />
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-ink truncate leading-tight group-hover:text-accent-dark transition-colors">
+          <p className="text-xs font-medium text-ink truncate leading-tight group-hover:text-accent transition-colors">
             {title}
           </p>
-          <p className="text-xs text-ink-muted truncate mt-0.5">
+          <p className="text-[10px] text-ink-muted truncate mt-0.5">
             {authors.join(", ")}
           </p>
         </div>
       </div>
-      {/* Progress bar */}
-      {/* <div className="mt-2.5">
-        <div className="w-full h-0.75 bg-border-subtle/60 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-accent rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <p className="text-[10px] text-ink-muted mt-1 font-mono">
-          {progress}% done
-        </p>
-      </div> */}
     </Link>
   );
 }

@@ -2,7 +2,7 @@ export type UserBookStatus = "wishlist" | "reading" | "finished";
 
 export interface Book {
   id: string;
-  externalId?: string;
+  sourceId?: string;
   title: string;
   subtitle?: string;
   authors?: { id: string; bookId: string; authorName: string }[];

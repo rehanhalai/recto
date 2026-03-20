@@ -122,7 +122,11 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
       {/* Optional Book Mention */}
       {book && (
         <Link
-          href={`/books/${book.id}`}
+          href={`/book/${book.sourceId}/${book.title
+            .trim()
+            .toLowerCase()
+            .replace(/[\/\s]+/g, "-")
+            .replace(/-+/g, "-")}`}
           className="flex items-start gap-4 p-3 rounded-lg border border-border-subtle bg-paper/50 hover:bg-paper/80 transition-colors"
         >
           <div className="shrink-0 relative w-12 h-18 rounded-md overflow-hidden bg-paper flex items-center justify-center border border-border-subtle shadow-sm">

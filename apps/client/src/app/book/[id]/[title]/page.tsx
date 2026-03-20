@@ -3,7 +3,7 @@ import BookDetailClient from "./book-detail-client";
 
 type Props = {
   params: Promise<{
-    workId: string;
+    id: string;
     title: string;
   }>;
   searchParams?: Promise<{
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BookPage({ params, searchParams }: Props) {
-  const { workId, title } = await params;
+  const { id, title } = await params;
   const awaitedSearchParams = await searchParams;
   const authorsParam = awaitedSearchParams?.authors;
   const authors = authorsParam
@@ -31,7 +31,7 @@ export default async function BookPage({ params, searchParams }: Props) {
     <div className="min-h-screen bg-paper dark:bg-background">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <BookDetailClient workId={workId} title={title} authors={authors} />
+        <BookDetailClient volumeId={id} title={title} authors={authors} />
       </div>
     </div>
   );

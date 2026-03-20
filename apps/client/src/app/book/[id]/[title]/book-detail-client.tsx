@@ -3,13 +3,13 @@
 import { BookDetail } from "@/features/book";
 
 export default function BookDetailClient({
-  workId,
+  volumeId,
   title,
   authors,
 }: {
-  workId: string;
+  volumeId: string;
   title: string;
   authors?: string[];
 }) {
-  return <BookDetail workId={workId} title={title} authors={authors} />;
+  return <BookDetail volumeId={volumeId} title={title} authors={authors} />;
 }

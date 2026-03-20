@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { Book } from "../types";
 
 interface FetchBookPayload {
-  externalId: string;
+  sourceId: string;
   title?: string;
   authors?: string[];
 }

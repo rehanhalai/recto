@@ -75,6 +75,7 @@ export class PostsService {
               id: row.book?.id || row.bookId,
               title: row.book?.title || row.book_title || "Untitled",
               coverImage: row.book?.coverImage || row.book_coverImage,
+              sourceId: row.book?.sourceId || row.book_sourceId,
             }
           : null,
     };
@@ -232,6 +233,7 @@ export class PostsService {
           id: books.id,
           title: books.title,
           coverImage: books.coverImage,
+          sourceId: books.sourceId,
         },
       })
       .from(posts)
@@ -314,6 +316,7 @@ export class PostsService {
           id: books.id,
           title: books.title,
           coverImage: books.coverImage,
+          sourceId: books.sourceId,
         },
       })
       .from(posts)

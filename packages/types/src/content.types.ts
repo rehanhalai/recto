@@ -37,6 +37,7 @@ export type PostWithRelations = Post & {
     id: string;
     title: string;
     coverImage: string | null;
+    sourceId?: string; // External provider ID (e.g., Google Books volume ID)
   } | null;
   isLikedByMe?: boolean;
   likeCount: number;

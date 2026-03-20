@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function SidebarRight() {
   return (
-    <div className="sticky top-16 py-2 space-y-5 overflow-y-hidden ">
+    <div className="py-2 space-y-5 overflow-y-auto h-full">
       <TrendingSection />
       <Separator className="bg-border-subtle/60" />
       <ReadersToFollowSection />
@@ -57,7 +57,7 @@ function TrendingSection() {
           {books.slice(0, 6).map((book, index) => (
             <Link
               key={book.id}
-              href={`/books/${book.id}`}
+              href={`/book/${book.id}/${book.title.replaceAll(" ", "-")}`}
               className="group flex flex-col gap-1.5"
             >
               <div className="relative aspect-2/3 w-full rounded overflow-hidden bg-card-surface border border-border-subtle">
