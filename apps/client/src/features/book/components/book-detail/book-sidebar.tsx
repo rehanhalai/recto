@@ -3,9 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { StarIcon } from "@phosphor-icons/react";
-import type { Book } from "../types";
-import { useBookStats } from "../hooks/use-book-stats";
-import { useBookAffiliateLinks } from "../hooks/use-book-affiliate-links";
+import type { Book } from "../../types";
+import { useBookStats } from "../../hooks/use-book-stats";
+import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";
 
 export function BookSidebar({ book }: { book: Book }) {
   const { data: stats } = useBookStats(book.id);

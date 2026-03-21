@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
-import { useTrendingBooks } from "../hooks/useTrendingBooks";
-import { TrendingBookCard } from "./TrendingBookCard";
+import type { Book } from "../../types";
+import { BookCard } from "./book-card";
 import {
   Carousel,
   CarouselContent,
@@ -12,23 +12,34 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-export function TrendingBooksStrip() {
-  const { data: books, isLoading } = useTrendingBooks(8);
+interface BookCarouselStripProps {
+  title: string;
+  subtitle: string;
+  href: string;
+  books?: Book[];
+  isLoading: boolean;
+}
 
+export function BookCarouselStrip({
+  title,
+  subtitle,
+  href,
+  books,
+  isLoading,
+}: BookCarouselStripProps) {
   return (
     <section className="flex flex-col gap-6 mb-12 w-full">
-      {/* Header Row */}
       <div className="flex items-center justify-between px-1">
         <div className="space-y-1">
           <h2 className="font-serif italic text-2xl text-ink font-semibold tracking-tight">
-            Trending Books
+            {title}
           </h2>
           <p className="text-xs text-ink-muted font-mono tracking-widest uppercase">
-            Currently popular
+            {subtitle}
           </p>
         </div>
         <Link
-          href="/books"
+          href={href}
           className="group flex items-center gap-1.5 font-sans text-sm font-medium text-ink-muted hover:text-ink transition-colors focus:outline-none focus:ring-2 focus:ring-border-subtle rounded-sm py-1 px-2 border border-border-subtle hover:border-ink hover:bg-card-surface"
         >
           See All
@@ -40,7 +51,6 @@ export function TrendingBooksStrip() {
         </Link>
       </div>
 
-      {/* Slider Content */}
       <div className="relative">
         <Carousel
           opts={{
@@ -70,12 +80,11 @@ export function TrendingBooksStrip() {
                     key={book.id}
                     className="pl-4 basis-40 md:basis-48 lg:basis-52"
                   >
-                    <TrendingBookCard book={book} />
+                    <BookCard book={book} />
                   </CarouselItem>
                 ))}
           </CarouselContent>
 
-          {/* Custom positioned controls that look like editorial buttons */}
           <div className="hidden md:block">
             <CarouselPrevious className="absolute -left-4 top-1/3 -translate-y-1/2 bg-paper/90 backdrop-blur shadow-md border-border-subtle hover:bg-card-surface hover:text-ink text-ink-muted h-10 w-10 z-10" />
             <CarouselNext className="absolute -right-4 top-1/3 -translate-y-1/2 bg-paper/90 backdrop-blur shadow-md border-border-subtle hover:bg-card-surface hover:text-ink text-ink-muted h-10 w-10 z-10" />

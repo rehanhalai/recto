@@ -1,10 +1,10 @@
 "use client";
 
 import { BookDetailSkeleton } from "./book-detail-skeleton";
-import { useBookByCard } from "../hooks/useBook";
-import { BookHero } from "./book-hero";
+import { useBookByCard } from "../../hooks/useBook";
+import { BookHero } from "../book-hero/book-hero";
 import { BookTabs } from "./book-tabs";
-import type { Book } from "../types";
+import type { Book } from "../../types";
 
 interface BookDetailProps {
   volumeId: string;

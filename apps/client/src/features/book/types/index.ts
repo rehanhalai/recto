@@ -1,25 +1,13 @@
-export type UserBookStatus = "wishlist" | "reading" | "finished";
+import type { 
+  BookDetailResponse,
+  BookList as RectoBookList,
+  BookListItem as RectoBookListItem,
+  ReadingStatus
+} from "@recto/types";
 
-export interface Book {
-  id: string;
-  sourceId?: string;
-  title: string;
-  subtitle?: string;
-  authors?: (string | { id?: string; bookId?: string; authorName: string })[];
-  genres: string[];
-  releaseDate?: string;
-  description?: string;
-  averageRating?: number;
-  ratingsCount?: number;
-  language?: string;
-  coverImage?: string;
-  cover_i?: number;
-  pageCount?: number;
-  isbn13?: string;
-  links?: { title: string; url: string }[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+export type UserBookStatus = `${ReadingStatus}`;
+
+export type Book = BookDetailResponse;
 
 export interface Pagination {
   currentPage: number;
@@ -58,47 +46,10 @@ export interface UserBook {
   updatedAt?: string;
 }
 
-export interface Review {
-  id: string;
-  bookId: string;
-  user: {
-    id?: string;
-    name?: string;
-    userName?: string;
-    avatarImage?: string;
-  };
-  rating: number;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BookListItem {
-  book_id: string;
-  title: string;
-  author: string;
-  added_at: string;
-  position: number;
-}
-
-export interface BookList {
-  id: string;
-  user_id:
-    | string
-    | {
-        id: string;
-        userName?: string;
-        fullName?: string;
-        avatarImage?: string;
-      };
-  name: string;
-  description?: string;
-  is_public: boolean;
-  book_count: number;
+export type BookListItem = RectoBookListItem;
+export type BookList = RectoBookList & {
   items: BookListItem[];
-  createdAt: string;
-  updatedAt: string;
-}
+};
 
 export interface ApiResponse<T> {
   statusCode: number;

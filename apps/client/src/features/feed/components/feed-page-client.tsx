@@ -19,7 +19,7 @@ export function FeedPageClient({ initialPosts }: FeedPageClientProps) {
 
   return (
     <FeedLayout leftSidebar={<SidebarLeft />} rightPanel={<SidebarRight />}>
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3">
         <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {activeTab === "explore" ? (

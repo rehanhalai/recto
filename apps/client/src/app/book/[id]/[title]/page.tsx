@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import BookDetailClient from "./book-detail-client";
 import { FeedLayout } from "@/features/feed/components/feed-layout";
 import { SidebarLeft } from "@/features/sidebar/components/sidebar-left";
-import { BookSidebar } from "@/features/book/components/book-sidebar";
+import { BookSidebar } from "@/features/book/components/book-detail/book-sidebar";
 import { config } from "@/config";
 import type { Book } from "@/features/book/types";
 

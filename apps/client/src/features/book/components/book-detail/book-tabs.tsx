@@ -1,9 +1,9 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Book } from "../types";
+import type { Book } from "../../types";
 import { BookOverview } from "./book-overview";
-import { BookReviews } from "./book-reviews";
+import { BookReviews } from "../book-reviews/book-reviews";
 import { BookLists } from "./book-lists";
 
 export function BookTabs({ book }: { book: Book }) {

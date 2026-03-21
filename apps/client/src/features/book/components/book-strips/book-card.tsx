@@ -1,25 +1,21 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import type { Book } from "../types";
+import type { Book } from "../../types";
+import { getHighResCover } from "../../utils/book-utils";
 
-interface TrendingBookCardProps {
+interface BookCardProps {
   book: Book;
 }
 
-export function TrendingBookCard({ book }: TrendingBookCardProps) {
+export function BookCard({ book }: BookCardProps) {
   const authorName = book.authors?.[0]?.authorName ?? "Unknown Author";
-
-  // High-res cover hack for Google Books API natively.
-  const coverImage = book.coverImage?.replace("zoom=1", "zoom=2");
+  const coverImage = getHighResCover(book.coverImage);
 
   return (
     <Link
       href={`/book/${book.id}/${book.title.replaceAll(" ", "-")}`}
       className="group flex flex-col gap-3 w-full h-full focus:outline-none"
     >
-      {/* Cover Image Container */}
       <div className="relative w-full aspect-2/3 rounded-md overflow-hidden bg-card-surface border border-border-subtle shadow-sm transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:group-hover:shadow-[0_8px_30px_rgba(255,255,255,0.05)] group-hover:-translate-y-1 after:absolute after:inset-0 after:bg-linear-to-tr after:from-black/10 after:to-transparent after:opacity-0 group-hover:after:opacity-100 after:transition-opacity">
         {coverImage ? (
           <Image
@@ -37,11 +33,9 @@ export function TrendingBookCard({ book }: TrendingBookCardProps) {
           </div>
         )}
 
-        {/* Book side-spine effect (subtle) */}
         <div className="absolute left-0 top-0 bottom-0 w-0.75 bg-linear-to-r from-white/30 to-transparent mix-blend-overlay z-10" />
       </div>
 
-      {/* Details */}
       <div className="flex flex-col px-1">
         <h3 className="font-serif text-[15px] md:text-base font-medium text-ink leading-snug line-clamp-2 group-hover:text-accent transition-colors">
           {book.title}

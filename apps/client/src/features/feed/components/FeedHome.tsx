@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import type { PostWithRelations, PaginatedResponse } from "@recto/types";
-import { TrendingBooksStrip } from "@/features/book/components/TrendingBooksStrip";
-import { GenreBooksStrip } from "@/features/book/components/GenreBooksStrip";
+import { TrendingBooksStrip } from "@/features/book/components/book-strips/TrendingBooksStrip";
+import { GenreBooksStrip } from "@/features/book/components/book-strips/GenreBooksStrip";
 import { FeedSection } from "./FeedSection";
 import { useCurrentRead } from "../hooks/useCurrentRead";
 import Image from "next/image";

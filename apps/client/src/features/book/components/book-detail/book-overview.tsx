@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import sanitizeHtml from "sanitize-html";
 import { Button } from "@/components/ui/button";
-import type { Book } from "../types";
-import { useBookAffiliateLinks } from "../hooks/use-book-affiliate-links";
+import type { Book } from "../../types";
+import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";
 
 export function BookOverview({ book }: { book: Book }) {
   const [expanded, setExpanded] = useState(false);

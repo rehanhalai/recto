@@ -5,19 +5,9 @@ import {
 } from "@tanstack/react-query";
 import { apiInstance } from "@/lib/api";
 
-export interface BookReview {
-  id: string;
-  bookId: string;
-  userId?: string;
-  rating: number;
-  content?: string;
-  createdAt: string;
-  updatedAt: string;
-  user?: {
-    userName?: string;
-    avatarImage?: string | null;
-  };
-}
+import { BookReviewWithRelations } from "@recto/types";
+
+export type BookReview = BookReviewWithRelations;
 
 interface ReviewsPage {
   reviews: BookReview[];
