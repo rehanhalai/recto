@@ -71,8 +71,6 @@ export class BookQueryService {
           language: normalizedBook.language,
           isbn13: normalizedBook.isbn13,
           coverImage: normalizedBook.coverImage,
-          googleRating: this.toNumericString(normalizedBook.googleRating),
-          googleRatingsCount: normalizedBook.googleRatingsCount ?? 0,
         })
         .returning({ id: books.id });
 
@@ -205,8 +203,6 @@ export class BookQueryService {
       language: dbBook.language ?? undefined,
       isbn13: dbBook.isbn13 ?? undefined,
       coverImage: dbBook.coverImage ?? undefined,
-      googleRating: this.toNumber(dbBook.googleRating),
-      googleRatingsCount: dbBook.googleRatingsCount ?? 0,
       authors: (dbBook.authors || []).map((author: any) => author.authorName),
       categories: genres,
       averageRating: this.toNumber(dbBook.averageRating),
@@ -215,10 +211,6 @@ export class BookQueryService {
       createdAt: dbBook.createdAt,
       updatedAt: dbBook.updatedAt,
     };
-  }
-
-  private toNumericString(value: number | undefined): string | undefined {
-    return typeof value === "number" ? value.toFixed(2) : undefined;
   }
 
   private toNumber(

@@ -44,10 +44,6 @@ export const books = pgTable(
     averageRating: numeric("average_rating", { precision: 3, scale: 2 }),
     ratingsCount: integer("ratings_count").default(0).notNull(),
 
-    // Google Books cold-start data
-    googleRating: numeric("google_rating", { precision: 3, scale: 2 }),
-    googleRatingsCount: integer("google_ratings_count").default(0).notNull(),
-
     coverImage: text("cover_image"),
 
     createdAt: timestamp("created_at", { withTimezone: true })

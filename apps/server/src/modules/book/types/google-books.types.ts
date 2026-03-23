@@ -138,8 +138,6 @@ export interface NormalizedBook {
   language?: string;
   isbn13?: string;
   coverImage?: string;
-  googleRating?: number;
-  googleRatingsCount?: number;
   authors: string[];
   categories: string[];
 }

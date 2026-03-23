@@ -36,6 +36,13 @@
       "when": 1773753966811,
       "tag": "0004_add_cloudinary_public_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1774252800000,
+      "tag": "0005_drop_google_ratings",
+      "breakpoints": true
     }
   ]
 }

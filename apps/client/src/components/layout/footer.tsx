@@ -10,6 +10,8 @@ import {
   GithubLogoIcon,
 } from "@phosphor-icons/react";
 
+import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
+
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -44,7 +46,7 @@ export function Footer() {
     { icon: TwitterLogoIcon, href: "#", label: "Twitter" },
     { icon: LinkedinLogoIcon, href: "#", label: "LinkedIn" },
     { icon: GithubLogoIcon, href: "#", label: "GitHub" },
-    { icon: EnvelopeIcon, href: "mailto:hello@example.com", label: "Email" },
+    { icon: EnvelopeIcon, href: "mailto:recto.help@gmail.com", label: "Email" },
   ];
 
   return (
@@ -56,7 +58,7 @@ export function Footer() {
           <div className="col-span-2 sm:col-span-1 md:col-span-1">
             <div className="mb-4">
               <Image
-                src="/logo.svg"
+                src={rectoLogoLight}
                 alt="Recto Logo"
                 loading="eager"
                 width={120}

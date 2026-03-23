@@ -23,12 +23,11 @@ export type BookGenre = InferSelectModel<typeof bookGenres>;
 // ─── API Response Types ────────────────────────────────────────────────────────
 
 /**
- * NOTE: averageRating and googleRating come back as strings from Drizzle
- * Parse them with parseFloat() on the client side.
+ * NOTE: averageRating comes back as string from Drizzle.
+ * Parse with parseFloat() on the client side.
  */
-export type BookResponse = Omit<Book, "averageRating" | "googleRating"> & {
+export type BookResponse = Omit<Book, "averageRating"> & {
   averageRating: string | null; // Parse with parseFloat()
-  googleRating: string | null; // Parse with parseFloat()
 };
 
 export type BookWithRelations = BookResponse & {
@@ -52,7 +51,5 @@ export type BookWithGenres = BookResponse & {
 
 export type BookDetailResponse = BookWithRelations & {
   averageRating: string | null; // Parse with parseFloat()
-  googleRating: string | null; // Parse with parseFloat()
   ratingsCount: number;
-  googleRatingsCount: number;
 };

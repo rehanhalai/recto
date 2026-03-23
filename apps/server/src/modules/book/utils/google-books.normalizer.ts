@@ -48,8 +48,6 @@ export function normalizeVolume(volume: GoogleBooksVolume): NormalizedBook {
     language: volumeInfo.language,
     isbn13: extractIsbn13(volume),
     coverImage: volumeInfo.imageLinks?.thumbnail,
-    googleRating: volumeInfo.averageRating,
-    googleRatingsCount: volumeInfo.ratingsCount,
     authors,
     categories: volumeInfo.categories || [],
   };

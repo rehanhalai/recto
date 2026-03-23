@@ -8,8 +8,15 @@ interface BookCardProps {
 }
 
 export function BookCard({ book }: BookCardProps) {
-  const authorName = book.authors?.[0]?.authorName ?? "Unknown Author";
+  const firstAuthor = book.authors?.[0];
+  const authorName =
+    typeof firstAuthor === "string"
+      ? firstAuthor
+      : (firstAuthor?.authorName ?? "Unknown Author");
   const coverImage = getHighResCover(book.coverImage);
+  const rating = Number(book.averageRating ?? 0);
+  const ratingsCount = Number(book.ratingsCount ?? 0);
+  const hasRating = rating > 0;
 
   return (
     <Link
@@ -42,6 +49,11 @@ export function BookCard({ book }: BookCardProps) {
         </h3>
         <p className="text-[11px] md:text-xs text-ink-muted truncate mt-1.5 font-sans tracking-wide">
           {authorName}
+        </p>
+        <p className="text-[11px] md:text-xs text-ink-muted mt-1 font-sans tracking-wide">
+          {hasRating
+            ? `${rating.toFixed(1)} (${ratingsCount} reviews)`
+            : "No ratings yet"}
         </p>
       </div>
     </Link>

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { searchBooks } from "../api/search-books";
+import { searchBooks } from "../service/search-books";
 
 export function useGenreBooks(genre: string, limit = 8) {
   return useQuery({

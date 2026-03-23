@@ -1,8 +1,51 @@
 import { apiInstance } from "@/lib/api";
+import { config } from "@/config";
 import { Book } from "../types";
+import { cache } from "react";
 
 export const fetchBook = (volumeId: string) =>
   apiInstance.get<Book & { message?: string }>(`/book/${volumeId}`);
+
+// Server-side fetch memoized per request to avoid duplicate calls from
+// generateMetadata + page for the same id.
+export const fetchBookSSR = cache(
+  async (volumeId: string): Promise<Book | null> => {
+    try {
+      const response = await fetch(
+        `${config.apiUrl}/book/${encodeURIComponent(volumeId)}`,
+        {
+          next: { revalidate: 3600 }, // Cache for 1 hour
+        },
+      );
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = (await response.json()) as Book & { data?: Book };
+      return data?.data ?? data;
+    } catch {
+      return null;
+    }
+  },
+);
+
+export function getFirstAuthor(book: Book | null) {
+  if (
+    !book?.authors ||
+    !Array.isArray(book.authors) ||
+    book.authors.length === 0
+  ) {
+    return undefined;
+  }
+
+  const author = book.authors[0];
+  return typeof author === "string" ? author : author?.authorName;
+}
+
+export function stripTags(text: string) {
+  return text.replace(/<[^>]+>/g, "").trim();
+}
 
 // export const searchBooks = (params: SearchBooksParams) =>
 //   apiClient.get<

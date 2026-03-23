@@ -5,25 +5,20 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { Book } from "../../types";
-import { getBookInitials, renderStars, getHighResCover } from "../../utils/book-utils";
+import {
+  getBookInitials,
+  renderStars,
+  getHighResCover,
+} from "../../utils/book-utils";
 import { BookActions } from "./book-actions";
+import { getFirstAuthor } from "../../service/book-api";
 
-export function BookHero({
-  book,
-  fallbackAuthor,
-}: {
-  book: Book;
-  fallbackAuthor?: string;
-}) {
+export function BookHero({ book }: { book: Book }) {
   const [coverError, setCoverError] = useState(false);
 
-  const firstAuthor = useMemo(() => {
-    const author = book.authors?.[0];
-    if (!author) return fallbackAuthor;
-    if (typeof author === "string") return author;
-    return author.authorName;
-  }, [book.authors, fallbackAuthor]);
+  console.log(book);
 
+  const firstAuthor = getFirstAuthor(book);
   const rating = Number(book.averageRating ?? 0);
   const ratingsCount = Number(book.ratingsCount ?? 0);
   const pages = book.pageCount ?? 0;
@@ -91,8 +86,8 @@ export function BookHero({
 
           <div className="flex flex-wrap gap-2">
             {(book.genres || []).slice(0, 6).map((genre: any) => {
-              const genreId = typeof genre === 'string' ? genre : genre.id;
-              const genreName = typeof genre === 'string' ? genre : genre.name;
+              const genreId = typeof genre === "string" ? genre : genre.id;
+              const genreName = typeof genre === "string" ? genre : genre.name;
               return (
                 <Link
                   key={genreId}

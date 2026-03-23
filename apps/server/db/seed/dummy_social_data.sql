@@ -114,8 +114,6 @@ INSERT INTO books (
   page_count,
   language,
   isbn13,
-  google_rating,
-  google_ratings_count,
   cover_image,
   created_at,
   updated_at
@@ -132,8 +130,6 @@ VALUES
     352,
     'en',
     '9780000000001',
-    4.20,
-    1200,
     'http://books.google.com/books/content?id=seed001&printsec=frontcover&img=1&zoom=1',
     NOW() - INTERVAL '30 days',
     NOW() - INTERVAL '5 days'
@@ -149,8 +145,6 @@ VALUES
     416,
     'en',
     '9780000000002',
-    4.10,
-    980,
     'http://books.google.com/books/content?id=seed002&printsec=frontcover&img=1&zoom=1',
     NOW() - INTERVAL '30 days',
     NOW() - INTERVAL '4 days'
@@ -166,8 +160,6 @@ VALUES
     544,
     'en',
     '9780000000003',
-    4.50,
-    2100,
     'http://books.google.com/books/content?id=seed003&printsec=frontcover&img=1&zoom=1',
     NOW() - INTERVAL '30 days',
     NOW() - INTERVAL '3 days'
@@ -183,8 +175,6 @@ VALUES
     288,
     'en',
     '9780000000004',
-    4.00,
-    640,
     'http://books.google.com/books/content?id=seed004&printsec=frontcover&img=1&zoom=1',
     NOW() - INTERVAL '30 days',
     NOW() - INTERVAL '2 days'
@@ -200,8 +190,6 @@ VALUES
     304,
     'en',
     '9780000000005',
-    3.90,
-    520,
     'http://books.google.com/books/content?id=seed005&printsec=frontcover&img=1&zoom=1',
     NOW() - INTERVAL '30 days',
     NOW() - INTERVAL '2 days'
@@ -217,8 +205,6 @@ VALUES
     368,
     'en',
     '9780000000006',
-    4.30,
-    1340,
     'http://books.google.com/books/content?id=seed006&printsec=frontcover&img=1&zoom=1',
     NOW() - INTERVAL '30 days',
     NOW() - INTERVAL '2 days'
