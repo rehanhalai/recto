@@ -1,9 +1,9 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { DRIZZLE } from "../../../../db/db.module";
 import * as schema from "../../../../db/schema";
-import { bookAuthors, bookGenres, books } from "../../../../db/schema";
+import { bookAuthors, bookGenres, books, genres } from "../../../../db/schema";
 import { GoogleBooksClient } from "../clients/google-books.client";
 import {
   extractIsbn13,
@@ -166,24 +166,108 @@ export class BookQueryService {
       return [];
     }
 
-    const allGenres = await this.db.query.genres.findMany({
+    const normalized = this.normalizeCategories(categories);
+    if (normalized.length === 0) {
+      return [];
+    }
+
+    const slugs = normalized.map((item) => item.slug);
+    const existing = await this.db.query.genres.findMany({
+      where: inArray(genres.slug, slugs),
       columns: {
         id: true,
-        name: true,
+        slug: true,
       },
     });
 
-    const genreLookup = new Map(
-      allGenres.map((genre) => [genre.name.trim().toLowerCase(), genre.id]),
-    );
+    const slugToId = new Map(existing.map((genre) => [genre.slug, genre.id]));
+
+    for (const item of normalized) {
+      if (slugToId.has(item.slug)) {
+        continue;
+      }
+
+      const inserted = await this.db
+        .insert(genres)
+        .values({
+          name: item.name,
+          slug: item.slug,
+        })
+        .onConflictDoNothing({ target: genres.slug })
+        .returning({
+          id: genres.id,
+          slug: genres.slug,
+        });
+
+      if (inserted[0]) {
+        slugToId.set(inserted[0].slug, inserted[0].id);
+        continue;
+      }
+
+      const conflicted = await this.db.query.genres.findFirst({
+        where: eq(genres.slug, item.slug),
+        columns: {
+          id: true,
+          slug: true,
+        },
+      });
+
+      if (conflicted) {
+        slugToId.set(conflicted.slug, conflicted.id);
+      }
+    }
 
     return [
       ...new Set(
-        categories
-          .map((category) => genreLookup.get(category.trim().toLowerCase()))
+        normalized
+          .map((item) => slugToId.get(item.slug))
           .filter((genreId): genreId is string => Boolean(genreId)),
       ),
     ];
+  }
+
+  private normalizeCategories(categories: string[]) {
+    const bySlug = new Map<string, { name: string; slug: string }>();
+
+    for (const rawCategory of categories) {
+      const parts = rawCategory
+        .split(/[>/|]+/)
+        .map((part) => this.normalizeCategoryText(part))
+        .filter((part) => part.length > 0);
+
+      for (const part of parts) {
+        const slug = part.replace(/\s+/g, "-");
+        if (!slug || bySlug.has(slug)) {
+          continue;
+        }
+
+        bySlug.set(slug, {
+          name: this.toTitleCase(part),
+          slug,
+        });
+      }
+    }
+
+    return Array.from(bySlug.values());
+  }
+
+  private normalizeCategoryText(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
   private mapToBookResponse(dbBook: any): BookResponse {

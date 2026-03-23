@@ -66,7 +66,7 @@ export function BookOverview({ book }: { book: Book }) {
         )}
       </section>
 
-      <section className="grid grid-cols-2 gap-3 rounded-xl border border-border-subtle/60 bg-background/60 p-3 md:grid-cols-5">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-5 md:gap-8 lg:gap-10 rounded-xl border border-border-subtle/70 bg-card/30 p-4 md:p-6">
         <InfoPair label="Publisher" value="-" />
         <InfoPair label="Published" value={publishedYear} />
         <InfoPair label="ISBN" value={book.isbn13 || "-"} />
@@ -104,10 +104,12 @@ export function BookOverview({ book }: { book: Book }) {
 function InfoPair({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+      <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
-      <p className="text-sm text-foreground break-words">{value}</p>
+      <p className="mt-2 text-sm font-medium text-foreground md:text-base break-words">
+        {value}
+      </p>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { Book } from "../../types";
 import {
@@ -15,8 +15,6 @@ import { getFirstAuthor } from "../../service/book-api";
 
 export function BookHero({ book }: { book: Book }) {
   const [coverError, setCoverError] = useState(false);
-
-  console.log(book);
 
   const firstAuthor = getFirstAuthor(book);
   const rating = Number(book.averageRating ?? 0);
