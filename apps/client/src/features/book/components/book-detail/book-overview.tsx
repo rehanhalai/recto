@@ -5,6 +5,8 @@ import sanitizeHtml from "sanitize-html";
 import { Button } from "@/components/ui/button";
 import type { Book } from "../../types";
 import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";
+import { getLanguageName } from "../../utils/book-utils";
+import { Buildings, CalendarBlank, Barcode, Globe, FileText } from "@phosphor-icons/react";
 
 export function BookOverview({ book }: { book: Book }) {
   const [expanded, setExpanded] = useState(false);
@@ -66,19 +68,25 @@ export function BookOverview({ book }: { book: Book }) {
         )}
       </section>
 
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-5 md:gap-8 lg:gap-10 rounded-xl border border-border-subtle/70 bg-card/30 p-4 md:p-6">
-        <InfoPair label="Publisher" value="-" />
-        <InfoPair label="Published" value={publishedYear} />
-        <InfoPair label="ISBN" value={book.isbn13 || "-"} />
-        <InfoPair label="Language" value={book.language || "Unknown"} />
+      <section className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+        <InfoPair icon={<Buildings size={16} weight="duotone" />} label="Publisher" value="-" />
+        <InfoPair icon={<CalendarBlank size={16} weight="duotone" />} label="Published" value={publishedYear} />
+        <InfoPair icon={<Globe size={16} weight="duotone" />} label="Language" value={getLanguageName(book.language)} />
         <InfoPair
+          icon={<FileText size={16} weight="duotone" />}
           label="Pages"
           value={book.pageCount ? String(book.pageCount) : "-"}
+        />
+        <InfoPair 
+          icon={<Barcode size={16} weight="duotone" />} 
+          label="ISBN" 
+          value={book.isbn13 || "-"} 
+          className="col-span-2 sm:col-span-4"
         />
       </section>
 
       {links.length > 0 && (
-        <section className="space-y-3">
+        <section className="space-y-3 mt-6">
           <h4 className="text-sm font-semibold text-foreground">
             Where to buy
           </h4>
@@ -101,13 +109,16 @@ export function BookOverview({ book }: { book: Book }) {
   );
 }
 
-function InfoPair({ label, value }: { label: string; value: string }) {
+function InfoPair({ label, value, icon, className }: { label: string; value: string; icon?: React.ReactNode; className?: string }) {
   return (
-    <div>
-      <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-2 text-sm font-medium text-foreground md:text-base break-words">
+    <div className={`flex flex-1 flex-col justify-between gap-2.5 rounded-xl border border-border-subtle/50 bg-card/20 p-3 shadow-sm transition-colors hover:border-border-subtle hover:bg-muted/30 ${className || ""}`}>
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {icon && <div className="flex items-center justify-center rounded-md bg-muted/70 p-1 text-foreground/80">{icon}</div>}
+        <p className="text-[10px] font-mono uppercase tracking-widest">
+          {label}
+        </p>
+      </div>
+      <p className="text-sm font-medium text-foreground sm:text-base wrap-break-words">
         {value}
       </p>
     </div>

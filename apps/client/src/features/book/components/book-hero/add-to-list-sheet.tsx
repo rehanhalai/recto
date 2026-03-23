@@ -13,7 +13,7 @@ import { ListPlus } from "@phosphor-icons/react";
 import { useAuth } from "@/features/auth";
 import { useUserLists, useAddToList } from "../../hooks/use-user-lists";
 
-export function AddToListSheet({ bookId }: { bookId: string }) {
+export function AddToListSheet({ bookId, className }: { bookId: string; className?: string }) {
   const { isAuthenticated } = useAuth();
   const { userLists, isLoading } = useUserLists();
   const addToListMutation = useAddToList(bookId);
@@ -21,8 +21,8 @@ export function AddToListSheet({ bookId }: { bookId: string }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" disabled={!isAuthenticated}>
-          <ListPlus size={18} className="mr-2" />
+        <Button variant="outline" className={className} disabled={!isAuthenticated}>
+          <ListPlus size={18} className="mr-2 text-ink-muted transition-colors group-hover:text-foreground" />
           Add to list
         </Button>
       </SheetTrigger>

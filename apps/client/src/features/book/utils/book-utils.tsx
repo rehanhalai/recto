@@ -31,3 +31,14 @@ export function getHighResCover(coverUrl: string | null | undefined): string | u
   if (!coverUrl) return undefined;
   return coverUrl.replace("zoom=1", "zoom=2").replace("L", "M");
 }
+
+export function getLanguageName(languageCode: string | null | undefined): string {
+  if (!languageCode) return "Unknown";
+  try {
+    const displayNames = new Intl.DisplayNames(["en"], { type: "language" });
+    const name = displayNames.of(languageCode);
+    return name ? name.charAt(0).toUpperCase() + name.slice(1) : languageCode;
+  } catch (err) {
+    return languageCode;
+  }
+}

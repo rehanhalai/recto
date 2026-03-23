@@ -9,6 +9,7 @@ import {
   getBookInitials,
   renderStars,
   getHighResCover,
+  getLanguageName,
 } from "../../utils/book-utils";
 import { BookActions } from "./book-actions";
 import { getFirstAuthor } from "../../service/book-api";
@@ -73,7 +74,7 @@ export function BookHero({ book }: { book: Book }) {
               <span>No ratings yet</span>
             )}
             <span>·</span>
-            <span>{book.language || "Unknown"}</span>
+            <span>{getLanguageName(book.language)}</span>
             {pages > 0 && (
               <>
                 <span>·</span>
