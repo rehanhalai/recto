@@ -105,7 +105,7 @@ export class UserController {
   @Get("search")
   async searchUsers(@Query() query: SearchUserDto) {
     const data = await this.userService.searchUsers(query.userName);
-    if (!data.length) {
+    if (!data.pagination.hasMore) {
       throw new NotFoundException("No users found matching the query.");
     }
     return {

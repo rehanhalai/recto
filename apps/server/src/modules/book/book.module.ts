@@ -24,5 +24,6 @@ import { GoogleBooksClient } from "./clients/google-books.client";
     BookDatabaseSearchService,
     AffiliateService,
   ],
+  exports: [BookService],
 })
 export class BookModule {}

@@ -26,14 +26,14 @@ export function ReviewCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={review.user?.avatarImage || undefined} />
+            <AvatarImage src={review.author?.avatarImage || undefined} />
             <AvatarFallback>
-              {(review.user?.userName || "U").charAt(0).toUpperCase()}
+              {(review.author?.userName || "U").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
             <p className="text-sm font-medium">
-              {review.user?.userName || "Reader"}
+              {review.author?.userName || "Reader"}
             </p>
             <p className="text-xs text-muted-foreground">
               {new Date(review.updatedAt || review.createdAt).toDateString()}

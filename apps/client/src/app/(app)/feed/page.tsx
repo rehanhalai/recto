@@ -1,7 +1,7 @@
 import { getExplorePosts } from "@/features/feed";
 import { FeedPageClient } from "@/features/feed/components/feed-page-client";
 
-export default async function FeedPage() {
+export default async function Page() {
   const initialPosts = await getExplorePosts({ limit: 15 });
 
   return <FeedPageClient initialPosts={initialPosts} />;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { PaginatedResponse, PostWithRelations } from "@recto/types";
-import { AppLayout } from "@/components/layout";
+import { StandardLayout } from "@/components/layout";
 import { FeedTabs } from "@/features/feed/components/feed-tabs";
 import { ExploreFeed } from "@/features/feed/components/explore-feed";
 import { FollowingFeed } from "@/features/feed/components/following-feed";
@@ -18,7 +18,10 @@ export function FeedPageClient({ initialPosts }: FeedPageClientProps) {
   );
 
   return (
-    <AppLayout leftSidebar={<SidebarLeft />} rightPanel={<SidebarRight />}>
+    <StandardLayout 
+      leftSidebar={<SidebarLeft />} 
+      rightSidebar={<SidebarRight />}
+    >
       <div className="flex flex-col gap-3">
         <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -28,6 +31,6 @@ export function FeedPageClient({ initialPosts }: FeedPageClientProps) {
           <FollowingFeed enabled={activeTab === "following"} />
         )}
       </div>
-    </AppLayout>
+    </StandardLayout>
   );
 }

@@ -10,6 +10,7 @@ import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { DRIZZLE } from "../../../db/db.module";
 import * as schema from "../../../db/schema";
 import { bookListItems, bookLists } from "../../../db/schema";
+import { ilike, or } from "drizzle-orm";
 
 @Injectable()
 export class ListsService {
@@ -180,6 +181,67 @@ export class ListsService {
     return {
       listId,
       bookId,
+    };
+  }
+
+  async searchLists(query: string, page: number = 1, limit: number = 10) {
+    const start = (page - 1) * limit;
+
+    const results = await this.db.query.bookLists.findMany({
+      where: and(
+        eq(bookLists.isPublic, true),
+        or(
+          ilike(bookLists.name, `%${query}%`),
+          ilike(bookLists.description, `%${query}%`),
+        ),
+      ),
+      with: {
+        user: {
+          columns: {
+            userName: true,
+            avatarImage: true,
+          },
+        },
+        items: {
+          with: {
+            book: {
+              columns: {
+                coverImage: true,
+              },
+            },
+          },
+          orderBy: (item, { desc }) => [desc(item.addedAt)],
+          limit: 4,
+        },
+      },
+      limit: limit + 1,
+      offset: start,
+      orderBy: (list, { desc }) => [desc(list.updatedAt)],
+    });
+
+    const hasMore = results.length > limit;
+    const finalResults = hasMore ? results.slice(0, limit) : results;
+
+    return {
+      lists: finalResults.map((list) => ({
+        id: list.id,
+        name: list.name,
+        description: list.description,
+        is_public: list.isPublic,
+        book_count: list.bookCount,
+        user: {
+          userName: list.user?.userName || "unknown",
+          avatarImage: list.user?.avatarImage,
+        },
+        covers: list.items
+          .map((item) => item.book?.coverImage)
+          .filter((cover): cover is string => Boolean(cover)),
+      })),
+      pagination: {
+        currentPage: page,
+        limit,
+        hasMore,
+      },
     };
   }
 }

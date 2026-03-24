@@ -2,12 +2,29 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Book } from "../../types";
 import { getHighResCover } from "../../utils/book-utils";
+import { Star } from "@phosphor-icons/react/dist/ssr";
 
 interface BookCardProps {
   book: Book;
+  featured?: boolean;
 }
 
-export function BookCard({ book }: BookCardProps) {
+function extractYear(dateStr?: string): string | undefined {
+  if (!dateStr) return undefined;
+  const match = dateStr.match(/\d{4}/);
+  return match ? match[0] : undefined;
+}
+
+function getInitials(title: string): string {
+  return title
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
+export function BookCard({ book, featured = false }: BookCardProps) {
   const firstAuthor = book.authors?.[0];
   const authorName =
     typeof firstAuthor === "string"
@@ -15,46 +32,84 @@ export function BookCard({ book }: BookCardProps) {
       : (firstAuthor?.authorName ?? "Unknown Author");
   const coverImage = getHighResCover(book.coverImage);
   const rating = Number(book.averageRating ?? 0);
-  const ratingsCount = Number(book.ratingsCount ?? 0);
   const hasRating = rating > 0;
+  const year = extractYear(book.releaseDate ?? undefined);
+
+  const slug = book.title
+    .trim()
+    .toLowerCase()
+    .replace(/[\/\s]+/g, "-")
+    .replace(/-+/g, "-");
 
   return (
     <Link
-      href={`/book/${book.id}/${book.title.replaceAll(" ", "-")}`}
-      className="group flex flex-col gap-3 w-full h-full focus:outline-none"
+      href={`/book/${book.sourceId}/${slug}`}
+      className={`group flex flex-col w-full h-full focus:outline-none ${
+        featured ? "col-span-2 row-span-1 md:col-span-1" : ""
+      }`}
     >
-      <div className="relative w-full aspect-2/3 rounded-md overflow-hidden bg-card-surface border border-border-subtle shadow-sm transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:group-hover:shadow-[0_8px_30px_rgba(255,255,255,0.05)] group-hover:-translate-y-1 after:absolute after:inset-0 after:bg-linear-to-tr after:from-black/10 after:to-transparent after:opacity-0 group-hover:after:opacity-100 after:transition-opacity">
+      {/* Cover */}
+      <div
+        className={`relative w-full aspect-2/3 rounded-xl overflow-hidden border border-border-subtle shadow-sm
+          transition-all duration-300 ease-out
+          group-hover:-translate-y-1 group-hover:shadow-[0_16px_48px_rgba(0,0,0,0.13)] dark:group-hover:shadow-[0_16px_48px_rgba(255,255,255,0.06)]
+          ${featured ? "ring-1 ring-gold/30" : ""}
+        `}
+      >
         {coverImage ? (
           <Image
-            src={coverImage}
+            src={book?.coverImage || ""}
             alt={`Cover of ${book.title}`}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 768px) 160px, (max-width: 1024px) 200px, 220px"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
           />
         ) : (
-          <div className="flex flex-col gap-2 w-full px-4 py-8 h-full items-center justify-center opacity-40">
-            <div className="w-full h-0.5 bg-ink-muted rounded-full" />
-            <div className="w-full h-0.5 bg-ink-muted rounded-full" />
-            <div className="w-2/3 h-0.5 bg-ink-muted rounded-full" />
+          <div className="flex flex-col items-center justify-center w-full h-full bg-linear-to-br from-card-surface to-border-subtle/30">
+            <span className="text-3xl font-serif font-bold text-ink/20 tracking-wider">
+              {getInitials(book.title)}
+            </span>
+            <span className="text-[10px] text-ink-muted/40 mt-2 px-4 text-center line-clamp-2 font-sans">
+              {book.title}
+            </span>
           </div>
         )}
 
-        <div className="absolute left-0 top-0 bottom-0 w-0.75 bg-linear-to-r from-white/30 to-transparent mix-blend-overlay z-10" />
+        {/* Spine highlight */}
+        <div className="absolute left-0 top-0 bottom-0 w-0.75 bg-linear-to-r from-white/25 to-transparent mix-blend-overlay z-10" />
+
+        {/* Hover overlay with gradient */}
+        <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+
+        {/* Featured badge */}
+        {featured && (
+          <div className="absolute top-2 right-2 z-20 bg-gold/90 text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
+            Best Match
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col px-1">
-        <h3 className="font-serif text-[15px] md:text-base font-medium text-ink leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+      {/* Metadata */}
+      <div className="flex flex-col mt-3 px-0.5 gap-1">
+        <h3 className="font-serif text-[15px] md:text-base font-semibold text-ink leading-snug line-clamp-2 min-h-[2.5em] group-hover:text-accent transition-colors duration-200">
           {book.title}
         </h3>
-        <p className="text-[11px] md:text-xs text-ink-muted truncate mt-1.5 font-sans tracking-wide">
+        <p className="text-xs text-ink-muted/80 font-sans truncate">
           {authorName}
         </p>
-        <p className="text-[11px] md:text-xs text-ink-muted mt-1 font-sans tracking-wide">
-          {hasRating
-            ? `${rating.toFixed(1)} (${ratingsCount} reviews)`
-            : "No ratings yet"}
-        </p>
+        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-ink-muted/70">
+          {hasRating && (
+            <>
+              <Star weight="fill" className="w-3.5 h-3.5 text-gold shrink-0" />
+              <span className="font-semibold text-ink/80">{rating.toFixed(1)}</span>
+            </>
+          )}
+          {hasRating && year && <span className="text-ink-muted/30">·</span>}
+          {year && <span>{year}</span>}
+          {!hasRating && !year && (
+            <span className="italic text-ink-muted/50">No info</span>
+          )}
+        </div>
       </div>
     </Link>
   );

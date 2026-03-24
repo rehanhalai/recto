@@ -147,7 +147,8 @@ export class UserService {
     return userData;
   }
 
-  async searchUsers(userName: string) {
+  async searchUsers(userName: string, page: number = 1, limit: number = 20) {
+    const offset = (page - 1) * limit;
     const results = await this.db.query.users.findMany({
       where: ilike(users.userName, `%${userName}%`),
       columns: {
@@ -156,9 +157,21 @@ export class UserService {
         fullName: true,
         avatarImage: true,
       },
-      limit: 20,
+      limit: limit + 1, // Fetch one extra to check if there's more
+      offset,
     });
-    return results;
+
+    const hasMore = results.length > limit;
+    const data = hasMore ? results.slice(0, limit) : results;
+
+    return {
+      users: data,
+      pagination: {
+        currentPage: page,
+        limit,
+        hasMore,
+      },
+    };
   }
 
   async getUserProfile(userName: string) {

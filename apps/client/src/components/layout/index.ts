@@ -1,2 +1,2 @@
 export { Footer } from "./footer";
-export { AppLayout } from "./app-layout";
+export { StandardLayout } from "./standard-layout";

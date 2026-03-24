@@ -1,4 +1,4 @@
-import { Footer, AppLayout } from "@/components/layout";
+import { Footer, StandardLayout } from "@/components/layout";
 import { SidebarLeft } from "@/features/sidebar/components/sidebar-left";
 import { BookSidebar } from "@/features/book/components/book-detail/book-sidebar";
 import { Metadata } from "next";
@@ -25,11 +25,11 @@ export default async function bookLayout({
   const initialBook = await fetchBookSSR(id);
 
   return (
-    <AppLayout
+    <StandardLayout
       leftSidebar={<SidebarLeft showCurrentReading={false} />}
-      rightPanel={initialBook ? <BookSidebar book={initialBook} /> : <div />}
+      rightSidebar={initialBook ? <BookSidebar book={initialBook} /> : <div />}
     >
       {children}
-    </AppLayout>
+    </StandardLayout>
   );
 }

@@ -15,43 +15,46 @@ export class BookSearchService {
     const startIndex = (page - 1) * limit;
     const requestWindow = Math.min(limit * 3, 40);
 
-    const initialResponse = await this.googleBooksClient.search(
-      query,
-      requestWindow,
-      startIndex,
-    );
-
-    let books = normalizeSearchResults(initialResponse);
-    const sourceTotalItems = initialResponse.totalItems;
-
-    if (books.length < limit && startIndex + requestWindow < sourceTotalItems) {
-      const retryResponse = await this.googleBooksClient.search(
+    try {
+      const initialResponse = await this.googleBooksClient.search(
         query,
         requestWindow,
-        startIndex + requestWindow,
+        startIndex,
       );
 
-      const retryBooks = normalizeSearchResults(retryResponse);
-      const deduped = new Map(
-        [...books, ...retryBooks].map((book) => [book.sourceId, book]),
-      );
-      books = Array.from(deduped.values());
+      let books = normalizeSearchResults(initialResponse);
+      const sourceTotalItems = initialResponse.totalItems;
+
+      if (books.length < limit && startIndex + requestWindow < sourceTotalItems) {
+        try {
+          const retryResponse = await this.googleBooksClient.search(
+            query,
+            requestWindow,
+            startIndex + requestWindow,
+          );
+          const retryBooks = normalizeSearchResults(retryResponse);
+          const deduped = new Map(
+            [...books, ...retryBooks].map((book) => [book.sourceId, book]),
+          );
+          books = Array.from(deduped.values());
+        } catch {
+          // Retry failed, proceed with what we have
+        }
+      }
+
+      const finalBooks = books.slice(0, limit);
+      const hasMore = !!finalBooks.length && startIndex + requestWindow < sourceTotalItems;
+
+      return {
+        books: finalBooks,
+        pagination: { currentPage: page, limit, hasMore },
+      };
+    } catch {
+      // Google API failed (404 at high page, rate limit, etc.)
+      return {
+        books: [],
+        pagination: { currentPage: page, limit, hasMore: false },
+      };
     }
-
-    const finalBooks = books.slice(0, limit);
-    const hasMore = startIndex + requestWindow < sourceTotalItems;
-
-    if (finalBooks.length === 0) {
-      throw new NotFoundException("No valid books found for the given query");
-    }
-
-    return {
-      books: finalBooks,
-      pagination: {
-        currentPage: page,
-        limit,
-        hasMore,
-      },
-    };
   }
 }

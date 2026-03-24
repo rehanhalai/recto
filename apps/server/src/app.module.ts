@@ -14,6 +14,7 @@ import { MailModule } from "./modules/mail/mail.module";
 import { OtpModule } from "./modules/otp/otp.module";
 import { ReadingTrackerModule } from "./modules/reading-tracker/reading-tracker.module";
 import { ListsModule } from "./modules/lists/lists.module";
+import { SearchModule } from "./modules/search/search.module";
 
 import { DbModule } from "../db/db.module";
 import config from "./config/config";
@@ -37,6 +38,7 @@ import config from "./config/config";
     OtpModule,
     ReadingTrackerModule,
     ListsModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

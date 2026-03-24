@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   MagnifyingGlassIcon,
   GearIcon,
@@ -44,6 +44,7 @@ import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -132,61 +133,8 @@ export function Navbar() {
 
           {/* RIGHT: ACTIONS + MOBILE MENU */}
           <div className="flex items-center gap-1 sm:gap-3 z-20 shrink-0">
-            {/* SEARCH */}
-            <div
-              className={cn(
-                "flex items-center transition-all duration-300 ease-in-out md:relative",
-                isSearchExpanded
-                  ? "absolute inset-x-0 mx-0 md:mx-0 md:inset-auto w-full md:w-64 lg:w-80 bg-paper dark:bg-card md:bg-transparent z-50 h-16 md:h-auto px-4 md:px-0"
-                  : "w-10",
-              )}
-            >
-              {!isSearchExpanded ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-10 w-10",
-                    isLandingPage
-                      ? "text-white/75 hover:text-gold"
-                      : "text-ink-muted hover:text-accent",
-                  )}
-                  onClick={() => setIsSearchExpanded(true)}
-                >
-                  <MagnifyingGlassIcon size={22} weight="bold" />
-                </Button>
-              ) : (
-                <div
-                  className={cn(
-                    "flex items-center w-full bg-card-surface border border-border-subtle rounded-full px-3 py-1.5 shadow-sm focus-within:ring-2 transition-all",
-                    isLandingPage
-                      ? "focus-within:ring-gold/40"
-                      : "focus-within:ring-orange-200 dark:focus-within:ring-orange-950/40",
-                  )}
-                >
-                  <MagnifyingGlassIcon className="w-4.5 h-4.5 text-ink-muted shrink-0" />
-                  <Input
-                    autoFocus
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 h-7 text-sm flex-1 font-sans"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-ink-muted hover:text-ink shrink-0"
-                    onClick={() => {
-                      setIsSearchExpanded(false);
-                      setSearchQuery("");
-                    }}
-                  >
-                    <X size={18} weight="bold" />
-                  </Button>
-                </div>
-              )}
-            </div>
+            {/* Removed Search */}
+
 
             {/* NOTIFICATIONS (Visible on all screens) */}
             {isAuthenticated && (
