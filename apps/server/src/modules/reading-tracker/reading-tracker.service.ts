@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { DRIZZLE } from "../../../db/db.module";
 import * as schema from "../../../db/schema";
@@ -14,6 +14,13 @@ import {
   ReadingTrackerStatus,
   SaveReadingTrackerEntryDto,
 } from "./dto/reading-tracker.dto";
+
+/**
+ * Maximum number of books a user can have in each shelf (wishlist/reading/finished).
+ * Kept as an app-level constant so it can easily become per-plan (e.g. pro users).
+ */
+const DEFAULT_SHELF_LIMIT = 20;
+
 
 type AddedBookRecord = typeof addedBooks.$inferSelect;
 
@@ -42,6 +49,26 @@ export class ReadingTrackerService {
         .returning();
 
       return updatedEntry;
+    }
+
+    // Enforce shelf limit for new entries
+    const [countRow] = await this.db
+      .select({ count: count() })
+      .from(addedBooks)
+      .where(
+        and(eq(addedBooks.userId, userId), eq(addedBooks.status, dto.status)),
+      );
+
+    if (Number(countRow?.count ?? 0) >= DEFAULT_SHELF_LIMIT) {
+      const statusLabel =
+        dto.status === ReadingTrackerStatus.WISHLIST
+          ? "wishlist"
+          : dto.status === ReadingTrackerStatus.READING
+            ? "reading"
+            : "finished";
+      throw new BadRequestException(
+        `You can have at most ${DEFAULT_SHELF_LIMIT} books in your ${statusLabel} shelf. Upgrade to Pro for higher limits.`,
+      );
     }
 
     const [createdEntry] = await this.db

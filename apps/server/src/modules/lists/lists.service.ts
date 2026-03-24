@@ -244,4 +244,24 @@ export class ListsService {
       },
     };
   }
+
+  async createList(
+    userId: string,
+    name: string,
+    description?: string,
+    isPublic?: boolean,
+  ) {
+    const [newList] = await this.db
+      .insert(bookLists)
+      .values({
+        userId,
+        name,
+        description: description ?? null,
+        isPublic: isPublic ?? false,
+        bookCount: 0,
+      })
+      .returning();
+
+    return newList;
+  }
 }

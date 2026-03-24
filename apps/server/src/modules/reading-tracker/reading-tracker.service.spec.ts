@@ -3,20 +3,27 @@ import { ReadingTrackerService } from "./reading-tracker.service";
 import { ReadingTrackerStatus } from "./dto/reading-tracker.dto";
 
 describe("ReadingTrackerService", () => {
-  const createDbMock = () => ({
-    query: {
-      books: {
-        findFirst: jest.fn(),
+  const createDbMock = () => {
+    const whereResult = jest.fn().mockResolvedValue([{ count: 0 }]);
+    const fromResult = jest.fn().mockReturnValue({ where: whereResult });
+    const selectResult = jest.fn().mockReturnValue({ from: fromResult });
+
+    return {
+      query: {
+        books: {
+          findFirst: jest.fn(),
+        },
+        addedBooks: {
+          findFirst: jest.fn(),
+          findMany: jest.fn(),
+        },
       },
-      addedBooks: {
-        findFirst: jest.fn(),
-        findMany: jest.fn(),
-      },
-    },
-    insert: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  });
+      select: selectResult,
+      insert: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+  };
 
   it("creates a reading entry with a startedAt date and no finishedAt", async () => {
     const db = createDbMock();

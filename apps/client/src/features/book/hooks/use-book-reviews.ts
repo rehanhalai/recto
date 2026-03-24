@@ -73,3 +73,16 @@ export function useUpdateReview(bookId: string) {
     },
   });
 }
+
+export function useDeleteReview(bookId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reviewId: string) =>
+      apiInstance.delete(`/reviews/${reviewId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["book-reviews", bookId] });
+      queryClient.invalidateQueries({ queryKey: ["book-stats", bookId] });
+    },
+  });
+}

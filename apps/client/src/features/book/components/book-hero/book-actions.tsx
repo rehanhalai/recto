@@ -7,15 +7,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BookOpen, BookmarkSimple, Export } from "@phosphor-icons/react";
+import {
+  BookOpen,
+  BookmarkSimple,
+  Export,
+  ShoppingCart,
+} from "@phosphor-icons/react";
+import { useState } from "react";
 import { useAuth } from "@/features/auth";
 import { toast } from "@/lib/toast";
 import { useBookTracker } from "../../hooks/use-book-tracker";
 import { AddToListSheet } from "./add-to-list-sheet";
+import { BuyBookResponsive } from "./buy-book-responsive";
 
 export function BookActions({ bookId }: { bookId: string }) {
   const { isAuthenticated } = useAuth();
   const { currentStatus, upsertTracker, isLoading } = useBookTracker(bookId);
+  const [showBuy, setShowBuy] = useState(false);
 
   const handleShare = async () => {
     try {
@@ -49,17 +57,19 @@ export function BookActions({ bookId }: { bookId: string }) {
         className={
           currentStatus
             ? "group flex-1 justify-center bg-muted text-foreground shadow-sm transition-all duration-300 hover:bg-muted/80 sm:flex-none sm:px-6 sm:hover:scale-[1.02] active:scale-[0.98]"
-            : "group flex-1 justify-center bg-accent text-accent-foreground shadow-md shadow-accent/20 transition-all duration-300 hover:bg-accent/90 sm:flex-none sm:px-6 sm:hover:-translate-y-0.5 sm:hover:shadow-lg sm:hover:shadow-accent/30 active:translate-y-0"
+            : "group flex-1 justify-center  text-accent-foreground shadow-md shadow-accent/20 transition-all duration-300 hover:bg-accent/90 sm:flex-none sm:px-6 sm:hover:-translate-y-0.5 sm:hover:shadow-lg sm:hover:shadow-accent/30  active:translate-y-0"
         }
         onClick={() => upsertTracker.mutate("reading")}
         disabled={!isAuthenticated || isPending}
       >
         <BookOpen
           size={18}
-          className="mr-2 transition-transform duration-300 group-hover:scale-110"
+          className="mr-2 transition-transform duration-300 group-hover:scale-110 sm:group-hover:text-white"
           weight={weight}
         />
-        <span className="font-medium tracking-wide">{label}</span>
+        <span className="font-medium tracking-wide sm:group-hover:text-white">
+          {label}
+        </span>
       </Button>
 
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-1 sm:items-center sm:gap-3">
@@ -67,12 +77,12 @@ export function BookActions({ bookId }: { bookId: string }) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="group w-full bg-muted/60 border-border-subtle/40 shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
+              className="group w-full bg-muted/60  shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
               disabled={!isAuthenticated || isPending}
             >
               <BookmarkSimple
                 size={18}
-                className="mr-2 text-ink-muted transition-colors group-hover:text-foreground"
+                className="mr-2 text-ink-muted group-hover:text-black"
                 weight={
                   currentStatus && currentStatus !== "reading"
                     ? "fill"
@@ -108,6 +118,22 @@ export function BookActions({ bookId }: { bookId: string }) {
           bookId={bookId}
           className="group w-full bg-muted/60 border-border-subtle/40 shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
         />
+
+        {showBuy ? (
+          <BuyBookResponsive
+            bookId={bookId}
+            className="group w-full bg-muted/60 border-border-subtle/40 shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
+          />
+        ) : (
+          <Button
+            variant="outline"
+            onClick={() => setShowBuy(true)}
+            className="group w-full bg-muted/60 border-border-subtle/40 shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <ShoppingCart size={18} className="mr-2 text-ink-muted transition-colors group-hover:text-black" />
+            Buy
+          </Button>
+        )}
 
         <div className="hidden sm:block sm:flex-1" />
 

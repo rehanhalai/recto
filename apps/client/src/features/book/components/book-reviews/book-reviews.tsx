@@ -7,6 +7,7 @@ import {
   BookReview,
   useBookReviews,
   useCreateReview,
+  useDeleteReview,
   useUpdateReview,
 } from "../../hooks/use-book-reviews";
 import { ReviewCard } from "./review-card";
@@ -19,6 +20,7 @@ export function BookReviews({ bookId }: { bookId: string }) {
 
   const createReview = useCreateReview(bookId);
   const updateReview = useUpdateReview(bookId);
+  const deleteReview = useDeleteReview(bookId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -96,6 +98,15 @@ export function BookReviews({ bookId }: { bookId: string }) {
                 pinned={isPinnedMine}
                 canEdit={isMine}
                 onEdit={() => startEdit(review)}
+                onDelete={
+                  isMine
+                    ? () => {
+                        if (window.confirm("Delete this review? This cannot be undone.")) {
+                          deleteReview.mutate(review.id);
+                        }
+                      }
+                    : undefined
+                }
               />
             );
           })}

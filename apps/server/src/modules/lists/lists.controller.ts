@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -65,6 +66,29 @@ export class ListsController {
     return {
       data,
       message: "Book added to list successfully",
+    };
+  }
+
+  @Post()
+  @UseGuards(AuthGuard)
+  async createList(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Body() body: { name: string; description?: string; is_public?: boolean },
+  ): Promise<any> {
+    if (!body.name?.trim()) {
+      throw new BadRequestException("List name is required");
+    }
+
+    const data = await this.listsService.createList(
+      user.id,
+      body.name.trim(),
+      body.description,
+      body.is_public,
+    );
+
+    return {
+      data,
+      message: "List created successfully",
     };
   }
 }

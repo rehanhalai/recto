@@ -8,7 +8,6 @@ import type { Book } from "../../types";
 import {
   getBookInitials,
   renderStars,
-  getHighResCover,
   getLanguageName,
 } from "../../utils/book-utils";
 import { BookActions } from "./book-actions";
@@ -21,16 +20,16 @@ export function BookHero({ book }: { book: Book }) {
   const rating = Number(book.averageRating ?? 0);
   const ratingsCount = Number(book.ratingsCount ?? 0);
   const pages = book.pageCount ?? 0;
-  const coverImage = getHighResCover(book.coverImage);
+  // const coverImage = getHighResCover(book.coverImage);
 
   return (
     <section className="space-y-4 rounded-2xl border border-border-subtle/70 bg-card/70 p-4 md:p-6">
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative w-40 shrink-0">
           <div className="relative aspect-2/3 overflow-hidden rounded-[10px] bg-muted shadow-lg border border-border-subtle/60">
-            {coverImage && !coverError ? (
+            {book.coverImage && !coverError ? (
               <Image
-                src={coverImage}
+                src={book.coverImage}
                 alt={book.title}
                 fill
                 className="object-cover"

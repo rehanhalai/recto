@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StarIcon, PencilSimpleIcon } from "@phosphor-icons/react";
+import { StarIcon, PencilSimpleIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { BookReview } from "../../hooks/use-book-reviews";
@@ -9,6 +9,7 @@ interface ReviewCardProps {
   pinned: boolean;
   canEdit: boolean;
   onEdit: () => void;
+  onDelete?: () => void;
 }
 
 export function ReviewCard({
@@ -16,6 +17,7 @@ export function ReviewCard({
   pinned,
   canEdit,
   onEdit,
+  onDelete,
 }: ReviewCardProps) {
   const [expanded, setExpanded] = useState(false);
   const content = review.content || "";
@@ -51,6 +53,11 @@ export function ReviewCard({
             <Button variant="ghost" size="sm" onClick={onEdit}>
               <PencilSimpleIcon size={16} className="mr-1" />
               Edit
+            </Button>
+          )}
+          {canEdit && onDelete && (
+            <Button variant="ghost" size="sm" onClick={onDelete} className="text-destructive hover:text-destructive">
+              <TrashSimpleIcon size={16} />
             </Button>
           )}
         </div>

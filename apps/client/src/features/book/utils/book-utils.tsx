@@ -27,12 +27,9 @@ export function renderStars(rating: number) {
   });
 }
 
-export function getHighResCover(coverUrl: string | null | undefined): string | undefined {
-  if (!coverUrl) return undefined;
-  return coverUrl.replace("zoom=1", "zoom=2").replace("L", "M");
-}
-
-export function getLanguageName(languageCode: string | null | undefined): string {
+export function getLanguageName(
+  languageCode: string | null | undefined,
+): string {
   if (!languageCode) return "Unknown";
   try {
     const displayNames = new Intl.DisplayNames(["en"], { type: "language" });

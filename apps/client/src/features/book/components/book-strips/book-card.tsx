@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Book } from "../../types";
-import { getHighResCover } from "../../utils/book-utils";
 import { Star } from "@phosphor-icons/react/dist/ssr";
 
 interface BookCardProps {
@@ -30,7 +29,7 @@ export function BookCard({ book, featured = false }: BookCardProps) {
     typeof firstAuthor === "string"
       ? firstAuthor
       : (firstAuthor?.authorName ?? "Unknown Author");
-  const coverImage = getHighResCover(book.coverImage);
+  const coverImage = book.coverImage;
   const rating = Number(book.averageRating ?? 0);
   const hasRating = rating > 0;
   const year = extractYear(book.releaseDate ?? undefined);
@@ -101,7 +100,9 @@ export function BookCard({ book, featured = false }: BookCardProps) {
           {hasRating && (
             <>
               <Star weight="fill" className="w-3.5 h-3.5 text-gold shrink-0" />
-              <span className="font-semibold text-ink/80">{rating.toFixed(1)}</span>
+              <span className="font-semibold text-ink/80">
+                {rating.toFixed(1)}
+              </span>
             </>
           )}
           {hasRating && year && <span className="text-ink-muted/30">·</span>}
