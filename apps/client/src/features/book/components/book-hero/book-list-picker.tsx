@@ -24,7 +24,7 @@ import {
   PlusCircle,
   Archive,
 } from "@phosphor-icons/react";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
 import {
   useUserLists,
   useAddToList,
@@ -42,7 +42,7 @@ interface BookListPickerProps {
 
 export function BookListPicker({ bookId, className }: BookListPickerProps) {
   const isDesktop = useMediaQuery("(min-width: 640px)");
-  const { isAuthenticated } = useAuth();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { userLists, isLoading } = useUserLists(bookId);
   const addToListMutation = useAddToList(bookId);
   const removeFromListMutation = useRemoveFromList(bookId);

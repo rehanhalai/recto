@@ -15,7 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
 import { useCurrentRead } from "@/features/feed/hooks/useCurrentRead";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -49,7 +49,7 @@ export function SidebarLeft({
   showCurrentReading?: boolean;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const user = useAuthStore((state) => state.user);
   const { data: currentRead, isLoading: isLoadingRead } = useCurrentRead();
   const { theme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);

@@ -178,4 +178,10 @@ export class AuthController {
     // or just the generic dashboard since cookie is set
     return res.redirect(clientUrl);
   }
+
+  @UseGuards(AuthGuard)
+  @Get("me")
+  async getCurrentUser(@CurrentUser() user: AuthenticatedRequestUser) {
+    return this.authService.getCurrentUser(user.id);
+  }
 }

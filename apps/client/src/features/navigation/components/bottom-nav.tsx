@@ -11,7 +11,7 @@ import {
   UserCircle,
 } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/UserAvatar";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
 import { useNotifications } from "@/features/notifications/hooks/use-notifications";
 import { cn } from "@/lib/utils";
 import {
@@ -23,7 +23,7 @@ import {
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const user = useAuthStore((state) => state.user);
   const { unreadCount } = useNotifications();
   const [isComposeOpen, setIsComposeOpen] = useState(false);
 

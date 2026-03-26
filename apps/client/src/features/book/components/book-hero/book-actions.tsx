@@ -15,7 +15,7 @@ import {
   CaretDown,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useBookTracker } from "../../hooks/use-book-tracker";
@@ -23,7 +23,7 @@ import { BookListPicker } from "./book-list-picker";
 import { BuyBookResponsive } from "./buy-book-responsive";
 
 export function BookActions({ bookId }: { bookId: string }) {
-  const { isAuthenticated } = useAuth();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { currentStatus, upsertTracker, isLoading } = useBookTracker(bookId);
   const [showBuy, setShowBuy] = useState(false);
 
@@ -70,29 +70,29 @@ export function BookActions({ bookId }: { bookId: string }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[320px] p-0 overflow-hidden rounded-2xl bg-card border-border-subtle/60 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+            className="w-[320px] p-0 overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border-subtle/40 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200"
             sideOffset={12}
             align="start"
           >
-            <div className="flex flex-col divide-y divide-border-subtle/40">
+            <div className="flex flex-col divide-y divide-border-subtle/30">
               {statusItems.map((item) => (
                 <DropdownMenuItem
                   key={item.id}
                   onClick={() => upsertTracker.mutate(item.id as any)}
-                  className="flex h-14 cursor-pointer items-center gap-4 px-5 transition-colors focus:bg-muted/60"
+                  className="flex h-14 cursor-pointer items-center gap-4 px-5 transition-all duration-200 hover:bg-muted/50 focus:bg-muted/60 group"
                 >
                   <div
                     className={cn(
-                      "h-3.5 w-3.5 rounded-full shadow-sm transition-transform group-hover:scale-110",
+                      "h-3.5 w-3.5 rounded-full shadow-sm transition-all duration-300 group-hover:scale-125 group-hover:shadow-md",
                       item.color,
                     )}
                   />
                   <span
                     className={cn(
-                      "flex-1 text-sm font-medium",
+                      "flex-1 text-sm font-medium transition-all duration-200",
                       currentStatus === item.id
-                        ? "text-foreground"
-                        : "text-ink-muted",
+                        ? "text-foreground font-semibold"
+                        : "text-ink-muted group-hover:text-foreground",
                     )}
                   >
                     {item.label}

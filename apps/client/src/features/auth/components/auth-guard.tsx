@@ -7,7 +7,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../hooks/use-auth";
+import { useAuthStore } from "../store/auth-store";
+import { useAuthUnauthorizedHandler } from "../hooks/use-auth-unauthorized-handler";
+import { useCurrentUser } from "../hooks/use-current-user";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -20,8 +22,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   redirectTo = "/login",
   requireAuth = true,
 }) => {
-  const { isAuthenticated, isCheckingAuth } = useAuth();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isCheckingAuth } = useCurrentUser();
   const router = useRouter();
+
+  useAuthUnauthorizedHandler();
 
   // Redirect if authentication requirement is not met
   useEffect(() => {
@@ -62,8 +67,11 @@ export const GuestGuard: React.FC<GuestGuardProps> = ({
   children,
   redirectTo = "/",
 }) => {
-  const { isAuthenticated, isCheckingAuth } = useAuth();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isCheckingAuth } = useCurrentUser();
   const router = useRouter();
+
+  useAuthUnauthorizedHandler();
 
   useEffect(() => {
     if (!isCheckingAuth && isAuthenticated) {

@@ -36,7 +36,10 @@ import {
 } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
+import { useAuthUnauthorizedHandler } from "@/features/auth/hooks/use-auth-unauthorized-handler";
+import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { useLogout } from "@/features/auth/hooks/use-logout";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";
@@ -49,8 +52,13 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logoutMutation = useLogout();
   const { theme, systemTheme } = useTheme();
+
+  useCurrentUser();
+  useAuthUnauthorizedHandler();
 
   useEffect(() => {
     setMounted(true);
@@ -134,7 +142,6 @@ export function Navbar() {
           {/* RIGHT: ACTIONS + MOBILE MENU */}
           <div className="flex items-center gap-1 sm:gap-3 z-20 shrink-0">
             {/* Removed Search */}
-
 
             {/* NOTIFICATIONS (Visible on all screens) */}
             {isAuthenticated && (
@@ -266,7 +273,7 @@ export function Navbar() {
 
                     <div className="px-1 relative z-10">
                       <DropdownMenuItem
-                        onClick={() => logout()}
+                        onClick={() => logoutMutation.mutateAsync()}
                         className="cursor-pointer py-2.5 px-3 gap-3 rounded-md text-red-500/80 focus:text-red-600 focus:bg-red-500/10 transition-all duration-200 group"
                       >
                         <SignOutIcon
@@ -436,7 +443,7 @@ export function Navbar() {
                       <Button
                         variant="ghost"
                         onClick={() => {
-                          logout();
+                          logoutMutation.mutateAsync();
                           setMobileMenuOpen(false);
                         }}
                         className="w-full justify-start gap-4 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"

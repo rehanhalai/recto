@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiInstance } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
 
 import { ReadingStatus, AddedBookWithRelations } from "@recto/types";
 
@@ -11,10 +11,11 @@ export type TrackerEntry = AddedBookWithRelations;
 
 export function useBookTracker(bookId: string) {
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
-  const [optimisticStatus, setOptimisticStatus] = useState<TrackerStatus | null>(null);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [optimisticStatus, setOptimisticStatus] =
+    useState<TrackerStatus | null>(null);
 
-  const trackersQuery = useQuery<{ data: TrackerEntry[] } | TrackerEntry[]> ({
+  const trackersQuery = useQuery<{ data: TrackerEntry[] } | TrackerEntry[]>({
     queryKey: ["book-tracker-status", bookId],
     queryFn: async () => {
       const [wishlist, reading, finished] = await Promise.all([

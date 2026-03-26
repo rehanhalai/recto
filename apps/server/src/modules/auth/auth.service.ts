@@ -338,4 +338,11 @@ export class AuthService {
 
     return { sessionToken, userData };
   }
+  async getCurrentUser(userId: string) {
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    if (!user) return { user: null };
+    return { user: this.getUserData(user) };
+  }
 }

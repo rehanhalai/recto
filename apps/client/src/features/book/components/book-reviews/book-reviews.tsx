@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
 import {
   BookReview,
   useBookReviews,
@@ -14,7 +14,8 @@ import { ReviewCard } from "./review-card";
 import { ReviewFormSheet } from "./review-form-sheet";
 
 export function BookReviews({ bookId }: { bookId: string }) {
-  const { user, isAuthenticated } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useBookReviews(bookId, 6);
 
@@ -101,7 +102,11 @@ export function BookReviews({ bookId }: { bookId: string }) {
                 onDelete={
                   isMine
                     ? () => {
-                        if (window.confirm("Delete this review? This cannot be undone.")) {
+                        if (
+                          window.confirm(
+                            "Delete this review? This cannot be undone.",
+                          )
+                        ) {
                           deleteReview.mutate(review.id);
                         }
                       }

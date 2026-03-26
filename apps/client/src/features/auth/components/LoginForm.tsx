@@ -16,7 +16,7 @@ import {
 } from "@phosphor-icons/react";
 
 import { Button, Input, Label } from "@/components/ui";
-import { useAuth } from "../hooks/use-auth";
+import { useLogin } from "../hooks/use-login";
 import { SocialAuth } from "./SocialAuth";
 
 // Validation Schema
@@ -29,7 +29,7 @@ type LoginInput = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
-  const { login, isLoggingIn } = useAuth();
+  const loginMutation = useLogin();
   const [showPassword, setShowPassword] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
@@ -40,7 +40,10 @@ export function LoginForm() {
   const onSubmit = async (data: LoginInput) => {
     setGlobalError(null);
     try {
-      await login({ email: data.email, password: data.password });
+      await loginMutation.mutateAsync({
+        email: data.email,
+        password: data.password,
+      });
       toast.success("Login successful!");
       router.push("/feed");
     } catch (error: any) {
@@ -143,14 +146,14 @@ export function LoginForm() {
         {/* Sign In Button */}
         <Button
           type="submit"
-          disabled={isLoggingIn}
+          disabled={loginMutation.isPending}
           className="w-full mt-6 bg-black hover:bg-gray-900 text-white font-medium py-2.5"
           size="lg"
         >
-          {isLoggingIn && (
+          {loginMutation.isPending && (
             <SpinnerIcon size={18} className="mr-2 animate-spin" />
           )}
-          {isLoggingIn ? "Signing in..." : "Sign in"}
+          {loginMutation.isPending ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 

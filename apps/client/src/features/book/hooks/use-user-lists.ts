@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
-import { useAuth } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
 import { addBookToList, createList, getUserLists } from "../service/list-api";
 
 import { removeBookFromList } from "../service/list-api";
 
 export function useUserLists(bookId?: string) {
-  const { isAuthenticated } = useAuth();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const userListsQuery = useQuery({
     queryKey: ["user-lists", bookId],

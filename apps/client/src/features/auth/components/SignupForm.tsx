@@ -31,7 +31,8 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui";
-import { useAuth } from "../hooks/use-auth";
+import { useSignup } from "../hooks/use-signup";
+import { useVerifyOTP } from "../hooks/use-verify-otp";
 import { useGenerateUsername } from "../hooks/use-username";
 import {
   otpSchema,
@@ -49,7 +50,8 @@ interface SignupFormProps {
 
 export function SignupForm({ onStepChange }: SignupFormProps) {
   const router = useRouter();
-  const { signup, verifyOTP, isSigningUp, isVerifyingOTP } = useAuth();
+  const signupMutation = useSignup();
+  const verifyOTPMutation = useVerifyOTP();
   const { refetch: generateUsername, isFetching: isGeneratingName } =
     useGenerateUsername();
 
@@ -83,7 +85,7 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
   const onCredentialsSubmit = async (data: SignupCredentialsInput) => {
     setGlobalError(null);
     try {
-      await signup({
+      await signupMutation.mutateAsync({
         email: data.email,
         userName: data.username,
         password: data.password,
@@ -106,7 +108,7 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
   const onOTPSubmit = async (data: OTPInput) => {
     setGlobalError(null);
     try {
-      await verifyOTP({
+      await verifyOTPMutation.mutateAsync({
         email: signupEmail,
         otp: data.otp,
       });
@@ -245,14 +247,14 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
                 )}
               </button>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+                disabled={signupMutation.isPending}
               8+ characters with uppercase letter and number
             </p>
             {credentialsForm.formState.errors.password && (
-              <p className="text-xs text-red-600">
+                {signupMutation.isPending && (
                 {credentialsForm.formState.errors.password.message}
               </p>
-            )}
+                {signupMutation.isPending ? "Sending OTP..." : "Create account"}
           </div>
 
           {/* Confirm Password */}
@@ -287,14 +289,16 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
                 )}
               </button>
             </div>
-            {credentialsForm.formState.errors.confirmPassword && (
+                disabled={verifyOTPMutation.isPending}
               <p className="mt-1 text-xs text-red-600">
                 {credentialsForm.formState.errors.confirmPassword.message}
               </p>
-            )}
+                {verifyOTPMutation.isPending && (
           </div>
 
-          {/* Submit Button */}
+                {verifyOTPMutation.isPending
+                  ? "Verifying..."
+                  : "Verify & Complete"}
           <Button
             type="submit"
             disabled={isSigningUp}
