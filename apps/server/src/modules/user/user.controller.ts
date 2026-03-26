@@ -1,8 +1,11 @@
 import {
   Controller,
+  Delete,
   Patch,
   Body,
   Get,
+  Post,
+  Param,
   Query,
   UseGuards,
   UseInterceptors,
@@ -14,6 +17,7 @@ import {
   UpdateProfileDto,
   UserNameAvailabilityDto,
   SearchUserDto,
+  ProfileRelationQueryDto,
 } from "./dto/user.dto";
 import { AuthGuard, OptionalAuthGuard, CurrentUser } from "../common";
 import type { AuthenticatedRequestUser } from "../common";
@@ -114,12 +118,73 @@ export class UserController {
     };
   }
 
+  @UseGuards(OptionalAuthGuard)
   @Get("profile")
-  async getUserProfile(@Query() query: SearchUserDto) {
-    const user = await this.userService.getUserProfile(query.userName);
+  async getUserProfile(
+    @CurrentUser() user: AuthenticatedRequestUser | null,
+    @Query() query: SearchUserDto,
+  ) {
+    const profile = await this.userService.getUserProfile(
+      query.userName,
+      user?.id,
+    );
     return {
-      ...user,
+      data: profile,
       message: "User fetched successfully.",
+    };
+  }
+
+  @Get("profile/followers")
+  async getFollowers(@Query() query: ProfileRelationQueryDto) {
+    const data = await this.userService.getFollowersByUserName(
+      query.userName,
+      query.cursor,
+      query.limit,
+    );
+
+    return {
+      data,
+      message: "Followers fetched successfully.",
+    };
+  }
+
+  @Get("profile/following")
+  async getFollowing(@Query() query: ProfileRelationQueryDto) {
+    const data = await this.userService.getFollowingByUserName(
+      query.userName,
+      query.cursor,
+      query.limit,
+    );
+
+    return {
+      data,
+      message: "Following fetched successfully.",
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Post("follow/:targetUserId")
+  async followUser(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("targetUserId") targetUserId: string,
+  ) {
+    const data = await this.userService.followUser(user.id, targetUserId);
+    return {
+      data,
+      message: "User followed successfully.",
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete("follow/:targetUserId")
+  async unfollowUser(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("targetUserId") targetUserId: string,
+  ) {
+    const data = await this.userService.unfollowUser(user.id, targetUserId);
+    return {
+      data,
+      message: "User unfollowed successfully.",
     };
   }
 }

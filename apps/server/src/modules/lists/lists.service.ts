@@ -148,6 +148,37 @@ export class ListsService {
     return results;
   }
 
+  async getPublicUserLists(userId: string) {
+    const lists = await this.db.query.bookLists.findMany({
+      where: and(eq(bookLists.userId, userId), eq(bookLists.isPublic, true)),
+      with: {
+        items: {
+          with: {
+            book: {
+              columns: {
+                coverImage: true,
+              },
+            },
+          },
+          orderBy: (item, { desc }) => [desc(item.addedAt)],
+          limit: 4,
+        },
+      },
+      orderBy: (list, { desc }) => [desc(list.updatedAt)],
+    });
+
+    return lists.map((list) => ({
+      id: list.id,
+      name: list.name,
+      description: list.description,
+      is_public: list.isPublic,
+      book_count: list.bookCount,
+      covers: list.items
+        .map((item) => item.book?.coverImage)
+        .filter((cover): cover is string => Boolean(cover)),
+    }));
+  }
+
   async removeBookFromList(userId: string, listId: string, bookId: string) {
     const list = await this.db.query.bookLists.findFirst({
       where: eq(bookLists.id, listId),

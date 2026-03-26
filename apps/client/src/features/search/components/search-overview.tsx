@@ -105,7 +105,7 @@ export function SearchOverview({ query, onTabChange }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {users.map((user: any) => (
               <Link
-                href={`/user/${user.userName}`}
+                href={`/${user.userName}`}
                 key={user.id}
                 className="group flex items-center gap-4 p-4 rounded-xl bg-card-surface border border-border-subtle hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
               >

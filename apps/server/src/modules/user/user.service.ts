@@ -3,14 +3,15 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from "@nestjs/common";
 import { StorageService } from "../storage/storage.service";
 import { UploadAssetType } from "../storage/enums/upload-asset-type.enum";
-import { eq, ilike, and, desc } from "drizzle-orm";
+import { eq, ilike, and, desc, lt } from "drizzle-orm";
 import { DRIZZLE } from "../../../db/db.module";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../../../db/schema";
-import { users } from "../../../db/schema";
+import { followers, users } from "../../../db/schema";
 import {
   uniqueNamesGenerator,
   adjectives,
@@ -183,7 +184,21 @@ export class UserService {
     };
   }
 
-  async getUserProfile(userName: string) {
+  private async getFollowingState(viewerId: string, targetUserId: string) {
+    const existing = await this.db.query.followers.findFirst({
+      where: and(
+        eq(followers.followerId, viewerId),
+        eq(followers.followingId, targetUserId),
+      ),
+      columns: {
+        id: true,
+      },
+    });
+
+    return Boolean(existing);
+  }
+
+  async getUserProfile(userName: string, viewerId?: string) {
     const user = await this.db.query.users.findFirst({
       where: eq(users.userName, userName.trim().toLowerCase()),
       columns: {
@@ -206,6 +221,195 @@ export class UserService {
       },
     });
     if (!user) throw new NotFoundException("No user found matching the query.");
-    return user;
+
+    const isMe = Boolean(viewerId && viewerId === user.id);
+    const isFollowing =
+      viewerId && !isMe
+        ? await this.getFollowingState(viewerId, user.id)
+        : false;
+
+    return {
+      user,
+      context: {
+        isMe,
+        isFollowing,
+      },
+    };
+  }
+
+  async getFollowersByUserName(userName: string, cursor?: string, limit = 30) {
+    const safeLimit = Math.min(Math.max(limit || 30, 1), 100);
+
+    const target = await this.db.query.users.findFirst({
+      where: eq(users.userName, userName.trim().toLowerCase()),
+      columns: { id: true },
+    });
+
+    if (!target) {
+      throw new NotFoundException("No user found matching the query.");
+    }
+
+    let cursorDate: Date | undefined;
+    if (cursor) {
+      const parsed = new Date(cursor);
+      if (!Number.isNaN(parsed.getTime())) {
+        cursorDate = parsed;
+      }
+    }
+
+    const query = this.db
+      .select({
+        id: users.id,
+        userName: users.userName,
+        fullName: users.fullName,
+        avatarImage: users.avatarImage,
+        followedAt: followers.createdAt,
+      })
+      .from(followers)
+      .innerJoin(users, eq(followers.followerId, users.id))
+      .orderBy(desc(followers.createdAt), desc(followers.id))
+      .limit(safeLimit + 1);
+
+    const rows = await (cursorDate
+      ? query.where(
+          and(
+            eq(followers.followingId, target.id),
+            lt(followers.createdAt, cursorDate),
+          ),
+        )
+      : query.where(eq(followers.followingId, target.id)));
+
+    const hasMore = rows.length > safeLimit;
+    const data = hasMore ? rows.slice(0, safeLimit) : rows;
+    const nextCursor = hasMore
+      ? (data[data.length - 1]?.followedAt?.toISOString() ?? null)
+      : null;
+
+    return {
+      data: data.map((row) => ({
+        id: row.id,
+        userName: row.userName,
+        fullName: row.fullName,
+        avatarImage: row.avatarImage,
+      })),
+      nextCursor,
+      hasMore,
+    };
+  }
+
+  async getFollowingByUserName(userName: string, cursor?: string, limit = 30) {
+    const safeLimit = Math.min(Math.max(limit || 30, 1), 100);
+
+    const target = await this.db.query.users.findFirst({
+      where: eq(users.userName, userName.trim().toLowerCase()),
+      columns: { id: true },
+    });
+
+    if (!target) {
+      throw new NotFoundException("No user found matching the query.");
+    }
+
+    let cursorDate: Date | undefined;
+    if (cursor) {
+      const parsed = new Date(cursor);
+      if (!Number.isNaN(parsed.getTime())) {
+        cursorDate = parsed;
+      }
+    }
+
+    const query = this.db
+      .select({
+        id: users.id,
+        userName: users.userName,
+        fullName: users.fullName,
+        avatarImage: users.avatarImage,
+        followedAt: followers.createdAt,
+      })
+      .from(followers)
+      .innerJoin(users, eq(followers.followingId, users.id))
+      .orderBy(desc(followers.createdAt), desc(followers.id))
+      .limit(safeLimit + 1);
+
+    const rows = await (cursorDate
+      ? query.where(
+          and(
+            eq(followers.followerId, target.id),
+            lt(followers.createdAt, cursorDate),
+          ),
+        )
+      : query.where(eq(followers.followerId, target.id)));
+
+    const hasMore = rows.length > safeLimit;
+    const data = hasMore ? rows.slice(0, safeLimit) : rows;
+    const nextCursor = hasMore
+      ? (data[data.length - 1]?.followedAt?.toISOString() ?? null)
+      : null;
+
+    return {
+      data: data.map((row) => ({
+        id: row.id,
+        userName: row.userName,
+        fullName: row.fullName,
+        avatarImage: row.avatarImage,
+      })),
+      nextCursor,
+      hasMore,
+    };
+  }
+
+  async followUser(currentUserId: string, targetUserId: string) {
+    if (currentUserId === targetUserId) {
+      throw new BadRequestException("You cannot follow yourself.");
+    }
+
+    const target = await this.db.query.users.findFirst({
+      where: eq(users.id, targetUserId),
+      columns: { id: true },
+    });
+
+    if (!target) {
+      throw new NotFoundException("Target user not found");
+    }
+
+    const existing = await this.db.query.followers.findFirst({
+      where: and(
+        eq(followers.followerId, currentUserId),
+        eq(followers.followingId, targetUserId),
+      ),
+      columns: { id: true },
+    });
+
+    if (existing) {
+      return { isFollowing: true };
+    }
+
+    await this.db.insert(followers).values({
+      followerId: currentUserId,
+      followingId: targetUserId,
+    });
+
+    return { isFollowing: true };
+  }
+
+  async unfollowUser(currentUserId: string, targetUserId: string) {
+    if (currentUserId === targetUserId) {
+      throw new BadRequestException("You cannot unfollow yourself.");
+    }
+
+    const deleted = await this.db
+      .delete(followers)
+      .where(
+        and(
+          eq(followers.followerId, currentUserId),
+          eq(followers.followingId, targetUserId),
+        ),
+      )
+      .returning({ id: followers.id });
+
+    if (deleted.length === 0) {
+      return { isFollowing: false };
+    }
+
+    return { isFollowing: false };
   }
 }

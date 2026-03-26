@@ -79,11 +79,14 @@ export function SidebarLeft({
       ? rectoLogoLight
       : rectoLogoDark;
 
-  const profileHref = user ? `/user/${user.userName}` : "/profile";
+  const profileHref = user ? `/${user.userName}` : "/login";
 
   const isActive = (href: string) => {
     if (href === "/feed") return pathname === "/feed";
     if (href === "/search") return pathname === "/search";
+    if (user && href === `/${user.userName}`) {
+      return pathname === `/${user.userName}`;
+    }
     return pathname.startsWith(href);
   };
 
@@ -351,7 +354,7 @@ function UserProfileCard({
 }) {
   return (
     <Link
-      href={`/user/${user.userName}`}
+      href={`/${user.userName}`}
       className="group flex items-start gap-3 px-4 py-3.5 rounded-xl border border-border-subtle/40 bg-card-surface/40 hover:bg-card-surface/60 transition-colors duration-150"
     >
       {/* Avatar */}

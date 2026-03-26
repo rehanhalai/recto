@@ -17,10 +17,10 @@ import {
 import { ReadingTrackerService } from "./reading-tracker.service";
 
 @Controller("tracker")
-@UseGuards(AuthGuard)
 export class ReadingTrackerController {
   constructor(private readonly readingTrackerService: ReadingTrackerService) {}
 
+  @UseGuards(AuthGuard)
   @Get()
   async listEntries(
     @CurrentUser() user: AuthenticatedRequestUser,
@@ -45,6 +45,7 @@ export class ReadingTrackerController {
     };
   }
 
+  @UseGuards(AuthGuard)
   @Post("tbrbook")
   async saveEntry(
     @CurrentUser() user: AuthenticatedRequestUser,
@@ -57,6 +58,7 @@ export class ReadingTrackerController {
     };
   }
 
+  @UseGuards(AuthGuard)
   @Delete("tbrbook/:tbrId")
   async removeEntry(
     @CurrentUser() user: AuthenticatedRequestUser,

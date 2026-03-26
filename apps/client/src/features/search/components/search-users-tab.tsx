@@ -40,7 +40,7 @@ export function SearchUsersTab({ query }: { query: string }) {
     <div className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {users.map((user: any, i: number) => (
-          <Link href={`/user/${user.userName}`} key={`${user.id}-${i}`} className="group flex items-center gap-4 p-4 rounded-xl bg-card-surface border border-border-subtle hover:border-accent/50 transition-all hover:shadow-md">
+          <Link href={`/${user.userName}`} key={`${user.id}-${i}`} className="group flex items-center gap-4 p-4 rounded-xl bg-card-surface border border-border-subtle hover:border-accent/50 transition-all hover:shadow-md">
             <Avatar className="w-14 h-14 ring-2 ring-transparent group-hover:ring-accent/30 transition-all">
               <AvatarImage src={user.avatarImage || ""} />
               <AvatarFallback className="bg-orange-100 text-orange-900 font-bold text-lg">{user.userName?.charAt(0).toUpperCase()}</AvatarFallback>

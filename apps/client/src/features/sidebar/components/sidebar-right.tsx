@@ -57,8 +57,12 @@ function TrendingSection() {
           {books.slice(0, 6).map((book, index) => (
             <Link
               key={book.id}
-              href={`/book/${book.id}/${book.title.replaceAll(" ", "-")}`}
-              className="group flex flex-col gap-1.5"
+              href={`/book/${book.sourceId}/${book.title
+              .trim()
+              .toLowerCase()
+              .replace(/[\/\s]+/g, "-")
+              .replace(/-+/g, "-")}`}
+            className="group flex flex-col gap-1.5"
             >
               <div className="relative aspect-2/3 w-full rounded overflow-hidden bg-card-surface border border-border-subtle">
                 {book.coverImage ? (
@@ -157,7 +161,7 @@ function UserSuggestionCard({
 
   return (
     <div className="flex items-center gap-3">
-      <Link href={`/user/${user.userName}`} className="shrink-0">
+      <Link href={`/${user.userName}`} className="shrink-0">
         <UserAvatar
           src={user.avatarImage}
           fallbackName={user.fullName ?? user.userName}
@@ -166,7 +170,7 @@ function UserSuggestionCard({
       </Link>
       <div className="flex-1 min-w-0">
         <Link
-          href={`/user/${user.userName}`}
+          href={`/${user.userName}`}
           className="text-sm font-medium text-ink truncate block hover:underline leading-tight"
         >
           {user.fullName ?? user.userName}

@@ -245,7 +245,7 @@ export function Navbar() {
                         className="cursor-pointer py-2.5 px-3 gap-3 rounded-md text-ink-muted focus:text-ink focus:bg-gold/10 transition-all duration-200 group"
                         asChild
                       >
-                        <Link href={`/user/${user?.userName}`}>
+                        <Link href={`/${user?.userName}`}>
                           <UserIcon
                             size={18}
                             weight="duotone"

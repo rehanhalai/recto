@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import {
   AuthGuard,
+  OptionalAuthGuard,
   CurrentUser,
   type AuthenticatedRequestUser,
 } from "../common";
@@ -49,6 +50,22 @@ export class ListsController {
     return {
       data,
       message: "User lists fetched successfully",
+    };
+  }
+
+  @Get("user/:userId")
+  @UseGuards(OptionalAuthGuard)
+  async getUserPublicLists(
+    @CurrentUser() user: AuthenticatedRequestUser | null,
+    @Param("userId") userId: string,
+  ): Promise<any> {
+    const isOwner = Boolean(user?.id && user.id === userId);
+    const data = isOwner
+      ? await this.listsService.getUserLists(userId)
+      : await this.listsService.getPublicUserLists(userId);
+    return {
+      data,
+      message: "User public lists fetched successfully",
     };
   }
 
