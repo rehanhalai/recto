@@ -16,6 +16,7 @@ const sanitizeUser = (user: User | null): User | null => {
     id: user.id ?? (user as User & { _id?: string })._id ?? "",
     userName: user.userName,
     fullName: user.fullName ?? null,
+    bio: user.bio ?? null,
     email: user.email,
     avatarImage: user.avatarImage ?? null,
     coverImage: user.coverImage ?? null,

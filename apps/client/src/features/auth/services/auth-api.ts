@@ -120,12 +120,35 @@ export const updateProfile = async (
 };
 
 export const updateProfileImage = async (
-  avatarFile?: File,
+  payload?:
+    | File
+    | {
+        avatarFile?: File | null;
+        coverFile?: File | null;
+        removeAvatar?: boolean;
+        removeCover?: boolean;
+      },
 ): Promise<ApiResponse<User>> => {
   const formData = new FormData();
 
-  if (avatarFile) {
-    formData.append("avatarImage", avatarFile);
+  if (payload instanceof File) {
+    formData.append("avatarImage", payload);
+  } else if (payload) {
+    if (payload.avatarFile) {
+      formData.append("avatarImage", payload.avatarFile);
+    }
+
+    if (payload.coverFile) {
+      formData.append("coverImage", payload.coverFile);
+    }
+
+    if (payload.removeAvatar) {
+      formData.append("avatarImage", "remove");
+    }
+
+    if (payload.removeCover) {
+      formData.append("coverImage", "remove");
+    }
   }
 
   return apiInstance.patch<ApiResponse<User>>(

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { DotsThree, Gear, UserPlus } from "@phosphor-icons/react";
+import { DotsThree, Gear, SignOut, UserPlus } from "@phosphor-icons/react";
 import {
   useInfiniteQuery,
   useMutation,
@@ -31,6 +32,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostCard } from "@/features/feed";
+import { useLogout } from "@/features/auth/hooks/use-logout";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { ApiError, apiInstance } from "@/lib/api";
@@ -168,19 +170,35 @@ async function fetchListsForProfile(userId: string): Promise<PublicList[]> {
   return response.data;
 }
 
-function OwnerActions() {
+type OwnerActionsProps = {
+  onLogout: () => void;
+  isLoggingOut: boolean;
+};
+
+function OwnerActions({ onLogout, isLoggingOut }: OwnerActionsProps) {
   return (
     <div className="flex items-center gap-2">
-      <Link href="/settings">
+      <Link href="/profile/update">
         <Button type="button" variant="outline" size="sm">
           Edit profile
         </Button>
       </Link>
-      <Link href="/settings">
+      <Link href="/profile/update">
         <Button type="button" variant="ghost" size="icon" aria-label="Settings">
           <Gear size={18} weight="regular" />
         </Button>
       </Link>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onLogout}
+        disabled={isLoggingOut}
+        className="text-red-600 hover:text-red-700 lg:hidden"
+      >
+        <SignOut size={15} className="mr-1" />
+        {isLoggingOut ? "Logging out..." : "Logout"}
+      </Button>
     </div>
   );
 }
@@ -391,7 +409,9 @@ function RelationshipOverlay({
 
 export function UserProfilePage({ username }: UserProfilePageProps) {
   const authUser = useAuthStore((state) => state.user);
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const logoutMutation = useLogout();
   const [activeTab, setActiveTab] = useState<"posts" | "reading" | "lists">(
     "posts",
   );
@@ -498,6 +518,14 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
     return profile.user.fullName || profile.user.userName;
   }, [profile]);
 
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+    } finally {
+      router.push("/login");
+    }
+  };
+
   if (profileQuery.isLoading) {
     return (
       <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
@@ -577,7 +605,10 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
               </div>
 
               {headerMode === "owner" ? (
-                <OwnerActions />
+                <OwnerActions
+                  onLogout={handleLogout}
+                  isLoggingOut={logoutMutation.isPending}
+                />
               ) : (
                 <ViewerActions
                   isFollowing={profile.context.isFollowing}

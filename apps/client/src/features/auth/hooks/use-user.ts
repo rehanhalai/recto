@@ -41,12 +41,21 @@ export const useUser = () => {
   );
 
   const updateProfileImage = useCallback(
-    async (avatarFile?: File) => {
+    async (
+      payload?:
+        | File
+        | {
+            avatarFile?: File | null;
+            coverFile?: File | null;
+            removeAvatar?: boolean;
+            removeCover?: boolean;
+          },
+    ) => {
       setIsUpdating(true);
       setError(null);
 
       try {
-        const response = await authApi.updateProfileImage(avatarFile);
+        const response = await authApi.updateProfileImage(payload);
         setUser(response.data);
         return response.data;
       } catch (error: any) {

@@ -6,6 +6,7 @@ export interface User {
   id: string;
   userName: string;
   fullName: string | null;
+  bio?: string | null;
   email: string;
   avatarImage?: string | null;
   coverImage?: string | null;
