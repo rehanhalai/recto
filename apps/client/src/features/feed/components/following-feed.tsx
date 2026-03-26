@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { PostCard } from "./PostCard";
 import { PostCardSkeleton } from "./PostCardSkeleton";
 import { useFollowingFeed } from "../hooks/use-following-feed";
 import { useAuthStore } from "@/features/auth";
+import { useFeedLike } from "../hooks/use-feed-like";
 
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
@@ -15,9 +17,11 @@ type FollowingFeedProps = {
 };
 
 export function FollowingFeed({ enabled }: FollowingFeedProps) {
+  const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { posts, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useFollowingFeed(enabled && isAuthenticated);
+  const likeMutation = useFeedLike(["feed", "posts", "following"]);
 
   const { ref, inView } = useInView({
     threshold: 0,
@@ -29,6 +33,22 @@ export function FollowingFeed({ enabled }: FollowingFeedProps) {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handleLike = (postId: string) => {
+    const postToLike = posts.find((post) => post.id === postId);
+    if (!postToLike) {
+      return;
+    }
+
+    likeMutation.mutate({
+      postId,
+      isLikedByMe: Boolean(postToLike.isLikedByMe),
+    });
+  };
+
+  const handleComment = (postId: string) => {
+    router.push(`/posts/${postId}`);
+  };
 
   if (enabled && !isAuthenticated) {
     return (
@@ -91,7 +111,12 @@ export function FollowingFeed({ enabled }: FollowingFeedProps) {
   return (
     <div className="flex flex-col gap-4">
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
+        <PostCard
+          key={post.id}
+          post={post}
+          onLike={handleLike}
+          onComment={handleComment}
+        />
       ))}
 
       {hasNextPage && (

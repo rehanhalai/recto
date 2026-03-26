@@ -176,20 +176,7 @@ export function SidebarLeft({
               </span>
             </Link>
           </li>
-        ) : (
-          <li>
-            <Link
-              href="/signup"
-              aria-label="Sign up"
-              className="flex items-center gap-4 rounded-xl border border-[#cfb286] bg-[#f8efde] px-4 py-3.5 text-[#5e472e] transition hover:brightness-95 dark:border-[#5b472f] dark:bg-[#2a2118] dark:text-[#d6b383]"
-            >
-              <UserPlus size={20} weight="bold" />
-              <span className="hidden lg:inline text-base font-medium">
-                Sign up
-              </span>
-            </Link>
-          </li>
-        )}
+        ) : null}
 
         {isAuthenticated && (
           <li className="hidden lg:block">
@@ -290,9 +277,18 @@ export function SidebarLeft({
           )}
         </div>
 
-        {/* User Profile Card */}
-        {user && (
+        {/* User Profile Card / Signup CTA */}
+        {isAuthenticated && user ? (
           <UserProfileCard user={user} currentRead={currentRead || []} />
+        ) : (
+          <Link
+            href="/signup"
+            aria-label="Sign up"
+            className="flex items-center gap-3 rounded-xl border border-[#cfb286] bg-[#f8efde] px-4 py-3.5 text-[#5e472e] transition hover:brightness-95 dark:border-[#5b472f] dark:bg-[#2a2118] dark:text-[#d6b383]"
+          >
+            <UserPlus size={20} weight="bold" />
+            <span className="text-base font-medium">Sign up</span>
+          </Link>
         )}
       </div>
 

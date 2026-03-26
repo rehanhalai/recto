@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { CreatePostCommentDto } from "./dto/create-post-comment.dto";
 import { CreatePostDto } from "./dto/create-post.dto";
 import { UpdatePostDto } from "./dto/update-post.dto";
 import { DRIZZLE } from "../../../db/db.module";
@@ -13,6 +14,7 @@ import * as schema from "../../../db/schema";
 import {
   books,
   postLikes,
+  postCommentLikes,
   posts,
   users,
   followers,
@@ -45,6 +47,27 @@ export class PostsService {
       );
 
     return new Set(likedRows.map((row) => row.postId));
+  }
+
+  private async getLikedCommentIdSet(
+    userId: string | undefined,
+    commentIds: string[],
+  ): Promise<Set<string>> {
+    if (!userId || commentIds.length === 0) {
+      return new Set();
+    }
+
+    const likedRows = await this.db
+      .select({ commentId: postCommentLikes.commentId })
+      .from(postCommentLikes)
+      .where(
+        and(
+          eq(postCommentLikes.userId, userId),
+          inArray(postCommentLikes.commentId, commentIds),
+        ),
+      );
+
+    return new Set(likedRows.map((row) => row.commentId));
   }
 
   private toPostWithRelations(row: any, isLikedByMe: boolean) {
@@ -569,12 +592,18 @@ export class PostsService {
     return rows;
   }
 
-  async getPostComments(postId: string, page = 1, limit = 20) {
+  async getPostComments(
+    postId: string,
+    page = 1,
+    limit = 20,
+    currentUserId?: string,
+  ) {
     const offset = (page - 1) * limit;
 
     const rows = await this.db
       .select({
         id: postComments.id,
+        parentId: postComments.parentId,
         content: postComments.content,
         likesCount: postComments.likesCount,
         createdAt: postComments.createdAt,
@@ -592,6 +621,118 @@ export class PostsService {
       .limit(limit)
       .offset(offset);
 
-    return rows;
+    const likedCommentIdSet = await this.getLikedCommentIdSet(
+      currentUserId,
+      rows.map((row) => row.id),
+    );
+
+    return rows.map((row) => ({
+      ...row,
+      isLikedByMe: likedCommentIdSet.has(row.id),
+    }));
+  }
+  
+  async createPostComment(
+    postId: string,
+    userId: string,
+    dto: CreatePostCommentDto,
+  ) {
+    const [post] = await this.db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(eq(posts.id, postId));
+
+    if (!post) {
+      throw new NotFoundException("Post not found");
+    }
+
+    if (dto.parentId) {
+      const [parentComment] = await this.db
+        .select({ id: postComments.id })
+        .from(postComments)
+        .where(
+          and(eq(postComments.id, dto.parentId), eq(postComments.postId, postId)),
+        );
+
+      if (!parentComment) {
+        throw new NotFoundException("Parent comment not found");
+      }
+    }
+
+    const [createdComment] = await this.db
+      .insert(postComments)
+      .values({
+        postId,
+        userId,
+        parentId: dto.parentId ?? null,
+        content: dto.content.trim(),
+      })
+      .returning({ id: postComments.id });
+
+    const [comment] = await this.db
+      .select({
+        id: postComments.id,
+        parentId: postComments.parentId,
+        content: postComments.content,
+        likesCount: postComments.likesCount,
+        createdAt: postComments.createdAt,
+        user: {
+          id: users.id,
+          userName: users.userName,
+          fullName: users.fullName,
+          avatarImage: users.avatarImage,
+        },
+      })
+      .from(postComments)
+      .innerJoin(users, eq(postComments.userId, users.id))
+      .where(eq(postComments.id, createdComment.id));
+
+    return {
+      ...comment,
+      isLikedByMe: false,
+    };
+  }
+
+  async likeComment(commentId: string, userId: string) {
+    const [existingComment] = await this.db
+      .select({ id: postComments.id })
+      .from(postComments)
+      .where(eq(postComments.id, commentId));
+
+    if (!existingComment) {
+      throw new NotFoundException("Comment not found");
+    }
+
+    const inserted = await this.db
+      .insert(postCommentLikes)
+      .values({ commentId, userId })
+      .onConflictDoNothing()
+      .returning({ id: postCommentLikes.id });
+
+    return {
+      liked: inserted.length > 0,
+    };
+  }
+
+  async unlikeComment(commentId: string, userId: string) {
+    const [existingComment] = await this.db
+      .select({ id: postComments.id })
+      .from(postComments)
+      .where(eq(postComments.id, commentId));
+
+    if (!existingComment) {
+      throw new NotFoundException("Comment not found");
+    }
+
+    await this.db
+      .delete(postCommentLikes)
+      .where(
+        and(
+          eq(postCommentLikes.commentId, commentId),
+          eq(postCommentLikes.userId, userId),
+        ),
+      );
+
+    return { liked: false };
   }
 }

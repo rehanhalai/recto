@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { PostWithRelations } from "@recto/types";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Heart,
   ChatCircle,
@@ -28,6 +29,7 @@ type PostCardProps = {
 };
 
 export function PostCard({ post, onLike, onComment }: PostCardProps) {
+  const router = useRouter();
   const {
     id,
     content,
@@ -50,8 +52,19 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
   const authorDisplayName =
     author?.fullName ?? author?.userName ?? "Deleted user";
   const authorAvatarImage = author?.avatarImage ?? null;
+  const hasExternalLikeHandler = typeof onLike === "function";
+
+  const resolvedLiked = hasExternalLikeHandler ? Boolean(isLikedByMe) : liked;
+  const resolvedLikeCount = hasExternalLikeHandler
+    ? likesCount ?? 0
+    : localLikeCount;
 
   const handleLike = async () => {
+    if (hasExternalLikeHandler) {
+      onLike?.(id);
+      return;
+    }
+
     // Optimistic update
     const wasLiked = liked;
     setLiked(!wasLiked);
@@ -68,11 +81,16 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
       setLiked(wasLiked);
       setLocalLikeCount((c) => (wasLiked ? c + 1 : c - 1));
     }
-
-    onLike?.(id);
   };
 
-  const handleComment = () => onComment?.(id);
+  const handleComment = () => {
+    if (onComment) {
+      onComment(id);
+      return;
+    }
+
+    router.push(`/posts/${id}`);
+  };
   // const handleSave = () => setSaved((s) => !s);
 
   const shouldTruncate = content.length > 200;
@@ -191,15 +209,15 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
           <button
             onClick={handleLike}
             aria-label={`Like post by ${authorUserName}`}
-            aria-pressed={liked}
+            aria-pressed={resolvedLiked}
             className="flex items-center gap-1.5 text-ink-muted hover:text-gold transition-colors focus:outline-none"
           >
             <Heart
               size={20}
-              weight={liked ? "fill" : "regular"}
-              className={liked ? "text-gold" : ""}
+              weight={resolvedLiked ? "fill" : "regular"}
+              className={resolvedLiked ? "text-gold" : ""}
             />
-            <span className="text-sm font-medium">{localLikeCount}</span>
+            <span className="text-sm font-medium">{resolvedLikeCount}</span>
           </button>
 
           <button

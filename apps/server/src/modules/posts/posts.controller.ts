@@ -15,6 +15,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { PostsService } from "./posts.service";
 import { CreatePostDto } from "./dto/create-post.dto";
+import { CreatePostCommentDto } from "./dto/create-post-comment.dto";
 import { GetFeedDto } from "./dto/get-feed.dto";
 import { UpdatePostDto } from "./dto/update-post.dto";
 import { AuthGuard, OptionalAuthGuard, CurrentUser } from "../common";
@@ -213,16 +214,66 @@ export class PostsController {
     };
   }
 
+  @UseGuards(OptionalAuthGuard)
   @Get(":id/comments")
   async getPostComments(
+    @CurrentUser() user: AuthenticatedRequestUser | null,
     @Param("id") id: string,
     @Query("page", new ParseIntPipe({ optional: true })) page = 1,
     @Query("limit", new ParseIntPipe({ optional: true })) limit = 20,
   ) {
-    const result = await this.postsService.getPostComments(id, page, limit);
+    const result = await this.postsService.getPostComments(
+      id,
+      page,
+      limit,
+      user?.id,
+    );
     return {
       data: result,
       message: "Comments fetched successfully",
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Post(":id/comments")
+  async createPostComment(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("id") id: string,
+    @Body() dto: CreatePostCommentDto,
+  ) {
+    const result = await this.postsService.createPostComment(id, user.id, dto);
+
+    return {
+      data: result,
+      message: "Comment added successfully",
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Post("comments/:commentId/like")
+  async likeComment(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("commentId") commentId: string,
+  ) {
+    const result = await this.postsService.likeComment(commentId, user.id);
+
+    return {
+      data: result,
+      message: "Comment liked successfully",
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete("comments/:commentId/like")
+  async unlikeComment(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("commentId") commentId: string,
+  ) {
+    const result = await this.postsService.unlikeComment(commentId, user.id);
+
+    return {
+      data: result,
+      message: "Comment unliked successfully",
     };
   }
 }

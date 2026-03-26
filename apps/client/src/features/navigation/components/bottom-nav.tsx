@@ -10,6 +10,7 @@ import {
   PencilSimple,
   Bell,
   UserCircle,
+  UserPlus,
   BookOpenText,
   Image as ImageIcon,
   X,
@@ -252,12 +253,22 @@ export function BottomNav() {
             badge={unreadCount > 0 ? unreadCount : undefined}
           />
 
-          {/* Profile */}
-          <ProfileNavItem
-            href={profileHref}
-            user={user}
-            active={profileActive}
-          />
+          {/* Profile / Sign up */}
+          {isAuthenticated ? (
+            <ProfileNavItem
+              href={profileHref}
+              user={user}
+              active={profileActive}
+            />
+          ) : (
+            <NavItem
+              href="/signup"
+              icon={UserPlus}
+              label="Sign up"
+              active={pathname === "/signup"}
+              iconSize={24}
+            />
+          )}
         </div>
       </nav>
 
