@@ -8,11 +8,13 @@ import {
   ListBullets,
   Bell,
   UserCircle,
+  UserPlus,
   Gear,
   MagnifyingGlass,
   SignOut,
   SunIcon,
   MoonIcon,
+  PencilSimple,
 } from "@phosphor-icons/react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,9 +26,11 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { UserAvatar } from "@/components/UserAvatar";
+import { Button } from "@/components/ui";
 import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";
 import { useState, useEffect } from "react";
+import { SidebarCreatePostDialog } from "./sidebar-create-post-dialog";
 
 const NAV_ITEMS: Array<{
   href: string;
@@ -55,9 +59,11 @@ export function SidebarLeft({
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const logoutMutation = useLogout();
-  const { data: currentRead, isLoading: isLoadingRead } = useCurrentRead();
+  const { data: currentRead, isLoading: isLoadingRead } =
+    useCurrentRead(isAuthenticated);
   const { theme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
 
   useCurrentUser();
 
@@ -137,40 +143,73 @@ export function SidebarLeft({
           );
         })}
 
-        {/* Profile item */}
-        <li>
-          <Link
-            href={profileHref}
-            aria-label="Profile"
-            className={cn(
-              "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-150 group",
-              "lg:justify-start md:justify-center min-h-12",
-              isActive(profileHref)
-                ? "bg-card-surface border border-border-subtle text-ink font-semibold"
-                : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border border-transparent",
-            )}
-          >
-            <span className="shrink-0">
-              <UserCircle
-                size={20}
-                weight={isActive(profileHref) ? "fill" : "regular"}
-                className={cn(
-                  "transition-colors",
-                  isActive(profileHref)
-                    ? "text-ink"
-                    : "text-ink-muted group-hover:text-ink",
-                )}
-              />
-            </span>
-            <span className="hidden lg:inline text-base font-medium">
-              Profile
-            </span>
-          </Link>
-        </li>
+        {isAuthenticated ? (
+          <li>
+            <Link
+              href={profileHref}
+              aria-label="Profile"
+              className={cn(
+                "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-150 group",
+                "lg:justify-start md:justify-center min-h-12",
+                isActive(profileHref)
+                  ? "bg-card-surface border border-border-subtle text-ink font-semibold"
+                  : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border border-transparent",
+              )}
+            >
+              <span className="shrink-0">
+                <UserCircle
+                  size={20}
+                  weight={isActive(profileHref) ? "fill" : "regular"}
+                  className={cn(
+                    "transition-colors",
+                    isActive(profileHref)
+                      ? "text-ink"
+                      : "text-ink-muted group-hover:text-ink",
+                  )}
+                />
+              </span>
+              <span className="hidden lg:inline text-base font-medium">
+                Profile
+              </span>
+            </Link>
+          </li>
+        ) : (
+          <li>
+            <Link
+              href="/signup"
+              aria-label="Sign up"
+              className="flex items-center gap-4 rounded-xl border border-[#cfb286] bg-[#f8efde] px-4 py-3.5 text-[#5e472e] transition hover:brightness-95 dark:border-[#5b472f] dark:bg-[#2a2118] dark:text-[#d6b383]"
+            >
+              <UserPlus size={20} weight="bold" />
+              <span className="hidden lg:inline text-base font-medium">
+                Sign up
+              </span>
+            </Link>
+          </li>
+        )}
+
+        {isAuthenticated && (
+          <li className="hidden lg:block">
+            <Button
+              type="button"
+              onClick={() => setIsCreatePostOpen(true)}
+              className={cn(
+                "flex w-full items-center gap-4 rounded-xl border px-4 py-3.5 text-base font-medium transition-all duration-150",
+                "lg:justify-start md:justify-center min-h-[48px]",
+                isCreatePostOpen
+                  ? "bg-card-surface border-border-subtle text-ink"
+                  : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border-transparent",
+              )}
+            >
+              <PencilSimple size={20} weight={isCreatePostOpen ? "fill" : "regular"} />
+              <span className="hidden lg:inline">Create post</span>
+            </Button>
+          </li>
+        )}
       </ul>
 
       {/* ═══ CURRENTLY READING (Desktop only) ═══ */}
-      {showCurrentReading && (
+      {showCurrentReading && isAuthenticated && (
         <div className="hidden lg:block px-4 py-4 border-y border-border-subtle/30">
           <p className="text-xs font-mono uppercase tracking-widest text-ink-muted mb-3">
             Currently Reading
@@ -253,6 +292,13 @@ export function SidebarLeft({
           <UserProfileCard user={user} currentRead={currentRead || []} />
         )}
       </div>
+
+      {isAuthenticated && (
+        <SidebarCreatePostDialog
+          open={isCreatePostOpen}
+          onOpenChange={setIsCreatePostOpen}
+        />
+      )}
     </nav>
   );
 }

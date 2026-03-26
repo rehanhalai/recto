@@ -22,7 +22,7 @@ type CurrentReadItem = {
 
 export type CurrentRead = CurrentReadItem[] | null;
 
-export function useCurrentRead() {
+export function useCurrentRead(enabled: boolean = true) {
   return useQuery<CurrentRead>({
     queryKey: ["feed", "current-read"],
     queryFn: async () => {
@@ -33,6 +33,7 @@ export function useCurrentRead() {
 
       return response.data;
     },
+    enabled,
     staleTime: 1000 * 60 * 2,
   });
 }

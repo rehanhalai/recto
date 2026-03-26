@@ -34,7 +34,7 @@ export function FeedClient({ initialData, type = "explore" }: FeedClientProps) {
   } = useFeed(type, initialData);
 
   const { ref, inView } = useInView({
-    rootMargin: "200px",
+    rootMargin: "1200px",
   });
 
   useEffect(() => {

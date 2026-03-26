@@ -18,7 +18,7 @@ export function ExploreFeed({ initialData }: ExploreFeedProps) {
 
   const { ref, inView } = useInView({
     threshold: 0,
-    rootMargin: "400px",
+    rootMargin: "1200px",
   });
 
   useEffect(() => {
