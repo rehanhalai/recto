@@ -28,7 +28,7 @@ export function HeroStrip({ currentRead }: HeroStripProps) {
           </p>
         </div>
         <Link
-          href="/books"
+          href="/browse"
           className="inline-flex items-center justify-center px-4 py-2 bg-ink text-paper rounded-md text-sm font-medium hover:bg-accent-dark transition-colors"
         >
           Find your next book →

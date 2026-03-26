@@ -18,6 +18,7 @@ interface BookCarouselStripProps {
   href: string;
   books?: Book[];
   isLoading: boolean;
+  compact?: boolean;
 }
 
 export function BookCarouselStrip({
@@ -26,7 +27,12 @@ export function BookCarouselStrip({
   href,
   books,
   isLoading,
+  compact = false,
 }: BookCarouselStripProps) {
+  const itemBasisClass = compact
+    ? "pl-4 basis-32 md:basis-40 lg:basis-44"
+    : "pl-4 basis-40 md:basis-48 lg:basis-52";
+
   return (
     <section className="flex flex-col gap-6 mb-12 w-full">
       <div className="flex items-center justify-between px-1">
@@ -62,10 +68,7 @@ export function BookCarouselStrip({
           <CarouselContent className="-ml-4">
             {isLoading
               ? Array.from({ length: 6 }).map((_, i) => (
-                  <CarouselItem
-                    key={i}
-                    className="pl-4 basis-40 md:basis-48 lg:basis-52"
-                  >
+                  <CarouselItem key={i} className={itemBasisClass}>
                     <div className="flex flex-col gap-3">
                       <div className="w-full aspect-2/3 bg-card-surface rounded-md animate-pulse shadow-sm" />
                       <div className="space-y-2">
@@ -76,10 +79,7 @@ export function BookCarouselStrip({
                   </CarouselItem>
                 ))
               : books?.map((book) => (
-                  <CarouselItem
-                    key={book.id}
-                    className="pl-4 basis-40 md:basis-48 lg:basis-52"
-                  >
+                  <CarouselItem key={book.id} className={itemBasisClass}>
                     <BookCard book={book} />
                   </CarouselItem>
                 ))}

@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import {
   House,
+  Binoculars,
   MagnifyingGlass,
   PencilSimple,
-  Bell,
   UserCircle,
   UserPlus,
   BookOpenText,
@@ -17,7 +17,6 @@ import {
 } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useAuthStore } from "@/features/auth";
-import { useNotifications } from "@/features/notifications/hooks/use-notifications";
 import { cn } from "@/lib/utils";
 import { apiInstance } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -75,7 +74,6 @@ export function BottomNav() {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { unreadCount } = useNotifications();
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [content, setContent] = useState("");
   const [bookQuery, setBookQuery] = useState("");
@@ -178,7 +176,9 @@ export function BottomNav() {
   const isActive = (href: string) => {
     if (href === "/feed") return pathname === "/feed";
     if (href === "/search") return pathname === "/search";
-    if (href === "/notifications") return pathname === "/notifications";
+    if (href === "/browse") {
+      return pathname === "/browse" || pathname === "/books";
+    }
     if (href === "/profile") {
       return user ? pathname === `/${user.userName}` : pathname === "/profile";
     }
@@ -187,7 +187,7 @@ export function BottomNav() {
 
   const feedActive = isActive("/feed");
   const searchActive = isActive("/search");
-  const notificationsActive = isActive("/notifications");
+  const browseActive = isActive("/browse");
   const profileActive = isActive("/profile");
 
   const profileHref = user ? `/${user.userName}` : "/profile";
@@ -243,14 +243,13 @@ export function BottomNav() {
             <PencilSimple size={22} weight="bold" className="text-black" />
           </button>
 
-          {/* Notifications */}
+          {/* Browse */}
           <NavItem
-            href="/notifications"
-            icon={Bell}
-            label="Notifications"
-            active={notificationsActive}
+            href="/browse"
+            icon={Binoculars}
+            label="Browse"
+            active={browseActive}
             iconSize={24}
-            badge={unreadCount > 0 ? unreadCount : undefined}
           />
 
           {/* Profile / Sign up */}

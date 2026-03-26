@@ -128,7 +128,7 @@ export function BookSidebar({ book }: { book: Book }) {
       </section>
 
       <div className="hidden">
-        <Link href="/books">Browse books</Link>
+        <Link href="/browse">Browse books</Link>
       </div>
     </div>
   );

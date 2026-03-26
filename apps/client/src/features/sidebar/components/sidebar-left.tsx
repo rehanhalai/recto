@@ -39,7 +39,7 @@ const NAV_ITEMS: Array<{
   hasNotificationDot?: boolean;
 }> = [
   { href: "/feed", label: "Feed", icon: House },
-  { href: "/books", label: "Browse", icon: Binoculars },
+  { href: "/browse", label: "Browse", icon: Binoculars },
   { href: "/lists", label: "Lists", icon: ListBullets },
   { href: "/search", label: "Search", icon: MagnifyingGlass },
   {
@@ -231,7 +231,7 @@ export function SidebarLeft({
           ) : (
             <div>
               <Link
-                href="/books"
+                href="/browse"
                 className="text-sm text-ink-muted hover:text-ink transition-colors font-medium"
               >
                 Start tracking →

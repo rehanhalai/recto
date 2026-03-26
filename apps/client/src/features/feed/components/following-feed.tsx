@@ -99,7 +99,7 @@ export function FollowingFeed({ enabled }: FollowingFeedProps) {
           </p>
         </div>
         <Link
-          href="/books"
+          href="/browse"
           className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-accent text-paper text-sm font-medium hover:bg-accent-dark transition-colors"
         >
           Find readers →

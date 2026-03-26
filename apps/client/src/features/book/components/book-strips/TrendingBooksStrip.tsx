@@ -10,7 +10,7 @@ export function TrendingBooksStrip() {
     <BookCarouselStrip
       title="Trending Books"
       subtitle="Currently popular"
-      href="/books"
+      href="/browse"
       books={books}
       isLoading={isLoading}
     />

@@ -36,7 +36,7 @@ function TrendingSection() {
           Trending this week
         </h3>
         <Link
-          href="/books?sort=trending"
+          href="/browse?sort=trending"
           className="text-[10px] font-mono text-ink-muted hover:text-ink transition-colors flex items-center gap-0.5"
         >
           See all <ArrowRight size={10} weight="bold" />
