@@ -79,7 +79,7 @@ export function SidebarLeft({
       ? rectoLogoLight
       : rectoLogoDark;
 
-  const profileHref = user ? `/${user.userName}` : "/login";
+  const profileHref = user ? `/${user.userName}` : "/profile";
 
   const isActive = (href: string) => {
     if (href === "/feed") return pathname === "/feed";

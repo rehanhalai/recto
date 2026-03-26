@@ -179,7 +179,7 @@ export function BottomNav() {
     if (href === "/search") return pathname === "/search";
     if (href === "/notifications") return pathname === "/notifications";
     if (href === "/profile") {
-      return user ? pathname === `/${user.userName}` : false;
+      return user ? pathname === `/${user.userName}` : pathname === "/profile";
     }
     return false;
   };
@@ -189,7 +189,7 @@ export function BottomNav() {
   const notificationsActive = isActive("/notifications");
   const profileActive = isActive("/profile");
 
-  const profileHref = user ? `/${user.userName}` : "/login";
+  const profileHref = user ? `/${user.userName}` : "/profile";
 
   return (
     <>

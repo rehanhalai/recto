@@ -5,6 +5,7 @@ import { MagnifyingGlass } from "@phosphor-icons/react";
 import { PostCard } from "./PostCard";
 import { PostCardSkeleton } from "./PostCardSkeleton";
 import { useFollowingFeed } from "../hooks/use-following-feed";
+import { useAuthStore } from "@/features/auth";
 
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
@@ -14,8 +15,9 @@ type FollowingFeedProps = {
 };
 
 export function FollowingFeed({ enabled }: FollowingFeedProps) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { posts, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useFollowingFeed(enabled);
+    useFollowingFeed(enabled && isAuthenticated);
 
   const { ref, inView } = useInView({
     threshold: 0,
@@ -27,6 +29,29 @@ export function FollowingFeed({ enabled }: FollowingFeedProps) {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  if (enabled && !isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-card-surface border border-border-subtle flex items-center justify-center">
+          <MagnifyingGlass size={28} className="text-ink-muted" />
+        </div>
+        <div className="space-y-2">
+          <p className="text-ink font-medium text-base">You are not signed in</p>
+          <p className="text-ink-muted text-sm max-w-xs mx-auto">
+            Login to view your Following feed and continue browsing posts from
+            people you follow.
+          </p>
+        </div>
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-accent text-paper text-sm font-medium hover:bg-accent-dark transition-colors"
+        >
+          Login
+        </Link>
+      </div>
+    );
+  }
 
   if (isLoading && enabled) {
     return (
