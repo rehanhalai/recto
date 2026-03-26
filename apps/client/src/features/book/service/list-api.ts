@@ -57,8 +57,10 @@ export const reorderBooks = (payload: ReorderPayload) =>
     bookIds: payload.bookIds,
   });
 
-export const getUserLists = () =>
-  apiInstance.get<ApiResponse<BookList[]>>("/lists/user/my-lists");
+export const getUserLists = (bookId?: string) =>
+  apiInstance.get<ApiResponse<BookList[]>>("/lists/user/my-lists", {
+    bookId,
+  });
 
 export const getPublicLists = (params?: { limit?: number; skip?: number }) =>
   apiInstance.get<ApiResponse<BookList[]>>(

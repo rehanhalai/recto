@@ -22,12 +22,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const book = await fetchBookSSR(id);
   const authorFromBook = getFirstAuthor(book);
   const plainTitle = (book?.title || title).replaceAll("-", " ");
+  const description = book?.description
+    ? stripTags(book.description).slice(0, 160)
+    : `Discover ${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""} on Recto.`;
+
+  const finalTitle = `${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""} | Recto`;
 
   return {
-    title: `${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""} | Recto`,
-    description: book?.description
-      ? `${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""}. ${stripTags(book.description).slice(0, 140)}`
-      : `Discover ${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""} on Recto.`,
+    title: finalTitle,
+    description,
+    openGraph: {
+      title: finalTitle,
+      description,
+      type: "book",
+      siteName: "Recto",
+      images: book?.coverImage
+        ? [
+            {
+              url: book.coverImage,
+              width: 800,
+              height: 1200,
+              alt: plainTitle,
+            },
+          ]
+        : undefined,
+    } as any,
+    twitter: {
+      card: "summary_large_image",
+      title: finalTitle,
+      description,
+      images: book?.coverImage ? [book.coverImage] : undefined,
+    },
   };
 }
 

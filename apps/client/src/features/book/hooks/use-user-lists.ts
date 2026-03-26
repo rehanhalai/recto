@@ -3,27 +3,49 @@ import { toast } from "@/lib/toast";
 import { useAuth } from "@/features/auth";
 import { addBookToList, createList, getUserLists } from "../service/list-api";
 
-export function useUserLists() {
+import { removeBookFromList } from "../service/list-api";
+
+export function useUserLists(bookId?: string) {
   const { isAuthenticated } = useAuth();
 
   const userListsQuery = useQuery({
-    queryKey: ["user-lists"],
-    queryFn: getUserLists,
+    queryKey: ["user-lists", bookId],
+    queryFn: () => getUserLists(bookId),
     enabled: isAuthenticated,
   });
 
   return {
     userLists: userListsQuery.data?.data ?? [],
     isLoading: userListsQuery.isLoading,
+    refetch: userListsQuery.refetch,
   };
 }
 
 export function useAddToList(bookId: string) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (listId: string) =>
       addBookToList({ listId, book_id: bookId }),
-    onSuccess: () => toast.success("Added to list"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-lists", bookId] });
+      toast.success("Added to list");
+    },
     onError: () => toast.error("Could not add to list"),
+  });
+}
+
+export function useRemoveFromList(bookId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (listId: string) =>
+      removeBookFromList({ listId, bookId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-lists", bookId] });
+      toast.success("Removed from list");
+    },
+    onError: () => toast.error("Could not remove from list"),
   });
 }
 
@@ -47,8 +69,8 @@ export function useCreateList(bookId?: string) {
       return newList;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-lists"] });
-      toast.success("List created & book added");
+      queryClient.invalidateQueries({ queryKey: ["user-lists", bookId] });
+      toast.success("List created");
     },
     onError: () => toast.error("Could not create list"),
   });

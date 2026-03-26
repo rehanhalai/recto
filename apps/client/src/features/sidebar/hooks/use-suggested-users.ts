@@ -6,11 +6,12 @@ export type SuggestedUser = {
   userName: string;
   fullName: string | null;
   avatarImage: string | null;
-  bio?: string | null;
 };
 
 type SearchResponse = {
-  data: SuggestedUser[];
+  data: {
+    users: SuggestedUser[];
+  };
   message: string;
 };
 
@@ -19,11 +20,12 @@ export function useSuggestedUsers() {
     queryKey: ["sidebar", "suggested-users"],
     queryFn: async () => {
       // Use the search endpoint to get suggested users
-      const response = await apiInstance.get<SearchResponse>("/user/search", {
-        userName: "r",
+      const response = await apiInstance.get<SearchResponse>("/search", {
+        q: "re",
+        type: "users",
         limit: 3,
       });
-      return response.data;
+      return response.data.users;
     },
     staleTime: 1000 * 60 * 5,
   });

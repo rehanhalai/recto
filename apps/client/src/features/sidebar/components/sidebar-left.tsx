@@ -137,13 +137,13 @@ export function SidebarLeft({
             aria-label="Profile"
             className={cn(
               "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-150 group",
-              "lg:justify-start md:justify-center min-h-[48px]",
+              "lg:justify-start md:justify-center min-h-12",
               isActive(profileHref)
                 ? "bg-card-surface border border-border-subtle text-ink font-semibold"
                 : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border border-transparent",
             )}
           >
-            <span className="flex-shrink-0">
+            <span className="shrink-0">
               <UserCircle
                 size={20}
                 weight={isActive(profileHref) ? "fill" : "regular"}

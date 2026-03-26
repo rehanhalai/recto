@@ -21,19 +21,25 @@ interface ReviewsPage {
   message?: string;
 }
 
+import { ApiResponse } from "../types";
+
 export function useBookReviews(bookId?: string, limit = 6) {
   return useInfiniteQuery<ReviewsPage>({
     queryKey: ["book-reviews", bookId, limit],
     queryFn: async ({ pageParam }) => {
       const page = typeof pageParam === "number" ? pageParam : 1;
-      return apiInstance.get<ReviewsPage>(`/reviews/${bookId}`, {
-        page,
-        limit,
-      });
+      const response = await apiInstance.get<ApiResponse<ReviewsPage>>(
+        `/reviews/${bookId}`,
+        {
+          page,
+          limit,
+        },
+      );
+      return response.data;
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
-      lastPage.pagination.hasMore
+      lastPage?.pagination?.hasMore
         ? lastPage.pagination.currentPage + 1
         : undefined,
     enabled: Boolean(bookId),

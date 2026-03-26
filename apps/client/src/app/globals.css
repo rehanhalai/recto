@@ -204,10 +204,13 @@
     @apply text-xl font-semibold;
   }
 
-  /* Cormorant italic — for display accents, manifesto, pull quotes */
+  /* Cormorant Garamond — Elegant literary font */
   .font-cormorant {
     font-family: var(--font-cormorant), "Garamond", serif;
-    font-style: italic;
+  }
+
+  .italic-cormorant {
+    @apply font-cormorant italic;
   }
 
   .italic-serif {

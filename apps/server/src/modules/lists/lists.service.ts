@@ -98,7 +98,7 @@ export class ListsService {
     };
   }
 
-  async getUserLists(userId: string) {
+  async getUserLists(userId: string, bookId?: string) {
     const lists = await this.db.query.bookLists.findMany({
       where: eq(bookLists.userId, userId),
       with: {
@@ -117,16 +117,74 @@ export class ListsService {
       orderBy: (list, { desc }) => [desc(list.updatedAt)],
     });
 
-    return lists.map((list) => ({
-      id: list.id,
-      name: list.name,
-      description: list.description,
-      is_public: list.isPublic,
-      book_count: list.bookCount,
-      covers: list.items
-        .map((item) => item.book?.coverImage)
-        .filter((cover): cover is string => Boolean(cover)),
-    }));
+    const results = await Promise.all(
+      lists.map(async (list) => {
+        let isIncluded = false;
+        if (bookId) {
+          const item = await this.db.query.bookListItems.findFirst({
+            where: and(
+              eq(bookListItems.listId, list.id),
+              eq(bookListItems.bookId, bookId),
+            ),
+            columns: { id: true },
+          });
+          isIncluded = !!item;
+        }
+
+        return {
+          id: list.id,
+          name: list.name,
+          description: list.description,
+          is_public: list.isPublic,
+          book_count: list.bookCount,
+          is_included: isIncluded,
+          covers: list.items
+            .map((item) => item.book?.coverImage)
+            .filter((cover): cover is string => Boolean(cover)),
+        };
+      }),
+    );
+
+    return results;
+  }
+
+  async removeBookFromList(userId: string, listId: string, bookId: string) {
+    const list = await this.db.query.bookLists.findFirst({
+      where: eq(bookLists.id, listId),
+      columns: { id: true, userId: true },
+    });
+
+    if (!list) {
+      throw new NotFoundException("List not found");
+    }
+
+    if (list.userId !== userId) {
+      throw new ForbiddenException("You cannot modify this list");
+    }
+
+    const result = await this.db
+      .delete(bookListItems)
+      .where(
+        and(eq(bookListItems.listId, listId), eq(bookListItems.bookId, bookId)),
+      )
+      .returning();
+
+    if (result.length > 0) {
+      const counts = await this.db
+        .select({ count: count() })
+        .from(bookListItems)
+        .where(eq(bookListItems.listId, listId));
+
+      await this.db
+        .update(bookLists)
+        .set({
+          bookCount: Number(counts[0]?.count || 0),
+          updatedAt: new Date(),
+        })
+        .where(eq(bookLists.id, listId));
+    }
+
+    return { listId, bookId, removed: result.length > 0 };
   }
 
   async addBookToList(userId: string, listId: string, bookId: string) {

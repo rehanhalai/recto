@@ -17,26 +17,9 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowSquareOut } from "@phosphor-icons/react";
+
 import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";
-
-// Helper hook for responsive design
-function useMediaQuery(query: string) {
-  const [value, setValue] = useState(false);
-
-  useEffect(() => {
-    const onChange = (event: MediaQueryListEvent) => {
-      setValue(event.matches);
-    };
-
-    const result = window.matchMedia(query);
-    result.addEventListener("change", onChange);
-    setValue(result.matches);
-
-    return () => result.removeEventListener("change", onChange);
-  }, [query]);
-
-  return value;
-}
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function BuyBookResponsive({
   bookId,

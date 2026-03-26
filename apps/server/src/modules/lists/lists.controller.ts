@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -42,11 +43,31 @@ export class ListsController {
   @UseGuards(AuthGuard)
   async getMyLists(
     @CurrentUser() user: AuthenticatedRequestUser,
+    @Query("bookId") bookId?: string,
   ): Promise<any> {
-    const data = await this.listsService.getUserLists(user.id);
+    const data = await this.listsService.getUserLists(user.id, bookId);
     return {
       data,
       message: "User lists fetched successfully",
+    };
+  }
+
+  @Delete(":listId/books/:bookId")
+  @UseGuards(AuthGuard)
+  async removeBookFromList(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("listId") listId: string,
+    @Param("bookId") bookId: string,
+  ): Promise<any> {
+    const data = await this.listsService.removeBookFromList(
+      user.id,
+      listId,
+      bookId,
+    );
+
+    return {
+      data,
+      message: "Book removed from list successfully",
     };
   }
 

@@ -12,12 +12,14 @@ import {
   BookmarkSimple,
   Export,
   ShoppingCart,
+  CaretDown,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useAuth } from "@/features/auth";
 import { toast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { useBookTracker } from "../../hooks/use-book-tracker";
-import { AddToListSheet } from "./add-to-list-sheet";
+import { BookListPicker } from "./book-list-picker";
 import { BuyBookResponsive } from "./buy-book-responsive";
 
 export function BookActions({ bookId }: { bookId: string }) {
@@ -25,127 +27,111 @@ export function BookActions({ bookId }: { bookId: string }) {
   const { currentStatus, upsertTracker, isLoading } = useBookTracker(bookId);
   const [showBuy, setShowBuy] = useState(false);
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.success("Copied!");
-    } catch {
-      toast.error("Could not copy URL");
-    }
-  };
-
   const isPending = upsertTracker.isPending || isLoading;
 
-  const getPrimaryProps = () => {
+  const getPrimaryLabel = () => {
     switch (currentStatus) {
       case "reading":
-        return { label: "Reading ✓", weight: "fill" as const };
+        return "Currently Reading";
       case "wishlist":
-        return { label: "Added to wishlist ✓", weight: "fill" as const };
+        return "Want to Read";
       case "finished":
-        return { label: "Completed reading ✓", weight: "fill" as const };
+        return "Completed";
       default:
-        return { label: "Start Reading", weight: "bold" as const };
+        return "Add to shelf";
     }
   };
 
-  const { label, weight } = getPrimaryProps();
+  const statusItems = [
+    { id: "wishlist", label: "Want to read", color: "bg-stone-400" },
+    { id: "reading", label: "Currently reading", color: "bg-emerald-500" },
+    { id: "finished", label: "Completed", color: "bg-sky-500" },
+  ];
 
   return (
-    <div className="mt-2 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-4 sm:rounded-2xl sm:border sm:border-border-subtle/60 sm:bg-card/40 sm:p-3 sm:shadow-sm sm:backdrop-blur-md">
-      <Button
-        className={
-          currentStatus
-            ? "group flex-1 justify-center bg-muted text-foreground shadow-sm transition-all duration-300 hover:bg-muted/80 sm:flex-none sm:px-6 sm:hover:scale-[1.02] active:scale-[0.98]"
-            : "group flex-1 justify-center  text-accent-foreground shadow-md shadow-accent/20 transition-all duration-300 hover:bg-accent/90 sm:flex-none sm:px-6 sm:hover:-translate-y-0.5 sm:hover:shadow-lg sm:hover:shadow-accent/30  active:translate-y-0"
-        }
-        onClick={() => upsertTracker.mutate("reading")}
-        disabled={!isAuthenticated || isPending}
-      >
-        <BookOpen
-          size={18}
-          className="mr-2 transition-transform duration-300 group-hover:scale-110 sm:group-hover:text-white"
-          weight={weight}
-        />
-        <span className="font-medium tracking-wide sm:group-hover:text-white">
-          {label}
-        </span>
-      </Button>
-
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-1 sm:items-center sm:gap-3">
+    <div className="flex flex-col gap-4">
+      {/* Integrated Shelf Section */}
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-border-subtle/50 bg-card/20 shadow-sm transition-all hover:bg-card/40">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="outline"
-              className="group w-full bg-muted/60  shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
+              variant="ghost"
+              className="h-14 w-full items-center justify-start gap-4 px-6 text-base font-medium transition-colors hover:bg-transparent"
               disabled={!isAuthenticated || isPending}
             >
               <BookmarkSimple
-                size={18}
-                className="mr-2 text-ink-muted group-hover:text-black"
-                weight={
-                  currentStatus && currentStatus !== "reading"
-                    ? "fill"
-                    : "regular"
-                }
+                size={20}
+                className="text-ink-muted"
+                weight="bold"
               />
-              Shelf
+              <span className="flex-1 text-left">{getPrimaryLabel()}</span>
+              <div className="h-6 w-px bg-border-subtle/40 mx-2" />
+              <CaretDown size={14} className="opacity-40" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-48" sideOffset={8}>
-            <DropdownMenuItem
-              onClick={() => upsertTracker.mutate("wishlist")}
-              className="cursor-pointer"
-            >
-              Want to Read
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => upsertTracker.mutate("reading")}
-              className="cursor-pointer"
-            >
-              Currently Reading
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => upsertTracker.mutate("finished")}
-              className="cursor-pointer"
-            >
-              Finished Reading
-            </DropdownMenuItem>
+          <DropdownMenuContent
+            className="w-[320px] p-0 overflow-hidden rounded-2xl bg-card border-border-subtle/60 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+            sideOffset={12}
+            align="start"
+          >
+            <div className="flex flex-col divide-y divide-border-subtle/40">
+              {statusItems.map((item) => (
+                <DropdownMenuItem
+                  key={item.id}
+                  onClick={() => upsertTracker.mutate(item.id as any)}
+                  className="flex h-14 cursor-pointer items-center gap-4 px-5 transition-colors focus:bg-muted/60"
+                >
+                  <div
+                    className={cn(
+                      "h-3.5 w-3.5 rounded-full shadow-sm transition-transform group-hover:scale-110",
+                      item.color,
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "flex-1 text-sm font-medium",
+                      currentStatus === item.id
+                        ? "text-foreground"
+                        : "text-ink-muted",
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                  {currentStatus === item.id && (
+                    <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
 
-        <AddToListSheet
+      {/* Secondary Actions: Add to List & Buy */}
+      <div className="flex items-stretch gap-3">
+        <BookListPicker
           bookId={bookId}
-          className="group w-full bg-muted/60 border-border-subtle/40 shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
+          className="flex-1 h-12 gap-3.5 rounded-2xl border-border-subtle/50 bg-card/20 hover:bg-card/40 text-sm font-medium transition-all shadow-sm justify-start px-6"
         />
 
         {showBuy ? (
           <BuyBookResponsive
             bookId={bookId}
-            className="group w-full bg-muted/60 border-border-subtle/40 shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
+            className="flex-1 h-12 gap-3.5 rounded-2xl border-border-subtle/50 bg-card/20 hover:bg-card/40 text-sm font-medium transition-all shadow-sm justify-start px-6"
           />
         ) : (
           <Button
             variant="outline"
             onClick={() => setShowBuy(true)}
-            className="group w-full bg-muted/60 border-border-subtle/40 shadow-sm transition-all duration-300 hover:bg-muted hover:shadow-md sm:w-auto sm:hover:-translate-y-0.5 active:translate-y-0"
+            className="flex-1 h-12 gap-3.5 rounded-2xl border-border-subtle/50 bg-card/20 hover:bg-card/40 text-sm font-medium transition-all shadow-sm justify-start px-6 group"
           >
-            <ShoppingCart size={18} className="mr-2 text-ink-muted transition-colors group-hover:text-black" />
-            Buy
+            <ShoppingCart
+              size={18}
+              className="text-ink-muted opacity-70 group-hover:rotate-12 transition-transform"
+            />
+            <span>Buy</span>
           </Button>
         )}
-
-        <div className="hidden sm:block sm:flex-1" />
-
-        <Button
-          variant="ghost"
-          onClick={handleShare}
-          className="col-span-2 sm:col-span-1 justify-center border border-transparent text-muted-foreground hover:text-foreground hover:bg-muted inline-flex transition-all duration-300 sm:w-10 sm:px-0 sm:hover:rotate-12 sm:hover:scale-110 sm:rounded-full"
-          title="Share book"
-        >
-          <Export size={18} />
-          <span className="ml-2 sm:hidden">Share this book</span>
-        </Button>
       </div>
     </div>
   );
