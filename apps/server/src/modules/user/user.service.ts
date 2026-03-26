@@ -36,6 +36,18 @@ export class UserService {
     return `${randomName}${randomNumber}`;
   }
 
+  private toAuthUser(user: typeof schema.users.$inferSelect) {
+    return {
+      id: user.id,
+      userName: user.userName,
+      fullName: user.fullName,
+      email: user.email,
+      avatarImage: user.avatarImage,
+      coverImage: user.coverImage,
+      role: user.role,
+    };
+  }
+
   async userNameAvailability(userName: string) {
     const existing = await this.db.query.users.findFirst({
       where: eq(users.userName, userName.trim().toLowerCase()),
@@ -48,8 +60,7 @@ export class UserService {
       where: eq(users.id, userId),
     });
     if (!user) throw new NotFoundException("User not found");
-    const { googleId, hashedPassword, ...userData } = user;
-    return userData;
+    return this.toAuthUser(user);
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
@@ -70,8 +81,7 @@ export class UserService {
       .where(eq(users.id, userId))
       .returning();
 
-    const { hashedPassword, ...userData } = updatedUser;
-    return userData;
+    return this.toAuthUser(updatedUser);
   }
 
   async updateAvatarAndBanner(
@@ -143,8 +153,7 @@ export class UserService {
       .where(eq(users.id, userId))
       .returning();
 
-    const { hashedPassword, ...userData } = updatedUser;
-    return userData;
+    return this.toAuthUser(updatedUser);
   }
 
   async searchUsers(userName: string, page: number = 1, limit: number = 20) {

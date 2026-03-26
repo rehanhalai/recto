@@ -7,6 +7,22 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { User } from "../types";
 
+const sanitizeUser = (user: User | null): User | null => {
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id ?? (user as User & { _id?: string })._id ?? "",
+    userName: user.userName,
+    fullName: user.fullName ?? null,
+    email: user.email,
+    avatarImage: user.avatarImage ?? null,
+    coverImage: user.coverImage ?? null,
+    role: user.role,
+  };
+};
+
 interface AuthState {
   // State
   user: User | null;
@@ -30,9 +46,12 @@ export const useAuthStore = create<AuthState>()(
 
       // Setters
       setUser: (user) =>
-        set({
-          user,
-          isAuthenticated: !!user,
+        set(() => {
+          const sanitizedUser = sanitizeUser(user);
+          return {
+            user: sanitizedUser,
+            isAuthenticated: !!sanitizedUser,
+          };
         }),
 
       setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),

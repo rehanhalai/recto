@@ -1,21 +1,15 @@
 /**
- * User interface matching server model
+ * Minimal frontend auth user shape.
+ * Keep this intentionally small because it is persisted to localStorage.
  */
 export interface User {
-  _id: string;
+  id: string;
   userName: string;
-  fullName: string;
+  fullName: string | null;
   email: string;
-  bio?: string;
-  avatarImage?: string;
-  coverImage?: string;
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
-  isVerified: boolean;
+  avatarImage?: string | null;
+  coverImage?: string | null;
   role: "user" | "admin" | "moderator";
-  createdAt: string;
-  updatedAt: string;
 }
 
 /**
@@ -31,7 +25,6 @@ export interface LoginCredentials {
  */
 export interface SignupCredentials {
   email: string;
-  userName: string;
   password: string;
 }
 

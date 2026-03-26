@@ -6,31 +6,37 @@
 
 import { useState, useCallback } from "react";
 import * as authApi from "../services/auth-api";
-import {
-  ForgotPasswordRequest,
-  PasswordResetOTPVerification,
-  NewPasswordRequest,
-} from "../types";
 
 interface PasswordResetState {
-  step: "request" | "verify" | "reset" | "complete";
+  step: "request" | "complete";
   email: string | null;
-  resetToken: string | null;
   isLoading: boolean;
   error: string | null;
 }
 
 export const usePasswordReset = () => {
+  const getErrorMessage = (error: unknown, fallback: string): string => {
+    if (
+      error &&
+      typeof error === "object" &&
+      "message" in error &&
+      typeof (error as { message?: unknown }).message === "string"
+    ) {
+      return (error as { message: string }).message;
+    }
+
+    return fallback;
+  };
+
   const [state, setState] = useState<PasswordResetState>({
     step: "request",
     email: null,
-    resetToken: null,
     isLoading: false,
     error: null,
   });
 
   /**
-   * Step 1: Request password reset OTP
+   * Step 1: Request password reset link
    */
   const requestPasswordReset = useCallback(async (email: string) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -39,61 +45,23 @@ export const usePasswordReset = () => {
       await authApi.forgotPasswordRequest({ email });
       setState((prev) => ({
         ...prev,
-        step: "verify",
+        step: "complete",
         email,
         isLoading: false,
       }));
-    } catch (error: any) {
-      const errorMessage =
-        error?.data?.message || error?.message || "Failed to send reset code";
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error, "Failed to send reset code");
       setState((prev) => ({ ...prev, error: errorMessage, isLoading: false }));
       throw error;
     }
   }, []);
 
   /**
-   * Step 2: Verify OTP
-   */
-  const verifyResetOTP = useCallback(
-    async (code: string) => {
-      if (!state.email) {
-        throw new Error("Email is required");
-      }
-
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        const response = await authApi.verifyPasswordResetOTP({
-          email: state.email,
-          code,
-        });
-
-        setState((prev) => ({
-          ...prev,
-          step: "reset",
-          resetToken: response.data.resetToken,
-          isLoading: false,
-        }));
-      } catch (error: any) {
-        const errorMessage =
-          error?.data?.message || error?.message || "Invalid or expired code";
-        setState((prev) => ({
-          ...prev,
-          error: errorMessage,
-          isLoading: false,
-        }));
-        throw error;
-      }
-    },
-    [state.email],
-  );
-
-  /**
-   * Step 3: Set new password
+   * Set new password from reset link token
    */
   const setNewPassword = useCallback(
-    async (password: string) => {
-      if (!state.resetToken) {
+    async (password: string, resetToken: string) => {
+      if (!resetToken) {
         throw new Error("Reset token is required");
       }
 
@@ -101,7 +69,7 @@ export const usePasswordReset = () => {
 
       try {
         await authApi.setNewPassword({
-          resetToken: state.resetToken,
+          resetToken,
           password,
         });
 
@@ -110,9 +78,8 @@ export const usePasswordReset = () => {
           step: "complete",
           isLoading: false,
         }));
-      } catch (error: any) {
-        const errorMessage =
-          error?.data?.message || error?.message || "Failed to reset password";
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error, "Failed to reset password");
         setState((prev) => ({
           ...prev,
           error: errorMessage,
@@ -121,7 +88,7 @@ export const usePasswordReset = () => {
         throw error;
       }
     },
-    [state.resetToken],
+    [],
   );
 
   /**
@@ -131,7 +98,6 @@ export const usePasswordReset = () => {
     setState({
       step: "request",
       email: null,
-      resetToken: null,
       isLoading: false,
       error: null,
     });
@@ -147,7 +113,6 @@ export const usePasswordReset = () => {
   return {
     ...state,
     requestPasswordReset,
-    verifyResetOTP,
     setNewPassword,
     reset,
     clearError,

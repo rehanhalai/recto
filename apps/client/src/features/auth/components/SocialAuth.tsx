@@ -15,7 +15,7 @@ export function SocialAuth({ actionText }: SocialAuthProps) {
 
   return (
     <>
-      <div className="relative my-6">
+      {/* <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
           <Separator className="w-full" />
         </div>
@@ -24,7 +24,7 @@ export function SocialAuth({ actionText }: SocialAuthProps) {
             or with
           </span>
         </div>
-      </div>
+      </div> */}
 
       <Button
         type="button"

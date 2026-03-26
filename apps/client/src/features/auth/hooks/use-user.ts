@@ -40,6 +40,29 @@ export const useUser = () => {
     [setUser],
   );
 
+  const updateProfileImage = useCallback(
+    async (avatarFile?: File) => {
+      setIsUpdating(true);
+      setError(null);
+
+      try {
+        const response = await authApi.updateProfileImage(avatarFile);
+        setUser(response.data);
+        return response.data;
+      } catch (error: any) {
+        const errorMessage =
+          error?.data?.message ||
+          error?.message ||
+          "Failed to update profile image";
+        setError(errorMessage);
+        throw error;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [setUser],
+  );
+
   /**
    * Check username availability
    */
@@ -87,6 +110,7 @@ export const useUser = () => {
     isUpdating,
     error,
     updateProfile,
+    updateProfileImage,
     checkUsernameAvailability,
     changePassword,
     clearError,

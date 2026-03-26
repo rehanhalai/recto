@@ -10,12 +10,15 @@ import {
   UserCircle,
   Gear,
   MagnifyingGlass,
+  SignOut,
   SunIcon,
   MoonIcon,
 } from "@phosphor-icons/react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/features/auth";
+import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { useLogout } from "@/features/auth/hooks/use-logout";
 import { useCurrentRead } from "@/features/feed/hooks/useCurrentRead";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -50,9 +53,13 @@ export function SidebarLeft({
 }) {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logoutMutation = useLogout();
   const { data: currentRead, isLoading: isLoadingRead } = useCurrentRead();
   const { theme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+
+  useCurrentUser();
 
   useEffect(() => {
     setMounted(true);
@@ -75,7 +82,7 @@ export function SidebarLeft({
   };
 
   return (
-    <nav className="h-full flex flex-col py-4 overflow-y-auto border-r border-border-subtle/30">
+    <nav className="h-full flex flex-col py-4 overflow-y-auto overflow-x-hidden border-r border-border-subtle/30">
       {/* ═══ LOGO (Desktop only) ═══ */}
       <div className="hidden lg:flex items-center justify-center px-4 pb-6">
         <Link href="/feed" className="flex items-center">
@@ -228,6 +235,17 @@ export function SidebarLeft({
             />
             <span className="text-base font-medium">Settings</span>
           </Link>
+          {isAuthenticated && (
+            <button
+              type="button"
+              aria-label="Log out"
+              disabled={logoutMutation.isPending}
+              onClick={() => logoutMutation.mutate()}
+              className="flex items-center justify-center px-4 py-3.5 rounded-xl transition-all duration-150 min-h-[48px] border border-transparent text-red-500/80 hover:text-red-600 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <SignOut size={20} className="flex-shrink-0" />
+            </button>
+          )}
         </div>
 
         {/* User Profile Card */}

@@ -1,39 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/lib/toast";
+import { AvatarImagePicker } from "@/components/avatar-image-picker";
 import {
-  LockIcon,
+  ArrowClockwiseIcon,
+  ArrowLeftIcon,
+  CheckCircleIcon,
   EnvelopeIcon,
-  UserIcon,
-  SpinnerIcon,
   EyeIcon,
   EyeSlashIcon,
-  CheckCircleIcon,
-  ArrowLeftIcon,
-  ArrowClockwiseIcon,
+  LockIcon,
+  SpinnerIcon,
+  UserIcon,
 } from "@phosphor-icons/react";
 
 import {
   Button,
-  Input,
-  Label,
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
+  Input,
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
+  Label,
 } from "@/components/ui";
-import { useSignup } from "../hooks/use-signup";
-import { useVerifyOTP } from "../hooks/use-verify-otp";
 import { useGenerateUsername } from "../hooks/use-username";
+import { useSignup } from "../hooks/use-signup";
+import { useUser } from "../hooks/use-user";
+import { useVerifyOTP } from "../hooks/use-verify-otp";
 import {
   otpSchema,
   signupCredentialsSchema,
@@ -41,41 +43,70 @@ import {
   type SignupCredentialsInput,
 } from "../validation/schemas";
 import { SocialAuth } from "./SocialAuth";
+import Link from "next/link";
 
-type SignupStep = "credentials" | "otp" | "success";
+type SignupStep = "credentials" | "otp" | "profile" | "success";
 
-interface SignupFormProps {
-  onStepChange: (step: SignupStep, email?: string) => void;
-}
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
 
-export function SignupForm({ onStepChange }: SignupFormProps) {
+  return fallback;
+};
+
+export function SignupForm() {
   const router = useRouter();
   const signupMutation = useSignup();
   const verifyOTPMutation = useVerifyOTP();
   const { refetch: generateUsername, isFetching: isGeneratingName } =
     useGenerateUsername();
+  const { updateProfile, updateProfileImage, checkUsernameAvailability } =
+    useUser();
 
   const [step, setStep] = useState<SignupStep>("credentials");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [signupEmail, setSignupEmail] = useState("");
-  const [signupUsername, setSignupUsername] = useState("");
+  const [profileUsername, setProfileUsername] = useState("");
+  const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailability, setUsernameAvailability] = useState<
+    "idle" | "invalid" | "available" | "taken"
+  >("idle");
 
   const credentialsForm = useForm<SignupCredentialsInput>({
     resolver: zodResolver(signupCredentialsSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const otpForm = useForm<OTPInput>({
     resolver: zodResolver(otpSchema),
+    defaultValues: {
+      otp: "",
+    },
   });
 
   const handleGenerateName = async () => {
     try {
-      const { data } = await generateUsername();
-      if (data?.username) {
-        credentialsForm.setValue("username", data.username);
+      const response = await generateUsername();
+      const name = response.data?.username;
+
+      if (!name) {
+        toast.error("Unable to generate username right now.");
+        return;
       }
+
+      setProfileUsername(name);
     } catch (error) {
       console.error("Failed to generate username", error);
       toast.error("Failed to generate username");
@@ -84,22 +115,23 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
 
   const onCredentialsSubmit = async (data: SignupCredentialsInput) => {
     setGlobalError(null);
+
     try {
       await signupMutation.mutateAsync({
         email: data.email,
-        userName: data.username,
         password: data.password,
       });
+
       setSignupEmail(data.email);
-      setSignupUsername(data.username);
+      setProfileUsername("");
+      setProfileAvatarFile(null);
       setStep("otp");
-      onStepChange("otp", data.email);
-      toast.success("OTP sent to your email!");
-    } catch (error: any) {
-      const errorMessage =
-        error?.data?.message ||
-        error?.message ||
-        "Failed to send OTP. Please try again.";
+      toast.success("OTP sent to your email.");
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(
+        error,
+        "Failed to send OTP. Please try again.",
+      );
       setGlobalError(errorMessage);
       toast.error(errorMessage);
     }
@@ -107,34 +139,121 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
 
   const onOTPSubmit = async (data: OTPInput) => {
     setGlobalError(null);
+
     try {
       await verifyOTPMutation.mutateAsync({
         email: signupEmail,
         otp: data.otp,
       });
-      setStep("success");
-      onStepChange("success");
-      toast.success("Email verified! Welcome to Recto!");
-    } catch (error: any) {
-      const errorMessage =
-        error?.data?.message ||
-        error?.message ||
-        "OTP verification failed. Please try again.";
+
+      setStep("profile");
+      toast.success("Email verified successfully.");
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(
+        error,
+        "OTP verification failed. Please try again.",
+      );
       setGlobalError(errorMessage);
       toast.error(errorMessage);
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /*                             View: Credentials                              */
-  /* -------------------------------------------------------------------------- */
+  const handleCompleteProfile = async () => {
+    const cleanedUsername = profileUsername.trim().toLowerCase();
+
+    if (!cleanedUsername) {
+      setGlobalError("Username is required.");
+      return;
+    }
+
+    if (cleanedUsername.length < 3 || cleanedUsername.length > 30) {
+      setGlobalError("Username must be between 3 and 30 characters.");
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanedUsername)) {
+      setGlobalError(
+        "Username can only contain letters, numbers, and underscores.",
+      );
+      return;
+    }
+
+    setGlobalError(null);
+    setIsSavingProfile(true);
+
+    try {
+      const isAvailable = await checkUsernameAvailability(cleanedUsername);
+      if (!isAvailable) {
+        setGlobalError("Username is unavailable. Please choose another one.");
+        return;
+      }
+
+      await updateProfile({ userName: cleanedUsername });
+
+      if (profileAvatarFile) {
+        await updateProfileImage(profileAvatarFile);
+      }
+
+      setStep("success");
+      toast.success("Profile completed successfully.");
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(
+        error,
+        "Could not save profile right now.",
+      );
+      setGlobalError(errorMessage);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    const cleanedUsername = profileUsername.trim().toLowerCase();
+
+    if (!cleanedUsername) {
+      setUsernameAvailability("idle");
+      setIsCheckingUsername(false);
+      return;
+    }
+
+    const isValidLength =
+      cleanedUsername.length >= 3 && cleanedUsername.length <= 30;
+    const isValidPattern = /^[a-zA-Z0-9_]+$/.test(cleanedUsername);
+
+    if (!isValidLength || !isValidPattern) {
+      setUsernameAvailability("invalid");
+      setIsCheckingUsername(false);
+      return;
+    }
+
+    setIsCheckingUsername(true);
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const isAvailable = await checkUsernameAvailability(cleanedUsername);
+        setUsernameAvailability(isAvailable ? "available" : "taken");
+      } catch {
+        setUsernameAvailability("idle");
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [profileUsername, checkUsernameAvailability]);
+
   if (step === "credentials") {
+    const isSubmitting = signupMutation.isPending;
+
     return (
-      <>
-        {/* Error Alert */}
+      <div className="space-y-5">
         {globalError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{globalError}</p>
+          <div className="rounded-lg border border-red-200 bg-red-50/80 px-4 py-3 dark:border-red-900 dark:bg-red-950/40">
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {globalError}
+            </p>
           </div>
         )}
 
@@ -142,103 +261,56 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
           onSubmit={credentialsForm.handleSubmit(onCredentialsSubmit)}
           className="space-y-4"
         >
-          {/* Email */}
           <div>
             <Label
               htmlFor="email"
-              className="text-sm font-medium text-foreground"
+              className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]"
             >
-              Email address
+              Email
             </Label>
             <div className="relative mt-2">
               <EnvelopeIcon
                 size={18}
-                className="absolute left-3 top-3 text-muted-foreground"
+                className="absolute left-3 top-3 text-[#9a8d80] dark:text-[#8f7f6b]"
               />
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                className="pl-10"
+                className="h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] pl-10 text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
                 {...credentialsForm.register("email")}
               />
             </div>
             {credentialsForm.formState.errors.email && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-red-300">
                 {credentialsForm.formState.errors.email.message}
               </p>
             )}
           </div>
 
-          {/* Username */}
-          <div>
-            <div className="flex justify-between items-center">
-              <Label
-                htmlFor="username"
-                className="text-sm font-medium text-foreground"
-              >
-                Username
-              </Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleGenerateName}
-                disabled={isGeneratingName}
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-              >
-                {isGeneratingName ? (
-                  <SpinnerIcon className="animate-spin mr-1" />
-                ) : (
-                  <ArrowClockwiseIcon className="mr-1" />
-                )}
-                Generate Random
-              </Button>
-            </div>
-            <div className="relative mt-2">
-              <UserIcon
-                size={18}
-                className="absolute left-3 top-3 text-muted-foreground"
-              />
-              <Input
-                id="username"
-                type="text"
-                placeholder="johndoe"
-                className="pl-10"
-                {...credentialsForm.register("username")}
-              />
-            </div>
-            {credentialsForm.formState.errors.username && (
-              <p className="mt-1 text-xs text-red-600">
-                {credentialsForm.formState.errors.username.message}
-              </p>
-            )}
-          </div>
-
-          {/* Password */}
           <div>
             <Label
               htmlFor="password"
-              className="text-sm font-medium text-foreground"
+              className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]"
             >
               Password
             </Label>
             <div className="relative mt-2">
               <LockIcon
                 size={18}
-                className="absolute left-3 top-3 text-muted-foreground"
+                className="absolute left-3 top-3 text-[#9a8d80] dark:text-[#8f7f6b]"
               />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                className="pl-10 pr-10"
+                placeholder="At least 8 characters"
+                className="h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] pl-10 pr-10 text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
                 {...credentialsForm.register("password")}
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-3 text-[#9a8d80] transition-colors hover:text-[#211b16] dark:text-[#8f7f6b] dark:hover:text-[#f4eee5]"
               >
                 {showPassword ? (
                   <EyeSlashIcon size={18} />
@@ -247,109 +319,72 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
                 )}
               </button>
             </div>
-                disabled={signupMutation.isPending}
-              8+ characters with uppercase letter and number
-            </p>
             {credentialsForm.formState.errors.password && (
-                {signupMutation.isPending && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-300">
                 {credentialsForm.formState.errors.password.message}
               </p>
-                {signupMutation.isPending ? "Sending OTP..." : "Create account"}
+            )}
           </div>
 
-          {/* Confirm Password */}
-          <div>
-            <Label
-              htmlFor="confirmPassword"
-              className="text-sm font-medium text-foreground"
-            >
-              Confirm password
-            </Label>
-            <div className="relative mt-2">
-              <LockIcon
-                size={18}
-                className="absolute left-3 top-3 text-muted-foreground"
-              />
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="••••••••"
-                className="pl-10 pr-10"
-                {...credentialsForm.register("confirmPassword")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showConfirmPassword ? (
-                  <EyeSlashIcon size={18} />
-                ) : (
-                  <EyeIcon size={18} />
-                )}
-              </button>
-            </div>
-                disabled={verifyOTPMutation.isPending}
-              <p className="mt-1 text-xs text-red-600">
-                {credentialsForm.formState.errors.confirmPassword.message}
-              </p>
-                {verifyOTPMutation.isPending && (
-          </div>
-
-                {verifyOTPMutation.isPending
-                  ? "Verifying..."
-                  : "Verify & Complete"}
           <Button
             type="submit"
-            disabled={isSigningUp}
-            className="w-full mt-6 bg-black hover:bg-gray-900 text-white font-medium py-2.5"
+            disabled={isSubmitting}
+            className="mt-2 h-11 w-full rounded-lg bg-[#1f1a16] text-[15px] font-medium text-[#faf5eb] transition hover:opacity-90 dark:bg-[#e9ddcb] dark:text-[#1f1a16]"
             size="lg"
           >
-            {isSigningUp && (
+            {isSubmitting && (
               <SpinnerIcon size={18} className="mr-2 animate-spin" />
             )}
-            {isSigningUp ? "Creating account..." : "Continue"}
+            {isSubmitting ? "Sending OTP..." : "Create account"}
           </Button>
         </form>
+        <p className="mt-2 text-sm leading-6 text-[#6f6154] dark:text-[#a1907b]">
+          {
+            <>
+              <span>Already have an account? </span>
+              <Link
+                href="/login"
+                className="font-medium text-[#8a6b37] hover:underline"
+              >
+                Log in
+              </Link>
+            </>
+          }
+        </p>
 
-        <SocialAuth actionText="Sign up with Google" />
-      </>
+        <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.18em] text-[#9a8d80] dark:text-[#8f7f6b]">
+          <span className="h-px flex-1 bg-[#dfd2c1] dark:bg-[#352d24]" />
+          <span>or continue with Google</span>
+          <span className="h-px flex-1 bg-[#dfd2c1] dark:bg-[#352d24]" />
+        </div>
+
+        <SocialAuth actionText="Continue with Google" />
+      </div>
     );
   }
 
-  /* -------------------------------------------------------------------------- */
-  /*                                View: OTP                                   */
-  /* -------------------------------------------------------------------------- */
   if (step === "otp") {
     return (
-      <div className="w-full space-y-6">
-        {/* Header with Icon */}
-        <div className="flex flex-col items-center space-y-3 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#C2410C]/10">
-            <EnvelopeIcon className="h-6 w-6 text-[#C2410C]" />
-          </div>
-          <h2 className="text-2xl font-semibold text-[#1C1917] dark:text-[#E7E5E4]">
-            Check your email
-          </h2>
-          <p className="text-sm text-[#6B6B6B] dark:text-[#A8A8A8]">
-            We sent a verification code to{" "}
-            <span className="font-medium text-[#1C1917] dark:text-[#E7E5E4]">
-              {signupEmail}
-            </span>
-          </p>
-        </div>
-
-        {/* Error Alert */}
+      <div className="space-y-6">
         {globalError && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{globalError}</p>
+          <div className="rounded-lg border border-red-200 bg-red-50/80 px-4 py-3 dark:border-red-900 dark:bg-red-950/40">
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {globalError}
+            </p>
           </div>
         )}
 
-        {/* OTP Form */}
+        <div className="rounded-lg border border-[#dfd2c1] bg-[#f6efe5] p-4 text-sm text-[#66584c] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#a1907b]">
+          We sent a 6-digit verification code to
+          <span className="ml-1 font-semibold text-[#1f1a16] dark:text-[#f4eee5]">
+            {signupEmail}
+          </span>
+          .
+        </div>
+
         <Form {...otpForm}>
           <form
-            className="space-y-6"
+            className="space-y-5"
             onSubmit={otpForm.handleSubmit(onOTPSubmit)}
           >
             <FormField
@@ -362,120 +397,197 @@ export function SignupForm({ onStepChange }: SignupFormProps) {
                       <InputOTP maxLength={6} {...field}>
                         <InputOTPGroup>
                           <InputOTPSlot
-                            className="bg-[#FDFBF7] dark:bg-[#2D2B2A] border-[#E5E5E5] dark:border-[#3D3B3A]"
                             index={0}
+                            className="border-[#d8c7b1] bg-[#f8f3ea] dark:border-[#3a3128] dark:bg-[#1e1813]"
                           />
                           <InputOTPSlot
-                            className="bg-[#FDFBF7] dark:bg-[#2D2B2A] border-[#E5E5E5] dark:border-[#3D3B3A]"
                             index={1}
+                            className="border-[#d8c7b1] bg-[#f8f3ea] dark:border-[#3a3128] dark:bg-[#1e1813]"
                           />
                           <InputOTPSlot
-                            className="bg-[#FDFBF7] dark:bg-[#2D2B2A] border-[#E5E5E5] dark:border-[#3D3B3A]"
                             index={2}
+                            className="border-[#d8c7b1] bg-[#f8f3ea] dark:border-[#3a3128] dark:bg-[#1e1813]"
                           />
                         </InputOTPGroup>
                         <InputOTPSeparator />
                         <InputOTPGroup>
                           <InputOTPSlot
-                            className="bg-[#FDFBF7] dark:bg-[#2D2B2A] border-[#E5E5E5] dark:border-[#3D3B3A]"
                             index={3}
+                            className="border-[#d8c7b1] bg-[#f8f3ea] dark:border-[#3a3128] dark:bg-[#1e1813]"
                           />
                           <InputOTPSlot
-                            className="bg-[#FDFBF7] dark:bg-[#2D2B2A] border-[#E5E5E5] dark:border-[#3D3B3A]"
                             index={4}
+                            className="border-[#d8c7b1] bg-[#f8f3ea] dark:border-[#3a3128] dark:bg-[#1e1813]"
                           />
                           <InputOTPSlot
-                            className="bg-[#FDFBF7] dark:bg-[#2D2B2A] border-[#E5E5E5] dark:border-[#3D3B3A]"
                             index={5}
+                            className="border-[#d8c7b1] bg-[#f8f3ea] dark:border-[#3a3128] dark:bg-[#1e1813]"
                           />
                         </InputOTPGroup>
                       </InputOTP>
                     </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-center" />
                 </FormItem>
               )}
             />
 
-            {/* Verify Button */}
             <Button
-              className="w-full bg-[#C2410C] hover:bg-[#A83408] text-white font-semibold py-2.5"
-              disabled={isVerifyingOTP}
               type="submit"
-              size="lg"
+              disabled={verifyOTPMutation.isPending}
+              className="h-11 w-full rounded-lg bg-[#1f1a16] text-[15px] font-medium text-[#faf5eb] transition hover:opacity-90 dark:bg-[#e9ddcb] dark:text-[#1f1a16]"
             >
-              {isVerifyingOTP ? "Verifying..." : "Verify Email"}
-            </Button>
-
-            {/* Resend Section */}
-            <div className="text-center text-sm text-[#6B6B6B] dark:text-[#A8A8A8]">
-              Didn't receive the email?{" "}
-              <Button
-                className="h-auto p-0 font-normal text-[#C2410C] hover:text-[#A83408]"
-                disabled={true}
-                type="button"
-                variant="link"
-              >
-                Resend code
-              </Button>
-            </div>
-
-            {/* Back Button */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setStep("credentials");
-                onStepChange("credentials");
-                setGlobalError(null);
-              }}
-              className="w-full border-[#E5E5E5] dark:border-[#3D3B3A] text-[#1C1917] dark:text-[#E7E5E4] hover:bg-[#F5F3F0] dark:hover:bg-[#2D2B2A]"
-            >
-              <ArrowLeftIcon size={18} className="mr-2" />
-              Back to details
+              {verifyOTPMutation.isPending && (
+                <SpinnerIcon size={18} className="mr-2 animate-spin" />
+              )}
+              {verifyOTPMutation.isPending ? "Verifying..." : "Verify email"}
             </Button>
           </form>
         </Form>
-      </div>
-    );
-  }
-
-  /* -------------------------------------------------------------------------- */
-  /*                              View: Success                                 */
-  /* -------------------------------------------------------------------------- */
-  if (step === "success") {
-    return (
-      <div className="space-y-6 text-center">
-        <div className="flex justify-center">
-          <div className="relative">
-            <div className="absolute inset-0 bg-black rounded-full opacity-20 animate-pulse" />
-            <CheckCircleIcon
-              size={80}
-              weight="fill"
-              className="text-black relative"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-foreground">
-            Account created!
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Welcome to Recto, {signupUsername}. Your account is ready to go.
-          </p>
-        </div>
 
         <Button
-          onClick={() => router.push("/feed")}
-          className="w-full bg-black hover:bg-gray-900 text-white font-medium py-2.5"
-          size="lg"
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            setStep("credentials");
+            setGlobalError(null);
+          }}
+          className="h-10 w-full text-[#8a6b37] hover:bg-[#f0e5d7] hover:text-[#71572f] dark:hover:bg-[#251e17]"
         >
-          Go to Homepage
+          <ArrowLeftIcon size={16} className="mr-2" />
+          Back to details
         </Button>
       </div>
     );
   }
 
-  return null;
+  if (step === "profile") {
+    return (
+      <div className="space-y-5">
+        {globalError && (
+          <div className="rounded-lg border border-red-200 bg-red-50/80 px-4 py-3 dark:border-red-900 dark:bg-red-950/40">
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {globalError}
+            </p>
+          </div>
+        )}
+
+        <div className="rounded-xl border border-[#cfb286] bg-[#f8efde] p-4 shadow-[0_10px_28px_rgba(118,82,34,0.12)] dark:border-[#5b472f] dark:bg-[#2a2118]">
+          <AvatarImagePicker
+            label="Profile picture (highlighted)"
+            value={profileAvatarFile}
+            onChange={setProfileAvatarFile}
+            disabled={isSavingProfile}
+          />
+        </div>
+
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <Label className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]">
+              Username
+            </Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleGenerateName}
+              disabled={isGeneratingName}
+              className="h-6 px-2 text-xs text-[#8a6b37] hover:text-[#705630]"
+            >
+              {isGeneratingName ? (
+                <SpinnerIcon size={14} className="mr-1 animate-spin" />
+              ) : (
+                <ArrowClockwiseIcon size={14} className="mr-1" />
+              )}
+              Suggest
+            </Button>
+          </div>
+
+          <div className="relative">
+            <UserIcon
+              size={18}
+              className="absolute left-3 top-3 text-[#9a8d80] dark:text-[#8f7f6b]"
+            />
+            <Input
+              value={profileUsername}
+              onChange={(event) => {
+                setProfileUsername(event.target.value);
+                if (globalError) {
+                  setGlobalError(null);
+                }
+              }}
+              placeholder="john_doe"
+              className="h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] pl-10 text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
+            />
+          </div>
+          <p className="mt-1 text-xs text-[#7f7062] dark:text-[#a1907b]">
+            Use 3-30 characters: letters, numbers, and underscores.
+          </p>
+          {(isCheckingUsername || usernameAvailability !== "idle") && (
+            <p
+              className={`mt-1 text-xs ${
+                usernameAvailability === "available"
+                  ? "text-emerald-700 dark:text-emerald-300"
+                  : usernameAvailability === "taken"
+                    ? "text-red-700 dark:text-red-300"
+                    : usernameAvailability === "invalid"
+                      ? "text-amber-700 dark:text-amber-300"
+                      : "text-[#7f7062] dark:text-[#a1907b]"
+              }`}
+            >
+              {isCheckingUsername
+                ? "Checking availability..."
+                : usernameAvailability === "available"
+                  ? "Username is available"
+                  : usernameAvailability === "taken"
+                    ? "Username is already taken"
+                    : "Invalid username format"}
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-dashed border-[#d8c7b1] bg-[#f6efe5] px-4 py-3 text-sm text-[#66584c] dark:border-[#3a3128] dark:bg-[#201a14] dark:text-[#a1907b]">
+          Account verified. Choose your public username to continue. You can add
+          a profile picture now or later.
+        </div>
+
+        <Button
+          type="button"
+          onClick={handleCompleteProfile}
+          disabled={isSavingProfile}
+          className="h-11 w-full rounded-lg bg-[#1f1a16] text-[15px] font-medium text-[#faf5eb] transition hover:opacity-90 dark:bg-[#e9ddcb] dark:text-[#1f1a16]"
+        >
+          {isSavingProfile && (
+            <SpinnerIcon size={18} className="mr-2 animate-spin" />
+          )}
+          {isSavingProfile ? "Saving..." : "Continue"}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#e8dac6] dark:bg-[#2b241c]">
+        <CheckCircleIcon size={34} weight="fill" className="text-[#8a6b37]" />
+      </div>
+
+      <div>
+        <h3 className="font-serif text-3xl leading-tight tracking-tight text-[#1f1a16] dark:text-[#f4eee4]">
+          You&apos;re in.
+        </h3>
+        <p className="mt-2 text-sm text-[#6f6154] dark:text-[#a1907b]">
+          Your shelf is ready. Start exploring books and building your reading
+          timeline.
+        </p>
+      </div>
+
+      <Button
+        onClick={() => router.push("/feed")}
+        className="h-11 w-full rounded-lg bg-[#1f1a16] text-[15px] font-medium text-[#faf5eb] transition hover:opacity-90 dark:bg-[#e9ddcb] dark:text-[#1f1a16]"
+      >
+        Go to my feed
+      </Button>
+    </div>
+  );
 }

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "@/lib/toast";
 import {
   LockIcon,
@@ -18,14 +17,20 @@ import {
 import { Button, Input, Label } from "@/components/ui";
 import { useLogin } from "../hooks/use-login";
 import { SocialAuth } from "./SocialAuth";
+import { loginSchema, type LoginInput } from "../validation/schemas";
 
-// Validation Schema
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
 
-type LoginInput = z.infer<typeof loginSchema>;
+  return fallback;
+};
 
 export function LoginForm() {
   const router = useRouter();
@@ -46,11 +51,11 @@ export function LoginForm() {
       });
       toast.success("Login successful!");
       router.push("/feed");
-    } catch (error: any) {
-      const errorMessage =
-        error?.data?.message ||
-        error?.message ||
-        "Login failed. Please try again.";
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(
+        error,
+        "Login failed. Please try again.",
+      );
       setGlobalError(errorMessage);
       toast.error(errorMessage);
       console.error("Login error:", error);
@@ -58,56 +63,46 @@ export function LoginForm() {
   };
 
   return (
-    <>
-      {/* Error Alert */}
-      {globalError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{globalError}</p>
-        </div>
-      )}
-
-      {/* Login Form */}
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        {/* Email Field */}
+    <div className="space-y-5">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label
             htmlFor="email"
-            className="text-sm font-medium text-foreground"
+            className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]"
           >
-            Email address
+            Email
           </Label>
           <div className="relative mt-2">
             <EnvelopeIcon
               size={18}
-              className="absolute left-3 top-3 text-muted-foreground"
+              className="absolute left-3 top-3 text-[#9a8d80] dark:text-[#8f7f6b]"
             />
             <Input
               id="email"
               type="email"
               placeholder="you@example.com"
-              className="pl-10"
+              className="h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] pl-10 text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
               {...form.register("email")}
             />
           </div>
           {form.formState.errors.email && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-300">
               {form.formState.errors.email.message}
             </p>
           )}
         </div>
 
-        {/* Password Field */}
         <div>
           <div className="flex items-center justify-between">
             <Label
               htmlFor="password"
-              className="text-sm font-medium text-foreground"
+              className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]"
             >
               Password
             </Label>
             <Link
-              href="/auth/forgot-password"
-              className="text-xs font-medium text-black hover:text-black transition-colors"
+              href="/forgot-password"
+              className="text-xs font-medium text-[#8a6b37] transition-colors hover:opacity-80"
             >
               Forgot password?
             </Link>
@@ -115,19 +110,19 @@ export function LoginForm() {
           <div className="relative mt-2">
             <LockIcon
               size={18}
-              className="absolute left-3 top-3 text-muted-foreground"
+              className="absolute left-3 top-3 text-[#9a8d80] dark:text-[#8f7f6b]"
             />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
-              className="pl-10 pr-10"
+              className="h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] pl-10 pr-10 text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
               {...form.register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-3 text-[#9a8d80] transition-colors hover:text-[#211b16] dark:text-[#8f7f6b] dark:hover:text-[#f4eee5]"
             >
               {showPassword ? (
                 <EyeSlashIcon size={18} />
@@ -137,27 +132,54 @@ export function LoginForm() {
             </button>
           </div>
           {form.formState.errors.password && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-300">
               {form.formState.errors.password.message}
             </p>
           )}
         </div>
 
-        {/* Sign In Button */}
         <Button
           type="submit"
           disabled={loginMutation.isPending}
-          className="w-full mt-6 bg-black hover:bg-gray-900 text-white font-medium py-2.5"
+          className="mt-2 h-11 w-full rounded-lg bg-[#1f1a16] text-[15px] font-medium text-[#faf5eb] transition hover:opacity-90 dark:bg-[#e9ddcb] dark:text-[#1f1a16]"
           size="lg"
         >
           {loginMutation.isPending && (
             <SpinnerIcon size={18} className="mr-2 animate-spin" />
           )}
-          {loginMutation.isPending ? "Signing in..." : "Sign in"}
+          {loginMutation.isPending ? "Signing in..." : "Log in"}
         </Button>
       </form>
 
-      <SocialAuth actionText="Sign in with Google" />
-    </>
+      <p className="mt-2 text-sm leading-6 text-[#6f6154] dark:text-[#a1907b]">
+        {
+          <>
+            <span>New to Recto? </span>
+            <Link
+              href="/signup"
+              className="font-medium text-[#8a6b37] hover:underline"
+            >
+              Create an account
+            </Link>
+          </>
+        }
+      </p>
+
+      <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.18em] text-[#9a8d80] dark:text-[#8f7f6b]">
+        <span className="h-px flex-1 bg-[#dfd2c1] dark:bg-[#352d24]" />
+        <span>or continue with Google</span>
+        <span className="h-px flex-1 bg-[#dfd2c1] dark:bg-[#352d24]" />
+      </div>
+
+      <SocialAuth actionText="Continue with Google" />
+
+      {globalError && (
+        <div className="rounded-lg border border-red-200 bg-red-50/80 px-4 py-3 dark:border-red-900 dark:bg-red-950/40">
+          <p className="text-sm text-red-700 dark:text-red-300">
+            {globalError}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

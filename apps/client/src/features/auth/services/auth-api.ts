@@ -119,6 +119,21 @@ export const updateProfile = async (
   return apiInstance.patch<ApiResponse<User>>("/user/update-profile", data);
 };
 
+export const updateProfileImage = async (
+  avatarFile?: File,
+): Promise<ApiResponse<User>> => {
+  const formData = new FormData();
+
+  if (avatarFile) {
+    formData.append("avatarImage", avatarFile);
+  }
+
+  return apiInstance.patch<ApiResponse<User>>(
+    "/user/update-profileimage",
+    formData,
+  );
+};
+
 export const checkUsernameAvailability = async (
   userName: string,
 ): Promise<ApiResponse<{ isAvailable: boolean }>> => {

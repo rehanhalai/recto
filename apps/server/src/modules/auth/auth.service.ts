@@ -72,13 +72,13 @@ export class AuthService {
 
   private getUserData(user: typeof schema.users.$inferSelect) {
     return {
+      id: user.id,
       userName: user.userName,
       fullName: user.fullName,
       email: user.email,
       avatarImage: user.avatarImage,
       coverImage: user.coverImage,
       role: user.role,
-      isVerified: user.isVerified,
     };
   }
 
