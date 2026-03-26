@@ -73,6 +73,7 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [signupEmail, setSignupEmail] = useState("");
+  const [profileFullName, setProfileFullName] = useState("");
   const [profileUsername, setProfileUsername] = useState("");
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -123,6 +124,7 @@ export function SignupForm() {
       });
 
       setSignupEmail(data.email);
+      setProfileFullName("");
       setProfileUsername("");
       setProfileAvatarFile(null);
       setStep("otp");
@@ -159,7 +161,18 @@ export function SignupForm() {
   };
 
   const handleCompleteProfile = async () => {
+    const cleanedFullName = profileFullName.trim();
     const cleanedUsername = profileUsername.trim().toLowerCase();
+
+    if (!cleanedFullName) {
+      setGlobalError("Full name is required.");
+      return;
+    }
+
+    if (cleanedFullName.length < 3 || cleanedFullName.length > 100) {
+      setGlobalError("Full name must be between 3 and 100 characters.");
+      return;
+    }
 
     if (!cleanedUsername) {
       setGlobalError("Username is required.");
@@ -188,7 +201,10 @@ export function SignupForm() {
         return;
       }
 
-      await updateProfile({ userName: cleanedUsername });
+      await updateProfile({
+        fullName: cleanedFullName,
+        userName: cleanedUsername,
+      });
 
       if (profileAvatarFile) {
         await updateProfileImage(profileAvatarFile);
@@ -482,6 +498,33 @@ export function SignupForm() {
         </div>
 
         <div>
+          <Label className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]">
+            Full name
+          </Label>
+
+          <div className="relative mt-2">
+            <UserIcon
+              size={18}
+              className="absolute left-3 top-3 text-[#9a8d80] dark:text-[#8f7f6b]"
+            />
+            <Input
+              value={profileFullName}
+              onChange={(event) => {
+                setProfileFullName(event.target.value);
+                if (globalError) {
+                  setGlobalError(null);
+                }
+              }}
+              placeholder="John Doe"
+              className="h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] pl-10 text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
+            />
+          </div>
+          <p className="mt-1 text-xs text-[#7f7062] dark:text-[#a1907b]">
+            Use 3-100 characters.
+          </p>
+        </div>
+
+        <div>
           <div className="mb-2 flex items-center justify-between">
             <Label className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]">
               Username
@@ -547,8 +590,8 @@ export function SignupForm() {
         </div>
 
         <div className="rounded-lg border border-dashed border-[#d8c7b1] bg-[#f6efe5] px-4 py-3 text-sm text-[#66584c] dark:border-[#3a3128] dark:bg-[#201a14] dark:text-[#a1907b]">
-          Account verified. Choose your public username to continue. You can add
-          a profile picture now or later.
+          Account verified. Add your full name and choose your public username
+          to continue. You can add a profile picture now or later.
         </div>
 
         <Button
