@@ -1,0 +1,102 @@
+name: Deploy Server to Azure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - apps/server/**
+      - packages/types/**
+      - packages/assets/**
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - turbo.json
+      - package.json
+      - .github/workflows/deploy-server-azure.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server-azure-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build only server app via Turborepo filter
+        run: pnpm turbo run build --filter=@recto/server...
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and push Docker image to ACR
+        env:
+          ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
+        run: |
+          set -euo pipefail
+          ACR_LOGIN_SERVER="$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)"
+          IMAGE_TAG="${GITHUB_SHA}"
+          IMAGE_NAME="$ACR_LOGIN_SERVER/recto-server:$IMAGE_TAG"
+
+          az acr login --name "$ACR_NAME"
+          docker build -f apps/server/Dockerfile -t "$IMAGE_NAME" .
+          docker push "$IMAGE_NAME"
+
+          echo "IMAGE_NAME=$IMAGE_NAME" >> "$GITHUB_ENV"
+
+      - name: Configure Azure Web App container
+        env:
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+          ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
+        run: |
+          set -euo pipefail
+          ACR_LOGIN_SERVER="$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)"
+          ACR_USER="$(az acr credential show --name "$ACR_NAME" --query username -o tsv)"
+          ACR_PASS="$(az acr credential show --name "$ACR_NAME" --query passwords[0].value -o tsv)"
+
+          az webapp config container set \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$WEBAPP_NAME" \
+            --container-image-name "$IMAGE_NAME" \
+            --container-registry-url "https://$ACR_LOGIN_SERVER" \
+            --container-registry-user "$ACR_USER" \
+            --container-registry-password "$ACR_PASS"
+
+          az webapp restart \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$WEBAPP_NAME"
+
+      - name: Show deployed backend URL
+        env:
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+        run: |
+          az webapp show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$WEBAPP_NAME" \
+            --query defaultHostName -o tsv
