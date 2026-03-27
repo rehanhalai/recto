@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { apiInstance } from "@/lib/api";
 import { Footer } from "@/components/layout/footer";
 import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 import { HeroScrollSequence } from "../features/landing/components/hero-scroll-sequence";
@@ -30,22 +29,64 @@ export default function LandingPage() {
   const [isDesktop, setIsDesktop] = useState(false);
   useLenis();
 
-  const checkAuth = useCallback(async () => {
+  useEffect(() => {
     try {
-      const res = await apiInstance.get<{ success: boolean }>("/user/whoami");
-      if (res.success) {
-        router.replace("/feed");
-      } else {
+      const persistedAuth = localStorage.getItem("auth-storage");
+
+      if (!persistedAuth) {
         setCheckingAuth(false);
+        return;
       }
+
+      const parsed = JSON.parse(persistedAuth) as {
+        state?: { isAuthenticated?: boolean; user?: { id?: string | null } | null };
+      };
+
+      const hasAuth = Boolean(
+        parsed?.state?.isAuthenticated && parsed?.state?.user?.id,
+      );
+
+      if (hasAuth) {
+        router.replace("/feed");
+        return;
+      }
+
+      setCheckingAuth(false);
     } catch {
       setCheckingAuth(false);
     }
   }, [router]);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "auth-storage") {
+        return;
+      }
+
+      if (!event.newValue) {
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(event.newValue) as {
+          state?: { isAuthenticated?: boolean; user?: { id?: string | null } | null };
+        };
+
+        const hasAuth = Boolean(
+          parsed?.state?.isAuthenticated && parsed?.state?.user?.id,
+        );
+
+        if (hasAuth) {
+          router.replace("/feed");
+        }
+      } catch {
+        // Ignore malformed localStorage payloads.
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [router]);
 
   useEffect(() => {
     const media = window.matchMedia("(min-width: 768px)");

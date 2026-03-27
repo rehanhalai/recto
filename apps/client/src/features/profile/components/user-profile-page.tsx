@@ -16,6 +16,7 @@ import { useInView } from "react-intersection-observer";
 
 import { UserAvatar } from "@/components/UserAvatar";
 import { StandardLayout } from "@/components/layout";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Dialog,
   DialogContent,
@@ -188,6 +189,9 @@ function OwnerActions({ onLogout, isLoggingOut }: OwnerActionsProps) {
           <Gear size={18} weight="regular" />
         </Button>
       </Link>
+      <div className="lg:hidden">
+        <ThemeToggle />
+      </div>
       <Button
         type="button"
         variant="ghost"
