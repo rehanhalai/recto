@@ -38,12 +38,37 @@ const cormorantGaramond = Cormorant_Garamond({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   applicationName: "Recto",
   title: "Recto — Discover Your Next Great Read",
   description:
     "A social reading platform for people who take books seriously. Track what you've read, discover what's next, and connect with readers who get it.",
   manifest: "/favicon/site.webmanifest",
+  openGraph: {
+    title: "Recto — Discover Your Next Great Read",
+    description:
+      "A social reading platform for people who take books seriously. Track what you've read, discover what's next, and connect with readers who get it.",
+    type: "website",
+    images: [
+      {
+        url: "/favicon/web-app-manifest-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Recto logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Recto — Discover Your Next Great Read",
+    description:
+      "A social reading platform for people who take books seriously. Track what you've read, discover what's next, and connect with readers who get it.",
+    images: ["/favicon/web-app-manifest-512x512.png"],
+  },
   appleWebApp: {
     capable: true,
     title: "Recto",
