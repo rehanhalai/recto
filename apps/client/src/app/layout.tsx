@@ -55,10 +55,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/favicon/web-app-manifest-512x512.png",
-        width: 512,
-        height: 512,
-        alt: "Recto logo",
+        url: "/social/recto-logo-dark.webp",
+        width: 625,
+        height: 188,
+        alt: "Recto social preview banner",
       },
     ],
   },
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     title: "Recto — Discover Your Next Great Read",
     description:
       "A social reading platform for people who take books seriously. Track what you've read, discover what's next, and connect with readers who get it.",
-    images: ["/favicon/web-app-manifest-512x512.png"],
+    images: ["/social/recto-logo-dark.webp"],
   },
   appleWebApp: {
     capable: true,
