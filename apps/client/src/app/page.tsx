@@ -172,6 +172,15 @@ export default function LandingPage() {
             its rightful space.
           </h2>
 
+          <div className="paper-feature mb-6 sm:mb-10">
+            <Link
+              href="/feed"
+              className="inline-flex items-center rounded-full border border-gold/40 bg-gold/10 px-6 py-3 text-sm font-medium tracking-wide text-gold transition-colors hover:bg-gold hover:text-black"
+            >
+              Start Exploring
+            </Link>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mt-10 md:mt-12 text-left border-t border-white/10 pt-10 md:pt-16">
             <div className="paper-feature space-y-4">
               <span className="text-gold font-serif italic text-2xl">01</span>

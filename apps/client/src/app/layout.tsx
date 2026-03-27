@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Geist_Mono,
   Playfair_Display,
@@ -8,6 +8,7 @@ import {
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Providers from "@/provider";
+import { PwaRegister } from "@/components/pwa-register";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -38,10 +39,16 @@ const cormorantGaramond = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
+  applicationName: "Recto",
   title: "Recto — Discover Your Next Great Read",
   description:
     "A social reading platform for people who take books seriously. Track what you've read, discover what's next, and connect with readers who get it.",
   manifest: "/favicon/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Recto",
+    statusBarStyle: "default",
+  },
   icons: {
     icon: [
       { url: "/favicon/favicon.ico", sizes: "any" },
@@ -50,6 +57,10 @@ export const metadata: Metadata = {
     ],
     apple: "/favicon/apple-touch-icon.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#171717",
 };
 
 export default function RootLayout({
@@ -70,6 +81,7 @@ export default function RootLayout({
         >
           <Providers>{children}</Providers>
         </ThemeProvider>
+        <PwaRegister />
       </body>
     </html>
   );

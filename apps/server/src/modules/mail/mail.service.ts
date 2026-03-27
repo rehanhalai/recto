@@ -22,23 +22,98 @@ export class MailService {
     });
   }
 
-  private async renderTemplate(
-    templateName: string,
-    data: Record<string, string>,
-  ) {
-    let templatePath = path.join(__dirname, "templates", `${templateName}.hbs`);
-
-    if (!fs.existsSync(templatePath)) {
-      templatePath = path.join(
+  private resolveTemplatePath(templateName: string): string {
+    const templateFileName = `${templateName}.hbs`;
+    const candidatePaths = [
+      path.join(__dirname, "templates", templateFileName),
+      // Nest assets can be emitted to dist/modules while JS files are in dist/src/modules.
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "..",
+        "modules",
+        "mail",
+        "templates",
+        templateFileName,
+      ),
+      path.join(
         process.cwd(),
         "src",
         "modules",
         "mail",
         "templates",
-        `${templateName}.hbs`,
+        templateFileName,
+      ),
+      path.join(
+        process.cwd(),
+        "apps",
+        "server",
+        "src",
+        "modules",
+        "mail",
+        "templates",
+        templateFileName,
+      ),
+      path.join(
+        process.cwd(),
+        "dist",
+        "src",
+        "modules",
+        "mail",
+        "templates",
+        templateFileName,
+      ),
+      path.join(
+        process.cwd(),
+        "dist",
+        "modules",
+        "mail",
+        "templates",
+        templateFileName,
+      ),
+      path.join(
+        process.cwd(),
+        "apps",
+        "server",
+        "dist",
+        "src",
+        "modules",
+        "mail",
+        "templates",
+        templateFileName,
+      ),
+      path.join(
+        process.cwd(),
+        "apps",
+        "server",
+        "dist",
+        "modules",
+        "mail",
+        "templates",
+        templateFileName,
+      ),
+    ];
+
+    const resolvedPath = candidatePaths.find((candidatePath) =>
+      fs.existsSync(candidatePath),
+    );
+
+    if (!resolvedPath) {
+      throw new Error(
+        `Email template '${templateName}' not found. Checked: ${candidatePaths.join(", ")}`,
       );
     }
 
+    return resolvedPath;
+  }
+
+  private async renderTemplate(
+    templateName: string,
+    data: Record<string, string>,
+  ) {
+    const templatePath = this.resolveTemplatePath(templateName);
     let template = fs.readFileSync(templatePath, "utf8");
 
     for (const key in data) {

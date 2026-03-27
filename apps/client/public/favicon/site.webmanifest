@@ -1,6 +1,10 @@
 {
-  "name": "recto",
-  "short_name": "recto",
+  "id": "/",
+  "name": "Recto",
+  "short_name": "Recto",
+  "description": "Discover, track, and share your reading journey.",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -16,6 +20,6 @@
     }
   ],
   "theme_color": "#171717",
-  "background_color": "#000000",
+  "background_color": "#f6f1e8",
   "display": "standalone"
 }
