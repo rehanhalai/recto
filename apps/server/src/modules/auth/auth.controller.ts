@@ -173,10 +173,10 @@ export class AuthController {
       this.getSessionCookieOptions(),
     );
 
-    const clientUrl = this.configService.get<string>("clientUrl") || "/";
-    // Redirect back to frontend with some success indicator if needed,
-    // or just the generic dashboard since cookie is set
-    return res.redirect(clientUrl);
+    const clientUrl =
+      this.configService.get<string>("clientUrl") || "http://localhost:3000";
+    const redirectUrl = new URL("/feed", clientUrl).toString();
+    return res.redirect(redirectUrl);
   }
 
   @UseGuards(AuthGuard)
