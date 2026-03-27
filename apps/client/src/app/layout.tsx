@@ -39,7 +39,10 @@ const cormorantGaramond = Cormorant_Garamond({
 });
 
 const siteUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_APP_URL || "https://recto.social";
+
+const previewImageUrl =
+  "https://res.cloudinary.com/dkfdpa4n3/image/upload/c_pad,b_white,ar_1200:630,w_1200,h_630,f_auto,q_auto/v1774618345/recto/posts/aqqcjvpgabtnnivuepvd.webp";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -52,12 +55,14 @@ export const metadata: Metadata = {
     title: "Recto — Discover Your Next Great Read",
     description:
       "A social reading platform for people who take books seriously. Track what you've read, discover what's next, and connect with readers who get it.",
+    url: siteUrl,
+    siteName: "Recto",
     type: "website",
     images: [
       {
-        url: "/social/recto-logo-dark.webp",
-        width: 625,
-        height: 188,
+        url: previewImageUrl,
+        width: 1200,
+        height: 630,
         alt: "Recto social preview banner",
       },
     ],
@@ -67,7 +72,7 @@ export const metadata: Metadata = {
     title: "Recto — Discover Your Next Great Read",
     description:
       "A social reading platform for people who take books seriously. Track what you've read, discover what's next, and connect with readers who get it.",
-    images: ["/social/recto-logo-dark.webp"],
+    images: [previewImageUrl],
   },
   appleWebApp: {
     capable: true,
