@@ -45,6 +45,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [liked, setLiked] = useState(Boolean(isLikedByMe));
   const [localLikeCount, setLocalLikeCount] = useState(likesCount ?? 0);
+  const [imageAspectRatio, setImageAspectRatio] = useState<string>();
   // const [saved, setSaved] = useState(false);
 
   const timeAgo = formatRelativeTime(createdAt);
@@ -99,7 +100,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
     <article className="flex flex-col bg-card-surface border border-border-subtle rounded-xl p-4 gap-4 w-full transition-colors hover:border-border-subtle/80">
       {/* Header */}
       <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <Link href={`/${authorUserName}`} className="flex items-center gap-3">
           <UserAvatar
             src={authorAvatarImage}
             fallbackName={authorDisplayName}
@@ -116,7 +117,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
             </div>
             <span className="text-ink-muted text-xs">@{authorUserName}</span>
           </div>
-        </div>
+        </Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-border-subtle/30 focus:outline-none transition-colors">
@@ -192,13 +193,19 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
 
       {/* Optional Post Image */}
       {image && (
-        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border-subtle">
+        <div
+          className="relative w-full rounded-lg overflow-hidden border border-border-subtle bg-paper/20"
+          style={{ aspectRatio: imageAspectRatio ?? "1 / 1" }}
+        >
           <Image
             src={image}
             alt="Post image"
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 560px"
+            onLoadingComplete={(img) =>
+              setImageAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`)
+            }
           />
         </div>
       )}

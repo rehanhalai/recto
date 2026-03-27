@@ -9,7 +9,7 @@ type FeedTabsProps = {
 
 export function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
   return (
-    <div className="flex w-full border-b border-border-subtle/40 bg-paper sticky top-0 z-20 -mt-4 ">
+    <div className="flex w-full border-b border-border-subtle/40 bg-paper sticky top-0 z-20 ">
       <button
         onClick={() => onTabChange("explore")}
         className="relative flex-1 flex justify-center hover:bg-muted/30 transition-colors cursor-pointer"

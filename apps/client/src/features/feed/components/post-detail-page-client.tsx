@@ -268,11 +268,11 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
           depth === 0 ? "bg-paper/60" : "bg-card-surface"
         }`}
       >
-        <div className="flex items-center justify-between gap-3">
+        <Link href={`/${comment.user.userName}`} className="flex items-center justify-between gap-3">
           <p className="truncate text-sm font-medium text-ink">
             {comment.user.fullName ?? comment.user.userName}
           </p>
-        </div>
+        </Link>
         <p className="mt-1 text-sm text-ink">{comment.content}</p>
 
         <div className="mt-2 flex items-center gap-4 text-xs">
