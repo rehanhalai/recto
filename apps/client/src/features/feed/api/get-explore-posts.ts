@@ -15,14 +15,22 @@ export async function getExplorePosts({
   limit?: number;
   cursor?: string;
 } = {}): Promise<PaginatedResponse<PostWithRelations>> {
-  const response = await apiInstance.get<
-    ApiEnvelope<PaginatedResponse<PostWithRelations>>
-  >("/posts/feed", {
-    limit,
-    cursor,
-  });
+  try {
+    const response = await apiInstance.get<
+      ApiEnvelope<PaginatedResponse<PostWithRelations>>
+    >("/posts/feed", {
+      limit,
+      cursor,
+    });
 
-  return response.data;
+    return response.data;
+  } catch {
+    return {
+      data: [],
+      nextCursor: null,
+      hasMore: false,
+    };
+  }
 }
 
 export async function getTrendingPosts(limit = 10): Promise<Post[]> {
