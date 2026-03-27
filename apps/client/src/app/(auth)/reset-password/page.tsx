@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +34,7 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
   return fallback;
 };
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams.get("token") ?? "", [searchParams]);
@@ -207,5 +207,28 @@ export default function ResetPasswordPage() {
         </form>
       )}
     </AuthLayout>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthLayout
+          title="Create new password."
+          topSlot={
+            <p className="mb-4 text-center text-sm leading-6 text-[#6f6154] dark:text-[#a1907b]">
+              Preparing your secure reset form...
+            </p>
+          }
+        >
+          <div className="rounded-lg border border-border-subtle bg-card/50 px-4 py-6 text-center text-sm text-muted-foreground">
+            Loading...
+          </div>
+        </AuthLayout>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
