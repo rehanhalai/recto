@@ -1,104 +1,9 @@
 {
-  "id": "aeea08c1-b856-47db-8f4d-e045f8e97b96",
-  "prevId": "cc8eae4f-1dda-4838-be72-4a27f01a8e3f",
+  "id": "e1fa862b-91fd-41fe-b4e9-9210163e97dc",
+  "prevId": "143d20d1-8af9-4f54-9e33-cc555f164103",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.book_affiliate_links": {
-      "name": "book_affiliate_links",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "book_id": {
-          "name": "book_id",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "platform": {
-          "name": "platform",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "book_affiliate_links_book_id_idx": {
-          "name": "book_affiliate_links_book_id_idx",
-          "columns": [
-            {
-              "expression": "book_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        },
-        "book_affiliate_links_book_platform_idx": {
-          "name": "book_affiliate_links_book_platform_idx",
-          "columns": [
-            {
-              "expression": "book_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "platform",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "with": {},
-          "method": "btree",
-          "concurrently": false
-        }
-      },
-      "foreignKeys": {
-        "book_affiliate_links_book_id_books_id_fk": {
-          "name": "book_affiliate_links_book_id_books_id_fk",
-          "tableFrom": "book_affiliate_links",
-          "columnsFrom": [
-            "book_id"
-          ],
-          "tableTo": "books",
-          "columnsTo": [
-            "id"
-          ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.book_authors": {
       "name": "book_authors",
       "schema": "",
@@ -344,19 +249,6 @@
         },
         "ratings_count": {
           "name": "ratings_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "google_rating": {
-          "name": "google_rating",
-          "type": "numeric(3, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "google_ratings_count": {
-          "name": "google_ratings_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1300,11 +1192,12 @@
           "primaryKey": false,
           "notNull": true
         },
-        "hashed_refresh_token": {
-          "name": "hashed_refresh_token",
-          "type": "text",
+        "is_revoked": {
+          "name": "is_revoked",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
         "user_agent": {
           "name": "user_agent",
@@ -1422,8 +1315,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "avatar_public_id": {
+          "name": "avatar_public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "cover_image": {
           "name": "cover_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cover_public_id": {
+          "name": "cover_public_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false

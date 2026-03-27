@@ -5,43 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1773401202235,
+      "when": 1774591122451,
       "tag": "0000_initial-setup",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1773401218444,
-      "tag": "0001_triggers",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1773427610585,
-      "tag": "0002_misty_dakota_north",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1773574664736,
-      "tag": "0003_session-id",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1773753966811,
-      "tag": "0004_add_cloudinary_public_ids",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1774252800000,
-      "tag": "0005_drop_google_ratings",
+      "when": 1774591192220,
+      "tag": "0001_triggers-setup",
       "breakpoints": true
     }
   ]

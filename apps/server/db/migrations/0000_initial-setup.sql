@@ -1,14 +1,6 @@
 CREATE TYPE "public"."book_source" AS ENUM('google_books', 'open_library', 'manual');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('user', 'admin', 'moderator');--> statement-breakpoint
 CREATE TYPE "public"."reading_status" AS ENUM('wishlist', 'reading', 'finished');--> statement-breakpoint
-CREATE TABLE "book_affiliate_links" (
-	"id" varchar(255) PRIMARY KEY NOT NULL,
-	"book_id" varchar(255) NOT NULL,
-	"platform" varchar(50) NOT NULL,
-	"url" text NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "book_authors" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
 	"book_id" varchar(255) NOT NULL,
@@ -34,8 +26,6 @@ CREATE TABLE "books" (
 	"isbn13" varchar(13),
 	"average_rating" numeric(3, 2),
 	"ratings_count" integer DEFAULT 0 NOT NULL,
-	"google_rating" numeric(3, 2),
-	"google_ratings_count" integer DEFAULT 0 NOT NULL,
 	"cover_image" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
@@ -119,7 +109,7 @@ CREATE TABLE "otps" (
 CREATE TABLE "sessions" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
-	"hashed_refresh_token" text NOT NULL,
+	"is_revoked" boolean DEFAULT false NOT NULL,
 	"user_agent" varchar(500),
 	"ip_address" varchar(50),
 	"expires_at" timestamp with time zone NOT NULL,
@@ -135,7 +125,9 @@ CREATE TABLE "users" (
 	"hashed_password" text,
 	"bio" varchar(300),
 	"avatar_image" text,
+	"avatar_public_id" text,
 	"cover_image" text,
+	"cover_public_id" text,
 	"role" "user_role" DEFAULT 'user' NOT NULL,
 	"is_verified" boolean DEFAULT false NOT NULL,
 	"follower_count" integer DEFAULT 0 NOT NULL,
@@ -196,7 +188,6 @@ CREATE TABLE "review_likes" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "book_affiliate_links" ADD CONSTRAINT "book_affiliate_links_book_id_books_id_fk" FOREIGN KEY ("book_id") REFERENCES "public"."books"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "book_authors" ADD CONSTRAINT "book_authors_book_id_books_id_fk" FOREIGN KEY ("book_id") REFERENCES "public"."books"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "book_genres" ADD CONSTRAINT "book_genres_book_id_books_id_fk" FOREIGN KEY ("book_id") REFERENCES "public"."books"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "book_genres" ADD CONSTRAINT "book_genres_genre_id_genres_id_fk" FOREIGN KEY ("genre_id") REFERENCES "public"."genres"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -222,8 +213,6 @@ ALTER TABLE "book_reviews" ADD CONSTRAINT "book_reviews_user_id_users_id_fk" FOR
 ALTER TABLE "book_reviews" ADD CONSTRAINT "book_reviews_book_id_books_id_fk" FOREIGN KEY ("book_id") REFERENCES "public"."books"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "review_likes" ADD CONSTRAINT "review_likes_review_id_book_reviews_id_fk" FOREIGN KEY ("review_id") REFERENCES "public"."book_reviews"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "review_likes" ADD CONSTRAINT "review_likes_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "book_affiliate_links_book_id_idx" ON "book_affiliate_links" USING btree ("book_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "book_affiliate_links_book_platform_idx" ON "book_affiliate_links" USING btree ("book_id","platform");--> statement-breakpoint
 CREATE INDEX "book_authors_book_id_idx" ON "book_authors" USING btree ("book_id");--> statement-breakpoint
 CREATE INDEX "book_authors_author_name_idx" ON "book_authors" USING btree ("author_name");--> statement-breakpoint
 CREATE UNIQUE INDEX "book_genres_book_genre_idx" ON "book_genres" USING btree ("book_id","genre_id");--> statement-breakpoint

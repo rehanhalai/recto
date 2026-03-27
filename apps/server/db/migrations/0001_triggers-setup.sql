@@ -1,6 +1,3 @@
--- Custom SQL migration file, put your code below! --
--- Custom SQL migration file, put your code below! --
-
 -- triggers and constraints
 
 -- ─── Rating constraint on book_reviews ───────────────────────────────────────
