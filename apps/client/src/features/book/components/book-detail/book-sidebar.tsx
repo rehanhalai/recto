@@ -10,7 +10,7 @@ import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";
 export function BookSidebar({ book }: { book: Book }) {
   const { data: stats } = useBookStats(book.id);
   const { data: affiliateData } = useBookAffiliateLinks(book.id, "IN");
-  const links = affiliateData?.links ? Object.values(affiliateData.links) : [];
+  const links = affiliateData?.data?.links ? Object.values(affiliateData.data.links) : [];
 
   const rows = [
     { label: "5★", key: "five", value: stats?.distribution?.five ?? 0 },
