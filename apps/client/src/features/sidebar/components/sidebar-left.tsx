@@ -42,12 +42,12 @@ const NAV_ITEMS: Array<{
   { href: "/browse", label: "Browse", icon: Binoculars },
   { href: "/lists", label: "Lists", icon: ListBullets },
   { href: "/search", label: "Search", icon: MagnifyingGlass },
-  {
-    href: "/notifications",
-    label: "Notifications",
-    icon: Bell,
-    hasNotificationDot: true,
-  },
+  // {
+  //   href: "/notifications",
+  //   label: "Notifications",
+  //   icon: Bell,
+  //   hasNotificationDot: true,
+  // },
 ];
 
 export function SidebarLeft({
