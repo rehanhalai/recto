@@ -65,8 +65,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
       onLike?.(id);
       return;
     }
-
-    // Optimistic update
+    
     const wasLiked = liked;
     setLiked(!wasLiked);
     setLocalLikeCount((c) => (wasLiked ? c - 1 : c + 1));
