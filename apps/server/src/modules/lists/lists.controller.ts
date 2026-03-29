@@ -40,6 +40,17 @@ export class ListsController {
     };
   }
 
+  @Get(":listId")
+  async getListById(
+    @Param("listId") listId: string,
+  ): Promise<any> {
+    const data = await this.listsService.getListById(listId);
+    return {
+      data,
+      message: "List details fetched successfully",
+    };
+  }
+
   @Get("user/my-lists")
   @UseGuards(AuthGuard)
   async getMyLists(

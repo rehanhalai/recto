@@ -353,4 +353,29 @@ export class ListsService {
 
     return newList;
   }
+  async getListById(listId: string) {
+    const list = await this.db.query.bookLists.findFirst({
+      where: eq(bookLists.id, listId),
+      with: {
+        user: {
+          columns: {
+            userName: true,
+            avatarImage: true,
+          },
+        },
+        items: {
+          with: {
+            book: {
+              with: {
+                authors: true,
+              },
+            },
+          },
+          orderBy: (item, { desc }) => [desc(item.addedAt)],
+        },
+      },
+    });
+
+    return list;
+  }
 }

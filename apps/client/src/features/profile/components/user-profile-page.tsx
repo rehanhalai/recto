@@ -813,12 +813,14 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
                       key={list.id}
                       className="rounded-lg border border-border-subtle bg-paper/50 p-3"
                     >
+                      {/* <Link href={`/list/${list.id}`}> */}
                       <p className="text-sm font-semibold text-ink">
                         {list.name}
                       </p>
                       <p className="mt-0.5 text-xs text-ink-muted">
                         {list.book_count} books
                       </p>
+                      {/* </Link> */}
                       {list.description ? (
                         <p className="mt-1 text-sm text-ink-muted">
                           {list.description}

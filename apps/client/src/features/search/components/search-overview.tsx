@@ -34,14 +34,11 @@ export function SearchOverview({ query, onTabChange }: Props) {
   if (!data) return null;
 
   const { lists } = data;
+  const { users } = data;
   const books = deduplicateByKey(
     data.books || [],
     (b: any) => b.sourceId || b.id,
   );
-  // Force even count for balanced grid (4 or 6, never 5)
-  const rawUsers: any[] = data.users || [];
-  const users =
-    rawUsers.length % 2 !== 0 ? rawUsers.slice(0, rawUsers.length - 1) : rawUsers;
 
   const noResults = !users?.length && !books?.length && !lists?.length;
 
@@ -58,33 +55,6 @@ export function SearchOverview({ query, onTabChange }: Props) {
 
   return (
     <div className="space-y-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Books Section */}
-      {books?.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-serif font-bold text-ink flex items-center gap-2">
-              <BookBookmark className="text-gold" weight="duotone" />
-              Books
-            </h2>
-            <Button
-              variant="ghost"
-              onClick={() => onTabChange("books")}
-              className="text-ink-muted hover:text-ink"
-            >
-              View All Books
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-10">
-            {books.map((book: any, i: number) => (
-              <BookCard
-                key={book.id || book.volumeId}
-                book={book}
-                featured={i === 0}
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Users Section */}
       {users?.length > 0 && (
@@ -103,11 +73,11 @@ export function SearchOverview({ query, onTabChange }: Props) {
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users.map((user: any) => (
+            {users?.slice(0,5).map((user: any) => (
               <Link
-                href={`/${user.userName}`}
-                key={user.id}
-                className="group flex items-center gap-4 p-4 rounded-xl bg-card-surface border border-border-subtle hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              href={`/${user.userName}`}
+              key={user.id}
+              className="group flex items-center gap-4 p-4 rounded-xl bg-card-surface border border-border-subtle hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
               >
                 <Avatar className="w-12 h-12 ring-2 ring-transparent group-hover:ring-accent/30 transition-all shrink-0">
                   <AvatarImage src={user.avatarImage || ""} />
@@ -143,6 +113,35 @@ export function SearchOverview({ query, onTabChange }: Props) {
           </div>
         </section>
       )}
+      {/* Books Section */}
+      {books?.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-serif font-bold text-ink flex items-center gap-2">
+              <BookBookmark className="text-gold" weight="duotone" />
+              Books
+            </h2>
+            <Button
+              variant="ghost"
+              onClick={() => onTabChange("books")}
+              className="text-ink-muted hover:text-ink"
+            >
+              View All Books
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-10">
+            {books.map((book: any, i: number) => (
+              <BookCard
+                key={book.id || book.volumeId}
+                book={book}
+                featured={i === 0}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      
 
       {/* Lists Section */}
       {lists?.length > 0 && (
