@@ -1,479 +1,554 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import {
-	ArrowLeftIcon,
-	ArrowClockwiseIcon,
-	FloppyDiskIcon,
-	SpinnerIcon,
-	TrashIcon,
+  Camera,
+  PencilSimple,
+  X,
+  Info,
+  ArrowClockwise,
+  Spinner,
+  CaretLeft,
 } from "@phosphor-icons/react";
 
-import { AvatarImagePicker } from "@/components/avatar-image-picker";
-import { CoverImagePicker } from "@/components/cover-image-picker";
 import { StandardLayout } from "@/components/layout";
-import { Button, Input, Label } from "@/components/ui";
+import {
+  Button,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+} from "@/components/ui";
+import { Textarea } from "@/components/ui/textarea";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useGenerateUsername } from "@/features/auth/hooks/use-username";
 import { useUser } from "@/features/auth/hooks/use-user";
 import { toast } from "@/lib/toast";
 
+const BIO_LIMIT = 160;
+
+const profileSchema = z.object({
+  fullName: z.string().min(1, "Full name is required").max(100),
+  userName: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30)
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores",
+    ),
+  bio: z
+    .string()
+    .max(BIO_LIMIT, `Bio must be at most ${BIO_LIMIT} characters`)
+    .optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
 export default function UpdateProfilePage() {
-	const router = useRouter();
-	const { user, updateProfile, updateProfileImage, checkUsernameAvailability } =
-		useUser();
-	const { isCheckingAuth, currentUserQuery } = useCurrentUser();
-	const { refetch: generateUsername, isFetching: isGeneratingName } =
-		useGenerateUsername();
+  const router = useRouter();
+  const { user, updateProfile, updateProfileImage, checkUsernameAvailability } =
+    useUser();
+  const { isCheckingAuth, currentUserQuery } = useCurrentUser();
+  const { refetch: generateUsername, isFetching: isGeneratingName } =
+    useGenerateUsername();
 
-	const [fullName, setFullName] = useState("");
-	const [userName, setUserName] = useState("");
-	const [bio, setBio] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
+  const [removeCover, setRemoveCover] = useState(false);
 
-	const [avatarFile, setAvatarFile] = useState<File | null>(null);
-	const [coverFile, setCoverFile] = useState<File | null>(null);
-	const [removeAvatar, setRemoveAvatar] = useState(false);
-	const [removeCover, setRemoveCover] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailability, setUsernameAvailability] = useState<
+    "idle" | "invalid" | "available" | "taken"
+  >("idle");
 
-	const [isSavingDetails, setIsSavingDetails] = useState(false);
-	const [isSavingMedia, setIsSavingMedia] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
-	const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-	const [usernameAvailability, setUsernameAvailability] = useState<
-		"idle" | "invalid" | "available" | "taken"
-	>("idle");
+  const profileUser = user ?? currentUserQuery.data;
 
-	const [detailsError, setDetailsError] = useState<string | null>(null);
-	const profileUser = user ?? currentUserQuery.data;
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      fullName: "",
+      userName: "",
+      bio: "",
+    },
+  });
 
-	const onGoBack = () => {
-		if (typeof window !== "undefined" && window.history.length > 1) {
-			router.back();
-			return;
-		}
+  // Initialize form with user data
+  useEffect(() => {
+    if (!profileUser) return;
+    form.reset({
+      fullName: profileUser.fullName ?? "",
+      userName: profileUser.userName ?? "",
+      bio: profileUser.bio ?? "",
+    });
+  }, [profileUser, form]);
 
-		router.push("/feed");
-	};
+  // Handle username availability check
+  const watchedUserName = form.watch("userName");
 
-	useEffect(() => {
-		void currentUserQuery.refetch();
-	}, [currentUserQuery.refetch]);
+  useEffect(() => {
+    const cleanedUserName = watchedUserName.trim().toLowerCase();
 
-	useEffect(() => {
-		if (!profileUser) {
-			return;
-		}
+    if (!cleanedUserName || cleanedUserName === profileUser?.userName) {
+      setUsernameAvailability("idle");
+      setIsCheckingUsername(false);
+      return;
+    }
 
-		setFullName(profileUser.fullName ?? "");
-		setUserName(profileUser.userName ?? "");
-		setBio(profileUser.bio ?? "");
-	}, [profileUser]);
+    const validLength =
+      cleanedUserName.length >= 3 && cleanedUserName.length <= 30;
+    const validPattern = /^[a-zA-Z0-9_]+$/.test(cleanedUserName);
 
-	useEffect(() => {
-		const cleanedUserName = userName.trim().toLowerCase();
+    if (!validLength || !validPattern) {
+      setUsernameAvailability("invalid");
+      setIsCheckingUsername(false);
+      return;
+    }
 
-		if (!cleanedUserName || cleanedUserName === profileUser?.userName) {
-			setUsernameAvailability("idle");
-			setIsCheckingUsername(false);
-			return;
-		}
+    setIsCheckingUsername(true);
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const available = await checkUsernameAvailability(cleanedUserName);
+        setUsernameAvailability(available ? "available" : "taken");
+      } catch {
+        setUsernameAvailability("idle");
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }, 400);
 
-		const validLength = cleanedUserName.length >= 3 && cleanedUserName.length <= 30;
-		const validPattern = /^[a-zA-Z0-9_]+$/.test(cleanedUserName);
+    return () => window.clearTimeout(timeoutId);
+  }, [watchedUserName, checkUsernameAvailability, profileUser?.userName]);
 
-		if (!validLength || !validPattern) {
-			setUsernameAvailability("invalid");
-			setIsCheckingUsername(false);
-			return;
-		}
+  // Image Previews
+  const avatarPreview = useMemo(() => {
+    if (avatarFile) return URL.createObjectURL(avatarFile);
+    if (removeAvatar) return null;
+    return profileUser?.avatarImage || null;
+  }, [avatarFile, removeAvatar, profileUser?.avatarImage]);
 
-		setIsCheckingUsername(true);
+  const coverPreview = useMemo(() => {
+    if (coverFile) return URL.createObjectURL(coverFile);
+    if (removeCover) return null;
+    return profileUser?.coverImage || null;
+  }, [coverFile, removeCover, profileUser?.coverImage]);
 
-		const timeoutId = window.setTimeout(async () => {
-			try {
-				const available = await checkUsernameAvailability(cleanedUserName);
-				setUsernameAvailability(available ? "available" : "taken");
-			} catch {
-				setUsernameAvailability("idle");
-			} finally {
-				setIsCheckingUsername(false);
-			}
-		}, 350);
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: "avatar" | "cover",
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-		return () => {
-			window.clearTimeout(timeoutId);
-		};
-	}, [userName, checkUsernameAvailability, profileUser?.userName]);
+    if (field === "avatar") {
+      setAvatarFile(file);
+      setRemoveAvatar(false);
+    } else {
+      setCoverFile(file);
+      setRemoveCover(false);
+    }
+    e.target.value = "";
+  };
 
-	const currentCoverUrl = removeCover ? null : profileUser?.coverImage ?? null;
+  const onSubmit = async (values: ProfileFormValues) => {
+    if (!profileUser) return;
 
-	const validateDetails = () => {
-		const trimmedName = fullName.trim();
-		const cleanedUserName = userName.trim().toLowerCase();
+    if (usernameAvailability === "taken") {
+      form.setError("userName", { message: "Username is already taken" });
+      return;
+    }
 
-		if (!trimmedName) {
-			return "Full name is required.";
-		}
+    setSaving(true);
+    try {
+      // 1. Save media if changed
+      const hasMediaChanges =
+        avatarFile || coverFile || removeAvatar || removeCover;
+      if (hasMediaChanges) {
+        await updateProfileImage({
+          avatarFile,
+          coverFile,
+          removeAvatar,
+          removeCover,
+        });
+      }
 
-		if (trimmedName.length < 3 || trimmedName.length > 100) {
-			return "Full name must be between 3 and 100 characters.";
-		}
+      // 2. Save profile details
+      await updateProfile({
+        fullName: values.fullName.trim(),
+        userName: values.userName.trim().toLowerCase(),
+        bio: values.bio?.trim() || undefined,
+      });
 
-		if (!cleanedUserName) {
-			return "Username is required.";
-		}
+      await currentUserQuery.refetch();
+      toast.success("Profile updated successfully!");
+      router.refresh();
 
-		if (cleanedUserName.length < 3 || cleanedUserName.length > 30) {
-			return "Username must be between 3 and 30 characters.";
-		}
+      setAvatarFile(null);
+      setCoverFile(null);
+      setRemoveAvatar(false);
+      setRemoveCover(false);
+    } catch (error: any) {
+      toast.error(error?.message || "Could not save profile right now.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-		if (!/^[a-zA-Z0-9_]+$/.test(cleanedUserName)) {
-			return "Username can only contain letters, numbers, and underscores.";
-		}
+  const onGenerateUsername = async () => {
+    try {
+      const response = await generateUsername();
+      if (response.data?.username) {
+        form.setValue("userName", response.data.username, {
+          shouldValidate: true,
+        });
+      }
+    } catch {
+      toast.error("Failed to generate username.");
+    }
+  };
 
-		if (bio.length > 300) {
-			return "Bio must be 300 characters or fewer.";
-		}
+  const bio = form.watch("bio") || "";
+  const bioRemaining = BIO_LIMIT - bio.length;
+  const bioProgress = (bio.length / BIO_LIMIT) * 100;
 
-		return null;
-	};
+  if (isCheckingAuth) {
+    return (
+      <StandardLayout
+        leftSidebar={<SidebarLeft />}
+        rightSidebar={<SidebarRight />}
+      >
+        <div className="rounded-xl border border-border-subtle bg-card-surface p-12 flex flex-col items-center justify-center gap-4">
+          <Spinner size={32} className="animate-spin text-accent" />
+          <p className="text-sm text-ink-muted italic">
+            preparing your shelf...
+          </p>
+        </div>
+      </StandardLayout>
+    );
+  }
 
-	const onGenerateUsername = async () => {
-		try {
-			const response = await generateUsername();
-			const generated = response.data?.username;
+  if (!profileUser) {
+    return (
+      <StandardLayout
+        leftSidebar={<SidebarLeft />}
+        rightSidebar={<SidebarRight />}
+      >
+        <div className="rounded-xl border border-border-subtle bg-card-surface p-12 text-center">
+          <h1 className="text-2xl italic mb-4">
+            A shelf for everyone, but first...
+          </h1>
+          <p className="text-ink-muted mb-6">
+            You need to be logged in to edit your profile.
+          </p>
+          <Button onClick={() => router.push("/login")}>Go to Login</Button>
+        </div>
+      </StandardLayout>
+    );
+  }
 
-			if (!generated) {
-				toast.error("Unable to generate username right now.");
-				return;
-			}
+  return (
+    <StandardLayout
+      leftSidebar={<SidebarLeft />}
+      rightSidebar={<SidebarRight />}
+    >
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="bg-paper text-ink selection:bg-gold/30 rounded-xl border border-border-subtle overflow-hidden"
+        >
+          {/* ── Sticky nav ── */}
+          <header className="sticky top-0 z-50 flex items-center px-6 h-14 bg-paper/90 backdrop-blur-md border-b border-border-subtle">
+            <div className="flex items-center gap-4 relative z-10">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="p-1.5 -ml-2 rounded-full hover:bg-black/5 transition-colors text-ink-muted hover:text-ink lg:hidden"
+              >
+                <CaretLeft size={20} weight="bold" />
+              </button>
+            </div>
 
-			setUserName(generated);
-		} catch {
-			toast.error("Failed to generate username.");
-		}
-	};
+            <span className="absolute left-1/2 -translate-x-1/2 text-[0.7rem] uppercase tracking-widest text-ink-muted font-semibold">
+              Edit Profile
+            </span>
+          </header>
 
-	const onSaveDetails = async () => {
-		if (!profileUser) {
-			return;
-		}
+          <main className="pb-16">
+            {/* ── Cover image section ── */}
+            <div className="relative w-full h-44 bg-[#211b16] overflow-hidden group">
+              {coverPreview && coverPreview.startsWith("http") ? (
+                <img
+                  src={coverPreview}
+                  alt="Cover"
+                  className="object-cover w-full h-full"
+                />
+              ) : coverPreview ? (
+                <Image
+                  src={coverPreview}
+                  alt="Cover"
+                  fill
+                  className="object-cover"
+                  unoptimized={!!coverFile}
+                />
+              ) : null}
 
-		const validationError = validateDetails();
-		if (validationError) {
-			setDetailsError(validationError);
-			return;
-		}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
 
-		setDetailsError(null);
-		setIsSavingDetails(true);
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                className="absolute top-4 right-4 flex items-center gap-1.5 text-[0.65rem] uppercase tracking-widest px-3 py-1.5 rounded-md
+                           bg-paper/10 backdrop-blur border border-white/20 text-white
+                           hover:bg-paper/20 transition-all font-medium"
+              >
+                <PencilSimple size={12} weight="bold" />
+                Change Cover
+              </button>
 
-		try {
-			const normalizedUserName = userName.trim().toLowerCase();
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => handleImageChange(e, "cover")}
+              />
+            </div>
 
-			if (
-				normalizedUserName !== profileUser.userName &&
-				!(await checkUsernameAvailability(normalizedUserName))
-			) {
-				setDetailsError("Username is unavailable. Please choose another one.");
-				return;
-			}
+            {/* ── Avatar + Name preview ── */}
+            <div className="flex items-end gap-5 px-8 -mt-10 relative z-10">
+              <div className="relative shrink-0">
+                <div className="w-28 h-28 rounded-full border-4 border-paper bg-[#211b16] overflow-hidden shadow-xl ring-1 ring-black/5">
+                  {avatarPreview && avatarPreview.startsWith("http") ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : avatarPreview ? (
+                    <Image
+                      src={avatarPreview}
+                      alt="Avatar"
+                      width={112}
+                      height={112}
+                      className="w-full h-full object-cover"
+                      unoptimized={!!avatarFile}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="italic text-4xl text-paper/20">
+                        {(form.watch("fullName")?.[0] || "?").toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-accent border-2 border-paper flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                >
+                  <PencilSimple
+                    size={14}
+                    weight="bold"
+                    className="text-paper"
+                  />
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(e) => handleImageChange(e, "avatar")}
+                />
+              </div>
 
-			await updateProfile({
-				fullName: fullName.trim(),
-				userName: normalizedUserName,
-				bio: bio.trim() || undefined,
-			});
+              <div className="pb-2 min-w-0">
+                <h2 className="text-2xl leading-tight truncate text-ink font-semibold">
+                  {form.watch("fullName") || (
+                    <span className="opacity-30">Your Name</span>
+                  )}
+                </h2>
+                <p className="text-sm text-ink-muted font-mono truncate">
+                  {form.watch("userName")
+                    ? `@${form.watch("userName")}`
+                    : "@username"}
+                </p>
+              </div>
+            </div>
 
-			toast.success("Profile details updated.");
-		} catch {
-			setDetailsError("Could not save profile details right now.");
-		} finally {
-			setIsSavingDetails(false);
-		}
-	};
+            {/* ── Form Controls ── */}
+            <div className="px-8 flex flex-col gap-6 w-full mt-8">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem className="space-y-2 w-full">
+                    <FormLabel className="font-semibold text-[0.65rem] uppercase tracking-[0.12em] text-ink-muted flex items-center gap-1">
+                      Full Name <span className="text-gold">✦</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Name"
+                        className="field-input h-11 font-sans w-full"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[0.6rem]" />
+                  </FormItem>
+                )}
+              />
 
-	const onSaveMedia = async () => {
-		if (!profileUser) {
-			return;
-		}
+              <FormField
+                control={form.control}
+                name="userName"
+                render={({ field }) => (
+                  <FormItem className="space-y-2 w-full">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="font-semibold text-[0.65rem] uppercase tracking-[0.12em] text-ink-muted flex items-center gap-1">
+                        Username <span className="text-gold">✦</span>
+                      </FormLabel>
+                      <button
+                        type="button"
+                        onClick={onGenerateUsername}
+                        className="text-[0.6rem] uppercase tracking-wider text-gold hover:text-gold-muted flex items-center gap-1 font-bold"
+                      >
+                        <ArrowClockwise size={10} weight="bold" />
+                        Suggest
+                      </button>
+                    </div>
+                    <FormControl>
+                      <div className="relative w-full">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-muted/40 font-sans">
+                          @
+                        </span>
+                        <Input
+                          placeholder="handle"
+                          className={`field-input h-11 pl-8 font-sans w-full ${usernameAvailability === "taken" ? "border-red-400 focus:border-red-400" : ""}`}
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(
+                              e.target.value
+                                .toLowerCase()
+                                .replace(/[^a-z0-9_]/g, ""),
+                            );
+                          }}
+                        />
+                      </div>
+                    </FormControl>
+                    <div className="flex items-center justify-between">
+                      <p
+                        className={`text-[0.6rem] font-medium ${
+                          usernameAvailability === "available"
+                            ? "text-green-500"
+                            : usernameAvailability === "taken"
+                              ? "text-red-500"
+                              : "text-ink-muted/50"
+                        }`}
+                      >
+                        {isCheckingUsername
+                          ? "Checking availability..."
+                          : usernameAvailability === "available"
+                            ? "✔ Handle is available"
+                            : usernameAvailability === "taken"
+                              ? "✘ Handle is taken"
+                              : `recto.social/${field.value || "handle"}`}
+                      </p>
+                      <FormMessage className="text-[0.6rem]" />
+                    </div>
+                  </FormItem>
+                )}
+              />
 
-		const hasChanges = avatarFile || coverFile || removeAvatar || removeCover;
-		if (!hasChanges) {
-			toast.error("No media changes to save.");
-			return;
-		}
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem className="space-y-2 w-full">
+                    <FormLabel className="font-semibold text-[0.65rem] uppercase tracking-[0.12em] text-ink-muted">
+                      Bio
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="A sentence about you..."
+                        rows={4}
+                        className="field-input resize-none min-h-25 font-sans w-full"
+                        {...field}
+                      />
+                    </FormControl>
+                    <div className="flex items-center justify-between mt-1">
+                      <FormMessage className="text-[0.6rem]" />
+                      {!form.formState.errors.bio && (
+                        <p className="text-[0.65rem] text-ink-muted/60 italic">
+                          Shown on your profile and hover cards.
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 ml-auto">
+                        <div className="w-24 h-1 bg-border-subtle overflow-hidden rounded-full">
+                          <div
+                            className={`h-full transition-all duration-300 ${bioRemaining < 20 ? "bg-red-400" : "bg-gold"}`}
+                            style={{ width: `${bioProgress}%` }}
+                          />
+                        </div>
+                        <span
+                          className={`text-[0.65rem] font-mono tabular-nums ${bioRemaining < 10 ? "text-red-500 font-bold" : "text-ink-muted/70"}`}
+                        >
+                          {bio.length}/{BIO_LIMIT}
+                        </span>
+                      </div>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
 
-		setIsSavingMedia(true);
+            {/* ── Info section ── */}
+            <div className="mx-8 mt-12 p-4 bg-card-surface/50 border border-border-subtle rounded-lg flex gap-4">
+              <Info size={18} className="text-gold shrink-0 mt-0.5" />
+              <div className="text-[0.7rem] leading-relaxed text-ink-muted/80">
+                <p>
+                  Your{" "}
+                  <strong className="text-ink">avatar and cover image</strong>{" "}
+                  are resized on upload — 1:1 for avatar, 3:1 for cover. JPG,
+                  PNG or WebP up to 5 MB.
+                </p>
+              </div>
+            </div>
 
-		try {
-			await updateProfileImage({
-				avatarFile,
-				coverFile,
-				removeAvatar,
-				removeCover,
-			});
-
-			await currentUserQuery.refetch();
-			router.refresh();
-
-			setAvatarFile(null);
-			setCoverFile(null);
-			setRemoveAvatar(false);
-			setRemoveCover(false);
-			toast.success("Profile media updated.");
-		} catch {
-			toast.error("Could not update media right now.");
-		} finally {
-			setIsSavingMedia(false);
-		}
-	};
-
-	if (isCheckingAuth) {
-		return (
-			<StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
-				<div className="rounded-xl border border-border-subtle bg-card-surface p-6 text-sm text-ink-muted">
-					Loading profile settings...
-				</div>
-			</StandardLayout>
-		);
-	}
-
-	if (!profileUser) {
-		return (
-			<StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
-				<div className="rounded-xl border border-border-subtle bg-card-surface p-6 text-center">
-					<h1 className="text-xl font-semibold text-ink">Please log in</h1>
-					<p className="mt-2 text-sm text-ink-muted">
-						You need to be logged in to update your profile.
-					</p>
-					<Button className="mt-4" onClick={() => router.push("/login")}>Go to login</Button>
-				</div>
-			</StandardLayout>
-		);
-	}
-
-	return (
-		<StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
-			<div className="mx-auto w-full max-w-3xl space-y-6">
-				<section className="rounded-xl border border-border-subtle bg-card-surface p-5">
-					<div className="flex items-start gap-3">
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							onClick={onGoBack}
-							className="h-9 w-9 lg:hidden"
-							aria-label="Go back"
-						>
-							<ArrowLeftIcon size={18} weight="bold" />
-						</Button>
-
-						<h1 className="text-2xl font-semibold tracking-tight text-ink">
-							Edit profile
-						</h1>
-					</div>
-					<p className="mt-1 text-sm text-ink-muted">
-						Update your public identity, bio, and profile media.
-					</p>
-				</section>
-
-				<section className="space-y-4 rounded-xl border border-border-subtle bg-card-surface p-5">
-					<div>
-						<Label className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]">
-							Full name
-						</Label>
-						<Input
-							value={fullName}
-							onChange={(event) => {
-								setFullName(event.target.value);
-								if (detailsError) {
-									setDetailsError(null);
-								}
-							}}
-							placeholder="Your full name"
-							className="mt-2 h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
-						/>
-					</div>
-
-					<div>
-						<div className="mb-2 flex items-center justify-between">
-							<Label className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]">
-								Username
-							</Label>
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								onClick={onGenerateUsername}
-								disabled={isGeneratingName}
-								className="h-6 px-2 text-xs text-[#8a6b37] hover:text-[#705630]"
-							>
-								{isGeneratingName ? (
-									<SpinnerIcon size={14} className="mr-1 animate-spin" />
-								) : (
-									<ArrowClockwiseIcon size={14} className="mr-1" />
-								)}
-								Suggest
-							</Button>
-						</div>
-
-						<Input
-							value={userName}
-							onChange={(event) => {
-								setUserName(event.target.value);
-								if (detailsError) {
-									setDetailsError(null);
-								}
-							}}
-							placeholder="username"
-							className="h-11 rounded-lg border-[#dfd2c1] bg-[#f6efe5] text-[#211b16] placeholder:text-[#958779] focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
-						/>
-
-						{(isCheckingUsername || usernameAvailability !== "idle") && (
-							<p
-								className={`mt-1 text-xs ${
-									usernameAvailability === "available"
-										? "text-emerald-700 dark:text-emerald-300"
-										: usernameAvailability === "taken"
-											? "text-red-700 dark:text-red-300"
-											: usernameAvailability === "invalid"
-												? "text-amber-700 dark:text-amber-300"
-												: "text-[#7f7062] dark:text-[#a1907b]"
-								}`}
-							>
-								{isCheckingUsername
-									? "Checking availability..."
-									: usernameAvailability === "available"
-										? "Username is available"
-										: usernameAvailability === "taken"
-											? "Username is already taken"
-											: "Invalid username format"}
-							</p>
-						)}
-					</div>
-
-					<div>
-						<Label className="text-xs font-medium uppercase tracking-[0.08em] text-[#7f7062] dark:text-[#a1907b]">
-							Bio
-						</Label>
-						<textarea
-							value={bio}
-							onChange={(event) => {
-								setBio(event.target.value);
-								if (detailsError) {
-									setDetailsError(null);
-								}
-							}}
-							maxLength={300}
-							placeholder="Tell people a little about yourself"
-							className="mt-2 min-h-24 w-full rounded-lg border border-[#dfd2c1] bg-[#f6efe5] px-3 py-2 text-[#211b16] placeholder:text-[#958779] outline-none focus-visible:ring-2 focus-visible:ring-[#9f8047] dark:border-[#352d24] dark:bg-[#201a14] dark:text-[#f4eee5]"
-						/>
-						<p className="mt-1 text-right text-xs text-[#7f7062] dark:text-[#a1907b]">
-							{bio.length}/300
-						</p>
-					</div>
-
-					{detailsError && (
-						<p className="rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-							{detailsError}
-						</p>
-					)}
-
-					<div className="flex justify-end">
-						<Button
-							type="button"
-							onClick={onSaveDetails}
-							disabled={isSavingDetails}
-							className="bg-[#1f1a16] text-[#faf5eb] hover:opacity-90 dark:bg-[#e9ddcb] dark:text-[#1f1a16]"
-						>
-							{isSavingDetails ? (
-								<SpinnerIcon size={16} className="mr-2 animate-spin" />
-							) : (
-								<FloppyDiskIcon size={16} className="mr-2" />
-							)}
-							{isSavingDetails ? "Saving details..." : "Save details"}
-						</Button>
-					</div>
-				</section>
-
-				<section className="space-y-4 rounded-xl border border-border-subtle bg-card-surface p-5">
-					<AvatarImagePicker
-						label="Avatar"
-						value={avatarFile}
-						onChange={(file) => {
-							setAvatarFile(file);
-							setRemoveAvatar(false);
-						}}
-						currentImageUrl={removeAvatar ? null : profileUser.avatarImage}
-						disabled={isSavingMedia}
-					/>
-
-					{profileUser.avatarImage && !avatarFile && !removeAvatar && (
-						<div className="flex justify-center">
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								disabled={isSavingMedia}
-								onClick={() => setRemoveAvatar(true)}
-								className="text-red-600 hover:text-red-700"
-							>
-								<TrashIcon size={14} className="mr-1" />
-								Remove current avatar
-							</Button>
-						</div>
-					)}
-
-					<CoverImagePicker
-						label="Cover image"
-						value={coverFile}
-						onChange={(file) => {
-							setCoverFile(file);
-							setRemoveCover(false);
-						}}
-						currentImageUrl={currentCoverUrl}
-						disabled={isSavingMedia}
-					/>
-
-					{(coverFile || currentCoverUrl) && !removeCover && (
-						<div className="flex justify-start">
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								disabled={isSavingMedia}
-								onClick={() => {
-									setCoverFile(null);
-									setRemoveCover(true);
-								}}
-								className="text-red-600 hover:text-red-700"
-							>
-								<TrashIcon size={14} className="mr-1" />
-								Remove current cover
-							</Button>
-						</div>
-					)}
-
-					<div className="flex justify-end">
-						<Button
-							type="button"
-							onClick={onSaveMedia}
-							disabled={isSavingMedia}
-							className="bg-[#1f1a16] text-[#faf5eb] hover:opacity-90 dark:bg-[#e9ddcb] dark:text-[#1f1a16]"
-						>
-							{isSavingMedia ? (
-								<SpinnerIcon size={16} className="mr-2 animate-spin" />
-							) : (
-								<FloppyDiskIcon size={16} className="mr-2" />
-							)}
-							{isSavingMedia ? "Saving media..." : "Save media"}
-						</Button>
-					</div>
-				</section>
-			</div>
-		</StandardLayout>
-	);
+            {/* ── Actions ── */}
+            <div className="px-8 mt-12 mb-8 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                disabled={saving}
+                className="w-full sm:w-auto text-sm px-4 py-3 sm:py-2 rounded-md border border-border-subtle text-ink-muted hover:text-ink hover:border-ink/20 transition-all font-medium"
+              >
+                Discard
+              </button>
+              <button
+                type="submit"
+                disabled={saving || usernameAvailability === "taken"}
+                className="w-full sm:w-auto text-sm px-8 py-3 sm:py-2 rounded-md bg-accent text-paper hover:bg-accent-dark transition-colors disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+              >
+                {saving && <Spinner size={14} className="animate-spin" />}
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </main>
+        </form>
+      </Form>
+    </StandardLayout>
+  );
 }

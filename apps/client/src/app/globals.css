@@ -247,4 +247,23 @@
   .border-gold {
     border-color: #c9a96e;
   }
+
+  /* ── Form field utility ── */
+  .field-input {
+    @apply w-full bg-[#f6efe5] dark:bg-[#201a14] border border-[#dfd2c1] dark:border-[#352d24] 
+           rounded-lg px-4 py-2.5 text-sm text-[#211b16] dark:text-[#f4eee5]
+           placeholder:text-[#958779] dark:placeholder:text-[#a1907b]
+           focus:outline-none focus:ring-2 focus:ring-[#9f8047]/20 focus:border-[#9f8047]
+           transition-all duration-200;
+  }
+
+  /* ── Scrollbar utility ── */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
 }

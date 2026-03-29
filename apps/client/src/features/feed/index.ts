@@ -5,7 +5,6 @@ export { FeedSection } from "./components/FeedSection";
 export { HeroStrip } from "./components/HeroStrip";
 export { FeedClient } from "./components/FeedClient";
 export { FeedHome } from "./components/FeedHome";
-export { FeedLayout } from "./components/feed-layout";
 export { FeedTabs } from "./components/feed-tabs";
 export { ExploreFeed } from "./components/explore-feed";
 export { FollowingFeed } from "./components/following-feed";

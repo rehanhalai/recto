@@ -36,18 +36,18 @@ export function StandardLayout({
         }`}
       >
         {/* Left Sidebar */}
-        <aside className="hidden md:block sticky top-6 h-[calc(100vh-3rem)] overflow-y-auto invisible-scrollbar">
+        <aside className="hidden md:block sticky top-6 h-[calc(100vh-3rem)] self-start overflow-y-auto invisible-scrollbar">
           {leftSidebar}
         </aside>
 
         {/* Main Content */}
-        <section className="min-w-0 w-full overflow-hidden">
+        <section className="min-w-0 w-full overflow-x-clip">
           {children}
         </section>
 
         {/* Right Sidebar (variant dependent) */}
         {variant === "three-column" && (
-          <aside className="hidden lg:block sticky top-6 h-[calc(100vh-3rem)] overflow-y-auto invisible-scrollbar">
+          <aside className="hidden lg:block sticky top-6 h-[calc(100vh-3rem)] self-start overflow-y-auto invisible-scrollbar">
             {rightSidebar}
           </aside>
         )}

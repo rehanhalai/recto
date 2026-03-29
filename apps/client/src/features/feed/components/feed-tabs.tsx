@@ -9,12 +9,12 @@ type FeedTabsProps = {
 
 export function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
   return (
-    <div className="flex w-full border-b border-border-subtle/40 bg-paper sticky top-0 z-20 ">
+    <div className="flex w-full border-b border-border-subtle/40 bg-paper/95 backdrop-blur-md sticky top-0 z-20 py-2">
       <button
         onClick={() => onTabChange("explore")}
         className="relative flex-1 flex justify-center hover:bg-muted/30 transition-colors cursor-pointer"
       >
-        <div className="relative flex flex-col justify-center h-13">
+        <div className="relative flex flex-col justify-center h-8">
           <span
             className={cn(
               "text-[15px] transition-colors",
@@ -34,7 +34,7 @@ export function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
         onClick={() => onTabChange("following")}
         className="relative flex-1 flex justify-center hover:bg-muted/30 transition-colors cursor-pointer"
       >
-        <div className="relative flex flex-col justify-center h-13">
+        <div className="relative flex flex-col justify-center h-8">
           <span
             className={cn(
               "text-[15px] transition-colors",

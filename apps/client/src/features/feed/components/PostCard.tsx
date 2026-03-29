@@ -21,6 +21,10 @@ import {
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import { apiInstance } from "@/lib/api";
+import { useAuthStore, selectUser } from "@/features/auth";
+import { useDeletePost } from "../hooks/use-delete-post";
+import { PostEditDialog } from "./PostEditDialog";
+import { toast } from "@/lib/toast";
 
 type PostCardProps = {
   post: PostWithRelations;
@@ -46,6 +50,12 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
   const [liked, setLiked] = useState(Boolean(isLikedByMe));
   const [localLikeCount, setLocalLikeCount] = useState(likesCount ?? 0);
   const [imageAspectRatio, setImageAspectRatio] = useState<string>();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  const currentUser = useAuthStore(selectUser);
+  const deletePostMutation = useDeletePost();
+  
+  const isOwner = currentUser?.id === author?.id;
   // const [saved, setSaved] = useState(false);
 
   const timeAgo = formatRelativeTime(createdAt);
@@ -57,7 +67,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
 
   const resolvedLiked = hasExternalLikeHandler ? Boolean(isLikedByMe) : liked;
   const resolvedLikeCount = hasExternalLikeHandler
-    ? likesCount ?? 0
+    ? (likesCount ?? 0)
     : localLikeCount;
 
   const handleLike = async () => {
@@ -65,7 +75,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
       onLike?.(id);
       return;
     }
-    
+
     const wasLiked = liked;
     setLiked(!wasLiked);
     setLocalLikeCount((c) => (wasLiked ? c - 1 : c + 1));
@@ -91,7 +101,22 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
 
     router.push(`/posts/${id}`);
   };
-  // const handleSave = () => setSaved((s) => !s);
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this post?")) {
+      return;
+    }
+
+    try {
+      await deletePostMutation.mutateAsync(id);
+    } catch {
+      // toast is already handled in the hook
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditDialogOpen(true);
+  };
 
   const shouldTruncate = content.length > 200;
 
@@ -126,13 +151,27 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
             align="end"
             className="w-40 bg-paper border-border-subtle"
           >
-            <DropdownMenuItem className="cursor-pointer">Edit</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              Delete
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30">
-              Report
-            </DropdownMenuItem>
+            {isOwner ? (
+              <>
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={handleEdit}
+                >
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="cursor-pointer text-red-500 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
+                  onClick={handleDelete}
+                  disabled={deletePostMutation.isPending}
+                >
+                  {deletePostMutation.isPending ? "Deleting..." : "Delete"}
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30">
+                Report
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
@@ -202,8 +241,8 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 560px"
-            onLoadingComplete={(img) =>
-              setImageAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`)
+            onLoad={(event) =>
+              setImageAspectRatio(`${event.currentTarget.naturalWidth} / ${event.currentTarget.naturalHeight}`)
             }
           />
         </div>
@@ -256,6 +295,12 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
           />
         </button> */}
       </footer>
+
+      <PostEditDialog 
+        post={post}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </article>
   );
 }

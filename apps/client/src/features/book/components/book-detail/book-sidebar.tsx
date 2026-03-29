@@ -10,7 +10,9 @@ import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";
 export function BookSidebar({ book }: { book: Book }) {
   const { data: stats } = useBookStats(book.id);
   const { data: affiliateData } = useBookAffiliateLinks(book.id, "IN");
-  const links = affiliateData?.data?.links ? Object.values(affiliateData.data.links) : [];
+  const links = affiliateData?.data?.links
+    ? Object.values(affiliateData.data.links)
+    : [];
 
   const rows = [
     { label: "5★", key: "five", value: stats?.distribution?.five ?? 0 },
@@ -71,27 +73,6 @@ export function BookSidebar({ book }: { book: Book }) {
         </div>
       </section>
 
-      {links.length > 0 && (
-        <section className="rounded-xl border border-border-subtle/70 bg-card/50 p-3">
-          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
-            Get this book
-          </h3>
-          <div className="space-y-2">
-            {links.map((link) => (
-              <a
-                key={link.platform}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-md border border-border-subtle bg-background px-3 py-2 text-sm hover:bg-muted"
-              >
-                Buy on {link.name}
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="rounded-xl border border-border-subtle/70 bg-card/50 p-3">
         <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
           Readers also enjoyed
@@ -103,7 +84,7 @@ export function BookSidebar({ book }: { book: Book }) {
               key={i}
               className="rounded-md border border-border-subtle/60 bg-background p-2"
             >
-              <div className="relative mx-auto mb-2 aspect-[2/3] w-14 overflow-hidden rounded bg-muted">
+              <div className="relative mx-auto mb-2 aspect-2/3 w-14 overflow-hidden rounded bg-muted">
                 <Image
                   src="/landingPage/books/book-one.webp"
                   alt="Coming soon"

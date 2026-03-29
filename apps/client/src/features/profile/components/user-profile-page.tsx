@@ -3,8 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { DotsThree, Gear, SignOut, UserPlus } from "@phosphor-icons/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CaretLeft,
+  CaretRight,
+  DotsThree,
+  Gear,
+  SignOut,
+  UserPlus,
+} from "@phosphor-icons/react";
 import {
   useInfiniteQuery,
   useMutation,
@@ -248,42 +255,89 @@ function ReadingStrip({
   emptyMessage: string;
   isLoading: boolean;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const scrollAmount = 400;
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <section className="rounded-xl border border-border-subtle bg-card-surface p-4">
-      <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.08em] text-ink-muted">
-        {title}
-      </h3>
+    <section className="py-2">
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h3 className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-ink-muted/80">
+          {title}
+        </h3>
+        {books.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => scroll("left")}
+              className="p-1 rounded-full hover:bg-card-surface transition-colors text-ink-muted hover:text-ink border border-border-subtle/40"
+              aria-label="Scroll left"
+            >
+              <CaretLeft size={14} weight="bold" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              className="p-1 rounded-full hover:bg-card-surface transition-colors text-ink-muted hover:text-ink border border-border-subtle/40"
+              aria-label="Scroll right"
+            >
+              <CaretRight size={14} weight="bold" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Skeleton className="h-36 w-full" />
-          <Skeleton className="h-36 w-full" />
-          <Skeleton className="h-36 w-full" />
-          <Skeleton className="h-36 w-full" />
+        <div className="flex gap-4 overflow-hidden pt-1">
+          <Skeleton className="h-56 w-40 shrink-0 rounded-md" />
+          <Skeleton className="h-56 w-40 shrink-0 rounded-md" />
+          <Skeleton className="h-56 w-40 shrink-0 rounded-md" />
         </div>
       ) : books.length === 0 ? (
-        <p className="text-sm text-ink-muted">{emptyMessage}</p>
+        <p className="text-sm text-ink-muted italic py-1">{emptyMessage}</p>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto pb-4 pt-1 no-scrollbar select-none scroll-smooth"
+        >
           {books.map((entry) => (
-            <article key={entry.id} className="space-y-2">
-              <div className="relative h-36 overflow-hidden rounded-md border border-border-subtle bg-paper">
+            <div
+              key={entry.id}
+              // href={`/books/${entry.book.}`}
+              className="group shrink-0 w-40 space-y-2.5"
+            >
+              <div className="relative aspect-2/3 w-full overflow-hidden rounded-md border border-border-subtle bg-card-surface/50 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-gold/30">
                 {entry.book.coverImage ? (
                   <Image
                     src={entry.book.coverImage}
                     alt={entry.book.title}
                     fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 50vw, 120px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    sizes="160px"
                   />
                 ) : (
-                  <div className="h-full w-full bg-border-subtle/30" />
+                  <div className="h-full w-full bg-border-subtle/10 flex items-center justify-center p-3">
+                    <span className="text-[10px] text-ink-muted/40 uppercase tracking-widest text-center font-bold">
+                      {entry.book.title}
+                    </span>
+                  </div>
                 )}
               </div>
-              <p className="line-clamp-2 text-xs font-medium text-ink">
-                {entry.book.title}
-              </p>
-            </article>
+              <div className="min-w-0">
+                <p className="line-clamp-1 text-[0.7rem] font-bold text-ink group-hover:text-gold transition-colors">
+                  {entry.book.title}
+                </p>
+                <p className="line-clamp-1 text-[0.6rem] text-ink-muted uppercase tracking-wider font-medium">
+                  {entry.book.authors.join(", ")}
+                </p>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -332,7 +386,11 @@ function RelationshipOverlay({
   });
 
   useEffect(() => {
-    if (inView && relationsQuery.hasNextPage && !relationsQuery.isFetchingNextPage) {
+    if (
+      inView &&
+      relationsQuery.hasNextPage &&
+      !relationsQuery.isFetchingNextPage
+    ) {
       relationsQuery.fetchNextPage();
     }
   }, [inView, relationsQuery]);
@@ -367,7 +425,9 @@ function RelationshipOverlay({
                   <p className="truncate text-sm font-medium text-ink">
                     {person.fullName ?? person.userName}
                   </p>
-                  <p className="truncate text-xs text-ink-muted">@{person.userName}</p>
+                  <p className="truncate text-xs text-ink-muted">
+                    @{person.userName}
+                  </p>
                 </div>
               </Link>
             </li>
@@ -430,7 +490,10 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
   const profile = profileQuery.data;
   const targetUserId = profile?.user.id;
 
-  const postsQuery = useInfiniteQuery<PaginatedResponse<PostWithRelations>, Error>({
+  const postsQuery = useInfiniteQuery<
+    PaginatedResponse<PostWithRelations>,
+    Error
+  >({
     queryKey: ["profile", targetUserId, "posts"],
     queryFn: ({ pageParam }) =>
       fetchUserPostsPage({
@@ -448,7 +511,11 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
   });
 
   useEffect(() => {
-    if (postsInView && postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) {
+    if (
+      postsInView &&
+      postsQuery.hasNextPage &&
+      !postsQuery.isFetchingNextPage
+    ) {
       postsQuery.fetchNextPage();
     }
   }, [postsInView, postsQuery]);
@@ -532,7 +599,10 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
 
   if (profileQuery.isLoading) {
     return (
-      <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
+      <StandardLayout
+        leftSidebar={<SidebarLeft />}
+        rightSidebar={<SidebarRight />}
+      >
         <div className="space-y-4">
           <Skeleton className="h-40 w-full" />
           <Skeleton className="h-8 w-40" />
@@ -545,7 +615,10 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
 
   if (profileQuery.isError || !profile) {
     return (
-      <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
+      <StandardLayout
+        leftSidebar={<SidebarLeft />}
+        rightSidebar={<SidebarRight />}
+      >
         <div className="rounded-xl border border-border-subtle bg-card-surface p-6 text-center">
           <h1 className="text-xl font-semibold text-ink">Profile not found</h1>
           <p className="mt-1 text-sm text-ink-muted">
@@ -562,7 +635,10 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
   }
 
   return (
-    <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
+    <StandardLayout
+      leftSidebar={<SidebarLeft />}
+      rightSidebar={<SidebarRight />}
+    >
       <RelationshipOverlay
         open={followersOpen}
         onOpenChange={setFollowersOpen}
@@ -578,7 +654,10 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
 
       <div className="space-y-5">
         <section className="overflow-hidden rounded-2xl border border-border-subtle bg-card-surface">
-          <div className="relative h-40 w-full bg-paper" style={{ background: FALLBACK_COVER }}>
+          <div
+            className="relative h-40 w-full bg-paper"
+            style={{ background: FALLBACK_COVER }}
+          >
             {profile.user.coverImage ? (
               <Image
                 src={profile.user.coverImage}
@@ -604,7 +683,9 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
                   <h1 className="text-2xl font-semibold tracking-tight text-ink truncate">
                     {profileDisplayName}
                   </h1>
-                  <p className="text-sm text-ink-muted truncate">@{profile.user.userName}</p>
+                  <p className="text-sm text-ink-muted truncate">
+                    @{profile.user.userName}
+                  </p>
                 </div>
               </div>
 
@@ -638,14 +719,20 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
                 onClick={() => setFollowersOpen(true)}
                 className="text-ink transition-colors hover:text-accent"
               >
-                <strong className="font-semibold">{profile.user.followerCount}</strong> followers
+                <strong className="font-semibold">
+                  {profile.user.followerCount}
+                </strong>{" "}
+                followers
               </button>
               <button
                 type="button"
                 onClick={() => setFollowingOpen(true)}
                 className="text-ink transition-colors hover:text-accent"
               >
-                <strong className="font-semibold">{profile.user.followingCount}</strong> following
+                <strong className="font-semibold">
+                  {profile.user.followingCount}
+                </strong>{" "}
+                following
               </button>
               <span className="text-ink-muted">
                 Joined {new Date(profile.user.createdAt).toLocaleDateString()}
@@ -726,12 +813,16 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
                       key={list.id}
                       className="rounded-lg border border-border-subtle bg-paper/50 p-3"
                     >
-                      <p className="text-sm font-semibold text-ink">{list.name}</p>
+                      <p className="text-sm font-semibold text-ink">
+                        {list.name}
+                      </p>
                       <p className="mt-0.5 text-xs text-ink-muted">
                         {list.book_count} books
                       </p>
                       {list.description ? (
-                        <p className="mt-1 text-sm text-ink-muted">{list.description}</p>
+                        <p className="mt-1 text-sm text-ink-muted">
+                          {list.description}
+                        </p>
                       ) : null}
                     </li>
                   ))}
