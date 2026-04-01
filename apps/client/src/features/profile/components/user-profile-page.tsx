@@ -178,6 +178,46 @@ async function fetchListsForProfile(userId: string): Promise<PublicList[]> {
   return response.data;
 }
 
+function ListCoverGrid({
+  covers,
+  size = "h-14 w-14",
+}: {
+  covers: string[];
+  size?: string;
+}) {
+  const displayCovers = (covers ?? []).slice(0, 4);
+
+  return (
+    <div
+      className={`grid aspect-square ${size} shrink-0 overflow-hidden rounded-md border border-border-subtle bg-paper grid-cols-2 grid-rows-2`}
+    >
+      {displayCovers.map((cover, i) => (
+        <div
+          key={`${cover}-${i}`}
+          className="relative h-full w-full border-[0.5px] border-border-subtle/10"
+        >
+          <Image
+            src={cover}
+            alt="Cover"
+            fill
+            className="object-cover"
+            sizes="40px"
+          />
+        </div>
+      ))}
+      {/* Fill empty slots if less than 4 covers */}
+      {Array.from({ length: Math.max(0, 4 - displayCovers.length) }).map(
+        (_, i) => (
+          <div
+            key={`empty-${displayCovers.length + i}`}
+            className="bg-card-surface/30 border-[0.5px] border-border-subtle/10"
+          />
+        ),
+      )}
+    </div>
+  );
+}
+
 type OwnerActionsProps = {
   onLogout: () => void;
   isLoggingOut: boolean;
@@ -813,19 +853,25 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
                       key={list.id}
                       className="rounded-lg border border-border-subtle bg-paper/50 p-3"
                     >
-                      {/* <Link href={`/list/${list.id}`}> */}
-                      <p className="text-sm font-semibold text-ink">
-                        {list.name}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink-muted">
-                        {list.book_count} books
-                      </p>
-                      {/* </Link> */}
-                      {list.description ? (
-                        <p className="mt-1 text-sm text-ink-muted">
-                          {list.description}
-                        </p>
-                      ) : null}
+                      <Link
+                        href={`/list/${list.id}`}
+                        className="flex items-start gap-3.5"
+                      >
+                        <ListCoverGrid covers={list.covers} />
+                        <div className="min-w-0 flex-1 pt-0.5">
+                          <p className="text-[0.85rem] font-bold text-ink group-hover:text-gold transition-colors truncate">
+                            {list.name}
+                          </p>
+                          <p className="mt-0.5 text-[0.65rem] text-ink-muted uppercase tracking-[0.05em] font-medium">
+                            {list.book_count} books
+                          </p>
+                          {list.description ? (
+                            <p className="mt-1.5 text-[0.75rem] text-ink-muted/80 leading-relaxed line-clamp-1">
+                              {list.description}
+                            </p>
+                          ) : null}
+                        </div>
+                      </Link>
                     </li>
                   ))}
                 </ul>
