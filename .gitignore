@@ -58,3 +58,4 @@ pgdata/
 
 # diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+.worktrees/
