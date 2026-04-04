@@ -352,7 +352,7 @@ function ReadingStrip({
               // href={`/books/${entry.book.}`}
               className="group shrink-0 w-40 space-y-2.5"
             >
-              <div className="relative aspect-2/3 w-full overflow-hidden rounded-md border border-border-subtle bg-card-surface/50 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-gold/30">
+              <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md border border-border-subtle bg-card-surface/50 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-gold/30">
                 {entry.book.coverImage ? (
                   <Image
                     src={entry.book.coverImage}

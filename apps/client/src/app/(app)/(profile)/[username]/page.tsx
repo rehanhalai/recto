@@ -6,7 +6,9 @@ type UserProfileRouteProps = {
   }>;
 };
 
-export default async function UserProfileRoute({ params }: UserProfileRouteProps) {
+export default async function UserProfileRoute({
+  params,
+}: UserProfileRouteProps) {
   const { username } = await params;
 
   return <UserProfilePage username={username} />;
