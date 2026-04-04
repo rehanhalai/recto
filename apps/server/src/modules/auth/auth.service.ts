@@ -272,8 +272,7 @@ export class AuthService {
 
   async revokeSession(sessionId: string) {
     await this.db
-      .update(schema.sessions)
-      .set({ isRevoked: true })
+      .delete(schema.sessions)
       .where(eq(schema.sessions.id, sessionId));
   }
 

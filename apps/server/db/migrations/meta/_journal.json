@@ -15,6 +15,13 @@
       "when": 1774591192220,
       "tag": "0001_triggers-setup",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775284141193,
+      "tag": "0002_revoked-drop-sessionTB",
+      "breakpoints": true
     }
   ]
 }

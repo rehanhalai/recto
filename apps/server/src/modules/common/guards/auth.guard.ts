@@ -51,7 +51,6 @@ export class AuthGuard implements CanActivate {
       where: and(
         eq(schema.sessions.id, payload.sid),
         eq(schema.sessions.userId, payload.sub),
-        eq(schema.sessions.isRevoked, false),
         gt(schema.sessions.expiresAt, new Date()),
       ),
       columns: { id: true, userId: true },

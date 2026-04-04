@@ -37,7 +37,6 @@ export class OptionalAuthGuard implements CanActivate {
         where: and(
           eq(schema.sessions.id, decoded.sid),
           eq(schema.sessions.userId, decoded.sub),
-          eq(schema.sessions.isRevoked, false),
           gt(schema.sessions.expiresAt, new Date()),
         ),
         columns: { id: true, userId: true },
