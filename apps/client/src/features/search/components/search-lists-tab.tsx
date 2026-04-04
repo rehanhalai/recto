@@ -3,20 +3,15 @@
 import { useInfiniteSearch } from "../api/search";
 import Link from "next/link";
 import Image from "next/image";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { Loader2 } from "lucide-react";
 
 export function SearchListsTab({ query }: { query: string }) {
   const { ref, inView } = useInView({ rootMargin: "400px" });
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteSearch(query, "lists", 9);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteSearch(query, "lists", 9);
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
@@ -77,12 +72,11 @@ export function SearchListsTab({ query }: { query: string }) {
               </div>
             )}
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-subtle/50">
-              <Avatar className="w-6 h-6">
-                <AvatarImage src={list.user?.avatarImage || ""} />
-                <AvatarFallback className="text-[10px] bg-border-subtle text-ink">
-                  {list.user?.userName?.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                src={list.user?.avatarImage || null}
+                fallbackName={list.user?.userName}
+                className="h-6 w-6"
+              />
               <span className="text-xs text-ink-muted font-medium">
                 @{list.user?.userName}
               </span>
@@ -92,14 +86,16 @@ export function SearchListsTab({ query }: { query: string }) {
       </div>
 
       {/* Infinite scrolling sentinel & Dead End */}
-      <div 
-        ref={ref} 
+      <div
+        ref={ref}
         className="h-24 flex flex-col items-center justify-center mt-12 border-t border-border-subtle/50"
       >
         {isFetchingNextPage ? (
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="w-6 h-6 text-green-500 animate-spin" />
-            <span className="text-xs text-ink-muted animate-pulse">Loading more lists...</span>
+            <span className="text-xs text-ink-muted animate-pulse">
+              Loading more lists...
+            </span>
           </div>
         ) : !hasNextPage && lists.length > 0 ? (
           <div className="text-center py-4 px-6 rounded-full bg-card-surface border border-border-subtle text-sm text-ink-muted flex items-center gap-2">

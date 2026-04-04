@@ -1,13 +1,10 @@
 /**
  * Feed feature types — re-exports shared types from @recto/types
- * and defines local API envelope type used by feed hooks.
+ * and keeps feed type imports centralized.
  */
 
-export type { PostWithRelations, PaginatedResponse } from "@recto/types";
-
-/** Standard API response wrapper from the server */
-export type ApiEnvelope<T> = {
-  statusCode: number;
-  message: string;
-  data: T;
-};
+export type {
+  ApiEnvelope,
+  PostWithRelations,
+  PaginatedResponse,
+} from "@recto/types";

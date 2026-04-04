@@ -18,7 +18,6 @@ export {
   AccordionTrigger,
   AccordionContent,
 } from "./accordion";
-export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 export {
   DropdownMenu,
   DropdownMenuTrigger,

@@ -1,11 +1,6 @@
 import { apiInstance } from "@/lib/api";
+import type { ApiEnvelope } from "@recto/types";
 import type { Book } from "../types";
-
-type ApiEnvelope<T> = {
-  statusCode: number;
-  message: string;
-  data: T;
-};
 
 export async function searchBooks(
   query: string,

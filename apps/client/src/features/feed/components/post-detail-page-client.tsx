@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { PostWithRelations } from "@recto/types";
+import type { ApiEnvelope, PostWithRelations } from "@recto/types";
 import { ArrowLeftIcon, HeartIcon } from "@phosphor-icons/react";
 
 import { StandardLayout } from "@/components/layout";
@@ -13,11 +13,6 @@ import { PostCard } from "@/features/feed/components/PostCard";
 import { useAuthStore } from "@/features/auth";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";
 import { apiInstance } from "@/lib/api";
-
-type ApiEnvelope<T> = {
-  data: T;
-  message: string;
-};
 
 type PostComment = {
   id: string;
@@ -95,21 +90,36 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["post", postId] }),
-        queryClient.invalidateQueries({ queryKey: ["feed", "posts", "explore"] }),
-        queryClient.invalidateQueries({ queryKey: ["feed", "posts", "following"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["feed", "posts", "explore"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["feed", "posts", "following"],
+        }),
       ]);
     },
   });
 
   const createCommentMutation = useMutation({
-    mutationFn: async ({ content, parentId }: { content: string; parentId?: string }) => {
-      return apiInstance.post<ApiEnvelope<PostComment>>(`/posts/${postId}/comments`, {
-        content,
-        parentId,
-      });
+    mutationFn: async ({
+      content,
+      parentId,
+    }: {
+      content: string;
+      parentId?: string;
+    }) => {
+      return apiInstance.post<ApiEnvelope<PostComment>>(
+        `/posts/${postId}/comments`,
+        {
+          content,
+          parentId,
+        },
+      );
     },
     onMutate: async ({ content, parentId }) => {
-      await queryClient.cancelQueries({ queryKey: ["post", postId, "comments"] });
+      await queryClient.cancelQueries({
+        queryKey: ["post", postId, "comments"],
+      });
 
       const previousComments = queryClient.getQueryData<PostComment[]>([
         "post",
@@ -132,25 +142,30 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
         },
       };
 
-      queryClient.setQueryData<PostComment[]>(["post", postId, "comments"], (old) => {
-        const current = old ?? [];
+      queryClient.setQueryData<PostComment[]>(
+        ["post", postId, "comments"],
+        (old) => {
+          const current = old ?? [];
 
-        if (!parentId) {
-          return [tempComment, ...current];
-        }
+          if (!parentId) {
+            return [tempComment, ...current];
+          }
 
-        const parentIndex = current.findIndex((comment) => comment.id === parentId);
-        if (parentIndex === -1) {
-          return [tempComment, ...current];
-        }
+          const parentIndex = current.findIndex(
+            (comment) => comment.id === parentId,
+          );
+          if (parentIndex === -1) {
+            return [tempComment, ...current];
+          }
 
-        const insertAt = parentIndex + 1;
-        return [
-          ...current.slice(0, insertAt),
-          tempComment,
-          ...current.slice(insertAt),
-        ];
-      });
+          const insertAt = parentIndex + 1;
+          return [
+            ...current.slice(0, insertAt),
+            tempComment,
+            ...current.slice(insertAt),
+          ];
+        },
+      );
 
       return { previousComments };
     },
@@ -168,15 +183,27 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
       setActiveReplyToId(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["post", postId] }),
-        queryClient.invalidateQueries({ queryKey: ["post", postId, "comments"] }),
-        queryClient.invalidateQueries({ queryKey: ["feed", "posts", "explore"] }),
-        queryClient.invalidateQueries({ queryKey: ["feed", "posts", "following"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["post", postId, "comments"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["feed", "posts", "explore"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["feed", "posts", "following"],
+        }),
       ]);
     },
   });
 
   const likeCommentMutation = useMutation({
-    mutationFn: async ({ commentId, isLikedByMe }: { commentId: string; isLikedByMe: boolean }) => {
+    mutationFn: async ({
+      commentId,
+      isLikedByMe,
+    }: {
+      commentId: string;
+      isLikedByMe: boolean;
+    }) => {
       if (isLikedByMe) {
         return apiInstance.delete<void>(`/posts/comments/${commentId}/like`);
       }
@@ -184,7 +211,9 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
       return apiInstance.post<void>(`/posts/comments/${commentId}/like`);
     },
     onMutate: async ({ commentId, isLikedByMe }) => {
-      await queryClient.cancelQueries({ queryKey: ["post", postId, "comments"] });
+      await queryClient.cancelQueries({
+        queryKey: ["post", postId, "comments"],
+      });
 
       const previousComments = queryClient.getQueryData<PostComment[]>([
         "post",
@@ -192,20 +221,22 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
         "comments",
       ]);
 
-      queryClient.setQueryData<PostComment[]>(["post", postId, "comments"], (old) =>
-        (old ?? []).map((comment) => {
-          if (comment.id !== commentId) {
-            return comment;
-          }
+      queryClient.setQueryData<PostComment[]>(
+        ["post", postId, "comments"],
+        (old) =>
+          (old ?? []).map((comment) => {
+            if (comment.id !== commentId) {
+              return comment;
+            }
 
-          return {
-            ...comment,
-            isLikedByMe: !isLikedByMe,
-            likesCount: isLikedByMe
-              ? Math.max(0, comment.likesCount - 1)
-              : comment.likesCount + 1,
-          };
-        }),
+            return {
+              ...comment,
+              isLikedByMe: !isLikedByMe,
+              likesCount: isLikedByMe
+                ? Math.max(0, comment.likesCount - 1)
+                : comment.likesCount + 1,
+            };
+          }),
       );
 
       return { previousComments };
@@ -219,7 +250,9 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["post", postId, "comments"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["post", postId, "comments"],
+      });
     },
   });
 
@@ -268,7 +301,10 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
           depth === 0 ? "bg-paper/60" : "bg-card-surface"
         }`}
       >
-        <Link href={`/${comment.user.userName}`} className="flex items-center justify-between gap-3">
+        <Link
+          href={`/${comment.user.userName}`}
+          className="flex items-center justify-between gap-3"
+        >
           <p className="truncate text-sm font-medium text-ink">
             {comment.user.fullName ?? comment.user.userName}
           </p>
@@ -280,10 +316,15 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
             type="button"
             onClick={() => handleCommentLike(comment)}
             className={`inline-flex items-center gap-1 transition-colors ${
-              comment.isLikedByMe ? "text-gold" : "text-ink-muted hover:text-ink"
+              comment.isLikedByMe
+                ? "text-gold"
+                : "text-ink-muted hover:text-ink"
             }`}
           >
-            <HeartIcon size={12} weight={comment.isLikedByMe ? "fill" : "regular"} />
+            <HeartIcon
+              size={12}
+              weight={comment.isLikedByMe ? "fill" : "regular"}
+            />
             {comment.likesCount}
           </button>
 
@@ -327,7 +368,10 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
               <Button
                 type="button"
                 size="sm"
-                disabled={replyText.trim().length === 0 || createCommentMutation.isPending}
+                disabled={
+                  replyText.trim().length === 0 ||
+                  createCommentMutation.isPending
+                }
                 onClick={submitReply}
               >
                 {createCommentMutation.isPending ? "Replying..." : "Reply"}
@@ -364,7 +408,10 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
 
   if (postQuery.isLoading) {
     return (
-      <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
+      <StandardLayout
+        leftSidebar={<SidebarLeft />}
+        rightSidebar={<SidebarRight />}
+      >
         <div className="rounded-xl border border-border-subtle bg-card-surface p-6 text-sm text-ink-muted">
           Loading post...
         </div>
@@ -374,13 +421,18 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
 
   if (postQuery.isError || !postQuery.data) {
     return (
-      <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
+      <StandardLayout
+        leftSidebar={<SidebarLeft />}
+        rightSidebar={<SidebarRight />}
+      >
         <div className="rounded-xl border border-border-subtle bg-card-surface p-6 text-center">
           <h1 className="text-xl font-semibold text-ink">Post not found</h1>
           <p className="mt-2 text-sm text-ink-muted">
             We could not load this post.
           </p>
-          <Button className="mt-4" onClick={() => router.push("/feed")}>Back to feed</Button>
+          <Button className="mt-4" onClick={() => router.push("/feed")}>
+            Back to feed
+          </Button>
         </div>
       </StandardLayout>
     );
@@ -389,7 +441,10 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
   const post = postQuery.data;
 
   return (
-    <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
+    <StandardLayout
+      leftSidebar={<SidebarLeft />}
+      rightSidebar={<SidebarRight />}
+    >
       <div className="mx-auto w-full max-w-3xl space-y-5">
         <div className="flex items-center justify-between">
           <Button type="button" variant="ghost" onClick={() => router.back()}>
@@ -421,14 +476,25 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
                 className="min-h-24 w-full resize-y rounded-lg border border-border-subtle bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-ink-muted">{commentText.length}/300</p>
+                <p className="text-xs text-ink-muted">
+                  {commentText.length}/300
+                </p>
                 <Button
                   type="button"
                   size="sm"
-                  disabled={commentText.trim().length === 0 || createCommentMutation.isPending}
-                  onClick={() => createCommentMutation.mutate({ content: commentText.trim() })}
+                  disabled={
+                    commentText.trim().length === 0 ||
+                    createCommentMutation.isPending
+                  }
+                  onClick={() =>
+                    createCommentMutation.mutate({
+                      content: commentText.trim(),
+                    })
+                  }
                 >
-                  {createCommentMutation.isPending ? "Posting..." : "Post comment"}
+                  {createCommentMutation.isPending
+                    ? "Posting..."
+                    : "Post comment"}
                 </Button>
               </div>
             </div>
@@ -446,7 +512,9 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps) {
           {commentsQuery.isLoading ? (
             <p className="mt-3 text-sm text-ink-muted">Loading comments...</p>
           ) : comments.length > 0 ? (
-            <ul className="mt-4 space-y-3">{rootComments.map((comment) => renderCommentItem(comment))}</ul>
+            <ul className="mt-4 space-y-3">
+              {rootComments.map((comment) => renderCommentItem(comment))}
+            </ul>
           ) : (
             <p className="mt-3 text-sm text-ink-muted">
               No comments yet. Be the first to share your thoughts.

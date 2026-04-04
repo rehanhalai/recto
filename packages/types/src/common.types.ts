@@ -3,6 +3,14 @@
  */
 
 /**
+ * Envelope used by backend endpoints that return `{ data, message }`.
+ */
+export type ApiEnvelope<T> = {
+  data: T;
+  message: string;
+};
+
+/**
  * Paginated response wrapper for list endpoints
  */
 export type PaginatedResponse<T> = {

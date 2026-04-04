@@ -1,14 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import type { ApiEnvelope } from "@recto/types";
 import { apiInstance } from "@/lib/api";
 
 interface GenerateUsernameResponse {
   username: string;
-}
-
-interface ApiEnvelope<T> {
-  data: T;
 }
 
 export const useGenerateUsername = () => {

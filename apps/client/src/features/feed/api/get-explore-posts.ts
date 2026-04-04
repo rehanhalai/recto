@@ -1,12 +1,10 @@
 import { apiInstance } from "@/lib/api";
-import type { PostWithRelations, PaginatedResponse } from "@recto/types";
-import { Post } from "@/../../packages/types/src";
-
-type ApiEnvelope<T> = {
-  statusCode: number;
-  message: string;
-  data: T;
-};
+import type {
+  ApiEnvelope,
+  Post,
+  PostWithRelations,
+  PaginatedResponse,
+} from "@recto/types";
 
 export async function getExplorePosts({
   limit = 10,

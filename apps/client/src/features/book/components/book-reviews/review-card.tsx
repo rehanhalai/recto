@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { StarIcon, PencilSimpleIcon, TrashSimpleIcon } from "@phosphor-icons/react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  StarIcon,
+  PencilSimpleIcon,
+  TrashSimpleIcon,
+} from "@phosphor-icons/react";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { BookReview } from "../../hooks/use-book-reviews";
 
@@ -27,12 +31,11 @@ export function ReviewCard({
     <article className="rounded-xl border border-border-subtle/70 bg-card/30 p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={review.author?.avatarImage || undefined} />
-            <AvatarFallback>
-              {(review.author?.userName || "U").charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            src={review.author?.avatarImage || null}
+            fallbackName={review.author?.userName || "Reader"}
+            className="h-8 w-8"
+          />
           <div>
             <p className="text-sm font-medium">
               {review.author?.userName || "Reader"}
@@ -56,7 +59,12 @@ export function ReviewCard({
             </Button>
           )}
           {canEdit && onDelete && (
-            <Button variant="ghost" size="sm" onClick={onDelete} className="text-destructive hover:text-destructive">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              className="text-destructive hover:text-destructive"
+            >
               <TrashSimpleIcon size={16} />
             </Button>
           )}

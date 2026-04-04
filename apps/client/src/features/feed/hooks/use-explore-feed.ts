@@ -1,12 +1,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import type { PostWithRelations, PaginatedResponse } from "@recto/types";
+import type {
+  ApiEnvelope,
+  PostWithRelations,
+  PaginatedResponse,
+} from "@recto/types";
 import { apiInstance } from "@/lib/api";
-
-type ApiEnvelope<T> = {
-  statusCode: number;
-  message: string;
-  data: T;
-};
 
 async function fetchExplorePosts(
   cursor?: string,

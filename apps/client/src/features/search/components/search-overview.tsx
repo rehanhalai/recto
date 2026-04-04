@@ -3,7 +3,7 @@
 import { useSearch } from "../api/search";
 import { BookCard } from "@/features/book/components/book-strips/book-card";
 import { deduplicateByKey } from "@/lib/deduplicate";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import {
   UserIcon,
@@ -55,7 +55,6 @@ export function SearchOverview({ query, onTabChange }: Props) {
 
   return (
     <div className="space-y-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
-
       {/* Users Section */}
       {users?.length > 0 && (
         <section>
@@ -73,18 +72,17 @@ export function SearchOverview({ query, onTabChange }: Props) {
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users?.slice(0,5).map((user: any) => (
+            {users?.slice(0, 5).map((user: any) => (
               <Link
-              href={`/${user.userName}`}
-              key={user.id}
-              className="group flex items-center gap-4 p-4 rounded-xl bg-card-surface border border-border-subtle hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                href={`/${user.userName}`}
+                key={user.id}
+                className="group flex items-center gap-4 p-4 rounded-xl bg-card-surface border border-border-subtle hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
               >
-                <Avatar className="w-12 h-12 ring-2 ring-transparent group-hover:ring-accent/30 transition-all shrink-0">
-                  <AvatarImage src={user.avatarImage || ""} />
-                  <AvatarFallback className="bg-accent/10 text-accent font-bold text-lg">
-                    {user.userName?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  src={user.avatarImage || null}
+                  fallbackName={user.fullName || user.userName}
+                  className="h-12 w-12 shrink-0 ring-2 ring-transparent transition-all group-hover:ring-accent/30"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="font-serif font-semibold text-ink truncate group-hover:text-accent transition-colors">
                     {user.fullName || user.userName}
@@ -140,8 +138,6 @@ export function SearchOverview({ query, onTabChange }: Props) {
           </div>
         </section>
       )}
-
-      
 
       {/* Lists Section */}
       {lists?.length > 0 && (
@@ -204,12 +200,11 @@ export function SearchOverview({ query, onTabChange }: Props) {
                 )}
 
                 <div className="flex items-center gap-2 mt-1 pt-3 border-t border-border-subtle/50">
-                  <Avatar className="w-5 h-5">
-                    <AvatarImage src={list.user?.avatarImage || ""} />
-                    <AvatarFallback className="text-[9px] bg-border-subtle text-ink">
-                      {list.user?.userName?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    src={list.user?.avatarImage || null}
+                    fallbackName={list.user?.userName}
+                    className="h-5 w-5"
+                  />
                   <span className="text-xs text-ink-muted">
                     Curated by @{list.user?.userName}
                   </span>

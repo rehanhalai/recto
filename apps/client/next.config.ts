@@ -5,6 +5,9 @@ const repoRoot = path.join(__dirname, "..", "..");
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: repoRoot,
+  experimental: {
+    optimizeCss: true,
+  },
   turbopack: {
     root: repoRoot,
   },
@@ -25,6 +28,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
       },
     ],
   },

@@ -9,15 +9,15 @@ Recto is a social reading platform built as a **Turborepo monorepo** with pnpm w
 
 ## Stack Summary
 
-| Layer | Technology |
-|-------|-----------|
-| Monorepo | Turborepo + pnpm workspaces |
-| Client | Next.js (App Router), TanStack Query, Tailwind CSS, shadcn/ui, Phosphor Icons, Cloudinary |
-| Server | NestJS, Drizzle ORM, PostgreSQL (Neon serverless) |
-| Shared Types | `packages/types` (inferred from Drizzle schema) |
-| Auth | Google OAuth + JWT/session dual-layer (httpOnly cookies) |
-| Media | Cloudinary |
-| Book Data | Google Books API (primary), Open Library (fallback) |
+| Layer        | Technology                                                                                |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| Monorepo     | Turborepo + pnpm workspaces                                                               |
+| Client       | Next.js (App Router), TanStack Query, Tailwind CSS, shadcn/ui, Phosphor Icons, Cloudinary |
+| Server       | NestJS, Drizzle ORM, PostgreSQL (Neon serverless)                                         |
+| Shared Types | `packages/types` (inferred from Drizzle schema)                                           |
+| Auth         | Google OAuth + JWT/session dual-layer (httpOnly cookies)                                  |
+| Media        | Cloudinary                                                                                |
+| Book Data    | Google Books API (primary), Open Library (fallback)                                       |
 
 ---
 
@@ -285,10 +285,8 @@ export const queryClient = new QueryClient({ defaultOptions: { ... } });
 // features/book/query-keys.ts
 export const bookKeys = {
   all: ["books"] as const,
-  list: (params: BookListParams) =>
-    [...bookKeys.all, "list", params] as const,
-  detail: (id: string) =>
-    [...bookKeys.all, "detail", id] as const,
+  list: (params: BookListParams) => [...bookKeys.all, "list", params] as const,
+  detail: (id: string) => [...bookKeys.all, "detail", id] as const,
 };
 ```
 
@@ -296,13 +294,15 @@ export const bookKeys = {
 
 ```ts
 // features/book/hooks/use-book-search.ts
-import { bookKeys } from '../query-keys';
+import { bookKeys } from "../query-keys";
 
 export function useBookSearch(query: string) {
   return useQuery({
     queryKey: bookKeys.list({ query }),
     queryFn: async () => {
-      const { data } = await apiInstance.get('/books/search', { params: { query } });
+      const { data } = await apiInstance.get("/books/search", {
+        params: { query },
+      });
       return data;
     },
   });
@@ -316,7 +316,7 @@ export function useCreateList() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
-      const { data } = await apiInstance.post('/lists', payload);
+      const { data } = await apiInstance.post("/lists", payload);
       return data;
     },
     onMutate: async (newList) => {
@@ -348,13 +348,13 @@ export function useCreateList() {
 
 ```ts
 // apps/server/db/schema/users.ts
-import { pgTable, serial, varchar, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp } from "drizzle-orm/pg-core";
 
-export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  email: varchar('email', { length: 255 }).unique().notNull(),
-  fullName: varchar('full_name', { length: 255 }),
-  createdAt: timestamp('created_at').defaultNow(),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
+  fullName: varchar("full_name", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -365,9 +365,9 @@ export type NewUser = typeof users.$inferInsert;
 
 ```ts
 // apps/server/db/schema/index.ts
-export * from './users';
-export * from './books';
-export * from './posts';
+export * from "./users";
+export * from "./books";
+export * from "./posts";
 // ... all schemas
 ```
 
@@ -375,10 +375,10 @@ export * from './posts';
 
 ```ts
 // packages/types/src/user.types.ts
-export type { User, NewUser } from '@recto/server/db/schema';
+export type { User, NewUser } from "@recto/server/db/schema";
 
 // Re-export from packages/types/src/index.ts
-export type { User, NewUser } from './user.types';
+export type { User, NewUser } from "./user.types";
 ```
 
 ### Rules
@@ -392,15 +392,15 @@ export type { User, NewUser } from './user.types';
 
 ## Naming Conventions
 
-| Category | Rule | Example |
-|----------|------|---------|
-| Files (general) | kebab-case | `use-book-search.ts`, `user-profile-page.tsx` |
-| Components | PascalCase | `BookCard.tsx`, `UserAvatar.tsx` |
-| Hooks | useCamelCase | `useBookSearch`, `useAuth` |
-| Query keys | camelCase object | `bookKeys`, `userKeys` |
-| Folders | lowercase or kebab-case | `features/book`, `common/guards` |
-| Database tables | snake_case | `users`, `book_lists`, `created_at` |
-| Environment vars | SCREAMING_SNAKE_CASE | `NEXT_PUBLIC_API_URL`, `DATABASE_URL` |
+| Category         | Rule                    | Example                                       |
+| ---------------- | ----------------------- | --------------------------------------------- |
+| Files (general)  | kebab-case              | `use-book-search.ts`, `user-profile-page.tsx` |
+| Components       | PascalCase              | `BookCard.tsx`, `UserAvatar.tsx`              |
+| Hooks            | useCamelCase            | `useBookSearch`, `useAuth`                    |
+| Query keys       | camelCase object        | `bookKeys`, `userKeys`                        |
+| Folders          | lowercase or kebab-case | `features/book`, `common/guards`              |
+| Database tables  | snake_case              | `users`, `book_lists`, `created_at`           |
+| Environment vars | SCREAMING_SNAKE_CASE    | `NEXT_PUBLIC_API_URL`, `DATABASE_URL`         |
 
 ---
 
@@ -409,6 +409,7 @@ export type { User, NewUser } from './user.types';
 ### Server (NestJS)
 
 ❌ **Business logic in controller**
+
 ```ts
 @Post('/lists')
 create(@Body() dto: CreateListDto) {
@@ -417,6 +418,7 @@ create(@Body() dto: CreateListDto) {
 ```
 
 ✅ **Service handles logic**
+
 ```ts
 @Post('/lists')
 create(@Body() dto: CreateListDto) {
@@ -431,12 +433,14 @@ create(dto: CreateListDto) {
 ```
 
 ❌ **Direct Drizzle queries in service**
+
 ```ts
 // service
 this.db.query.users.findFirst({ where: eq(users.id, id) });
 ```
 
 ✅ **Repository encapsulates queries**
+
 ```ts
 // repository
 findById(id: number) {
@@ -447,6 +451,7 @@ findById(id: number) {
 ### Client (Next.js)
 
 ❌ **Direct `fetch()` in components**
+
 ```tsx
 useEffect(() => {
   fetch('/api/books/search?q=' + query).then(...);
@@ -454,16 +459,18 @@ useEffect(() => {
 ```
 
 ✅ **Use custom hook with apiInstance**
+
 ```tsx
 export function useBookSearch(query: string) {
   return useQuery({
     queryKey: bookKeys.list({ query }),
-    queryFn: () => apiInstance.get('/books/search', { params: { query } }),
+    queryFn: () => apiInstance.get("/books/search", { params: { query } }),
   });
 }
 ```
 
 ❌ **Async Server Component without awaiting params**
+
 ```tsx
 export default function Page({ params }: { params: { id: string } }) {
   return <div>{params.id}</div>; // WRONG: params is Promise in Next 16
@@ -471,6 +478,7 @@ export default function Page({ params }: { params: { id: string } }) {
 ```
 
 ✅ **Await async params in Server Component**
+
 ```tsx
 export default async function Page({
   params,
@@ -483,30 +491,34 @@ export default async function Page({
 ```
 
 ❌ **Barrel exports everywhere**
+
 ```ts
 // components/index.ts
-export { default as Button } from './Button';
-export { default as Card } from './Card';
+export { default as Button } from "./Button";
+export { default as Card } from "./Card";
 // ... 50 more
 
 // usage: import { Button, Card } from '@/components'; (bundles everything)
 ```
 
 ✅ **Direct imports**
+
 ```tsx
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 ```
 
 ❌ **Caching any GET endpoint without discrimination**
+
 ```ts
 // sw.js
-if (event.request.method === 'GET') {
+if (event.request.method === "GET") {
   // Cache API responses, migrations, everything
 }
 ```
 
 ✅ **Cache only static assets**
+
 ```ts
 const isStaticAsset = ['style', 'script', 'image', 'font'].includes(
   event.request.destination,
@@ -609,16 +621,170 @@ EOF
 
 ## Quick Decisions
 
-| Question | Answer |
-|----------|--------|
-| Where does a new hook go? | `features/<feature>/hooks/use-feature.ts` or `hooks/use-generic.ts` if truly generic |
-| Where do custom API calls go? | `features/<feature>/api.ts` or use `useQuery`/`useMutation` with `apiInstance` directly |
-| Should I create a new feature folder? | Yes, if it has >1 component/hook or domain-specific data fetching |
-| Where does shared UI go? | `components/` for primitives (Button, Badge); `features/` for scoped UI |
-| Do I export from `components/index.ts`? | No; import directly: `from '@/components/ui/button'` |
-| How do I share types across apps? | Define/infer in `packages/types`, re-export from `packages/types/src/index.ts` |
-| Where do I put utility functions? | `lib/utils.ts` for app-wide; `features/<feature>/utils.ts` for feature-specific |
-| Should the Server Component fetch data? | Yes; fetch during render, pass data as props to Client Components |
+| Question                                | Answer                                                                                  |
+| --------------------------------------- | --------------------------------------------------------------------------------------- |
+| Where does a new hook go?               | `features/<feature>/hooks/use-feature.ts` or `hooks/use-generic.ts` if truly generic    |
+| Where do custom API calls go?           | `features/<feature>/api.ts` or use `useQuery`/`useMutation` with `apiInstance` directly |
+| Should I create a new feature folder?   | Yes, if it has >1 component/hook or domain-specific data fetching                       |
+| Where does shared UI go?                | `components/` for primitives (Button, Badge); `features/` for scoped UI                 |
+| Do I export from `components/index.ts`? | No; import directly: `from '@/components/ui/button'`                                    |
+| How do I share types across apps?       | Define/infer in `packages/types`, re-export from `packages/types/src/index.ts`          |
+| Where do I put utility functions?       | `lib/utils.ts` for app-wide; `features/<feature>/utils.ts` for feature-specific         |
+| Should the Server Component fetch data? | Yes; fetch during render, pass data as props to Client Components                       |
+
+---
+
+## SSR / CSR Rendering Strategy
+
+Use this section as a decision framework for any new page or feature. Do not map it to a fixed list of Recto screens. Evaluate the current requirement against the questions below, in order, and choose the smallest rendering strategy that satisfies them.
+
+If the answers are mixed or unclear, ask the developer one focused clarifying question instead of guessing. Prefer a question like: "Does this data need to be crawlable or visible on first paint?" Do not fall back to a static feature lookup.
+
+### Decision Algorithm
+
+Ask these yes/no questions in order for the specific piece of data or UI you are implementing:
+
+1. Does this data appear in `<title>`, meta description, or Open Graph tags?
+2. Must it be present on first paint, with no skeleton acceptable above the fold?
+3. Is it the same for all users visiting this URL, with no personalization?
+4. Is it paginated, infinite-scroll, or only triggered by user interaction?
+5. Is it secondary to the page's identity, meaning the page still makes sense without it?
+6. Is it real-time or frequently mutated?
+
+Interpretation rules:
+
+1. If question 1 is yes, default to server rendering for that data.
+2. If questions 2 and 3 are yes, prefer server rendering or server-prefetched hydration.
+3. If question 4 is yes, prefer client fetching unless the first page must be SEO-visible.
+4. If question 5 is yes, keep the identity shell on the server and fill the rest on the client.
+5. If question 6 is yes, prefer client fetching unless there is a strong first-paint requirement.
+6. If the answers point to both SSR and CSR, split the page: render the identity on the server and defer the secondary data to the client.
+
+### Reusable Patterns
+
+#### Pure SSR
+
+Use when the data is SEO-critical, identity-bearing, and stable enough to render directly on the server.
+
+Typical traits:
+
+1. The content affects crawlability or metadata.
+2. The content must be visible on first paint.
+3. The content is not personalized per viewer, or personalization is handled separately.
+
+#### SSR Shell + CSR Fill
+
+Use when the server should render the page's identity and layout, but secondary data can arrive after hydration.
+
+Typical traits:
+
+1. The page needs a meaningful shell immediately.
+2. The secondary section can suspend or skeleton-load without harming the page.
+3. The client side owns interaction-heavy or secondary panels.
+
+#### SSR + TanStack Query Dehydration
+
+Use when the server should fetch the initial payload, but the client still needs the same cache for interactivity, refetching, or dependent queries.
+
+Typical traits:
+
+1. The first response should be server-rendered.
+2. The same data will continue to be used by client hooks.
+3. The page benefits from avoiding a duplicate client request after hydration.
+
+#### Pure CSR
+
+Use when the data is paginated, personalized, real-time, or only relevant after user interaction.
+
+Typical traits:
+
+1. The content does not need crawlable HTML.
+2. The data changes frequently or per user.
+3. The UI depends on live filtering, infinite scroll, or client-side state.
+
+### `lib/server-api.ts` Pattern
+
+Use a shared server-only helper for server-side data access. It should forward the session cookie from `next/headers`, handle `404` responses with `notFound()`, and accept Next.js cache options per call.
+
+Guidelines:
+
+1. Keep it generic: no hardcoded endpoints and no feature-specific wrappers in the helper itself.
+2. Pass the request path and options from the calling feature.
+3. Forward cookies from the incoming request so authenticated server fetches behave like the browser session.
+4. Allow per-call `cache`, `next.revalidate`, and related fetch options so the feature decides freshness.
+
+Shape to aim for:
+
+```ts
+import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
+
+type ServerFetchOptions = RequestInit & {
+  next?: {
+    revalidate?: number;
+    tags?: string[];
+  };
+};
+
+export async function serverFetch<T>(
+  path: string,
+  options: ServerFetchOptions = {},
+): Promise<T> {
+  const cookieHeader = cookies().toString();
+
+  const response = await fetch(`${process.env.API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...(cookieHeader ? { cookie: cookieHeader } : {}),
+      ...options.headers,
+    },
+  });
+
+  if (response.status === 404) {
+    notFound();
+  }
+
+  if (!response.ok) {
+    throw new Error(`serverFetch failed for ${path}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+```
+
+### Caching Heuristics
+
+Choose cache settings from data volatility, not from the page name or route name.
+
+1. Use `cache: "no-store"` for user-specific, permission-sensitive, or rapidly mutating data.
+2. Use `cache: "force-cache"` with `next.revalidate` for data that is mostly stable but benefits from background freshness.
+3. Use short revalidation windows for content that changes occasionally but should still feel current.
+4. Use longer revalidation windows for identity or catalog data that changes rarely.
+5. If the data must reflect the current request user, do not cache it across users.
+6. If the data is safe to share across users and does not depend on cookies, cache it aggressively.
+
+### Anti-Patterns
+
+Avoid these patterns when choosing SSR or CSR:
+
+1. SSR waterfall fetching: do not chain unrelated server requests one after another when they can run in parallel.
+2. `useEffect` plus raw `fetch` for data that should have been prefetched, dehydrated, or server-rendered.
+3. Missing `<Suspense>` boundaries around CSR fill sections that can suspend during hydration.
+4. Hardcoding a feature name into the rendering strategy instead of evaluating the current data requirements.
+5. Using SSR for data that is purely interaction-driven, paginated, or highly personalized when it does not need crawlable HTML.
+6. Using CSR for SEO-critical identity data and then trying to repair it with client-side effects.
+
+### Worked Example
+
+When a new feature is introduced, walk the data through the algorithm instead of naming the feature first.
+
+Example reasoning flow:
+
+1. If the page needs crawlable identity data in metadata, render that part on the server.
+2. If the page shell must appear immediately but a secondary panel can wait, render the shell on the server and fill the panel on the client inside `<Suspense>`.
+3. If the first payload should hydrate into TanStack Query for later interactions, prefetch it on the server and dehydrate it into the client cache.
+4. If the content is personalized, real-time, or only useful after interaction, keep it client-side.
+5. If the answer is not obvious after these checks, ask one focused question before choosing a strategy.
 
 ---
 
