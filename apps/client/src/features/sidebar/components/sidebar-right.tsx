@@ -11,23 +11,26 @@ import { useTrendingBooks } from "@/features/book/hooks/useTrendingBooks";
 import { useSuggestedUsers } from "../hooks/use-suggested-users";
 import { useFeaturedList } from "../hooks/use-featured-list";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function SidebarRight() {
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
   return (
     <div className="py-2 space-y-5 overflow-y-auto h-full">
-      <TrendingSection />
+      <TrendingSection enabled={isDesktop} />
       <Separator className="bg-border-subtle/60" />
-      <ReadersToFollowSection />
+      <ReadersToFollowSection enabled={isDesktop} />
       <Separator className="bg-border-subtle/60" />
-      <FeaturedListSection />
+      <FeaturedListSection enabled={isDesktop} />
     </div>
   );
 }
 
 /* ── Trending Books ───────────────────────────────────────────── */
 
-function TrendingSection() {
-  const { data: books, isLoading } = useTrendingBooks();
+function TrendingSection({ enabled }: { enabled: boolean }) {
+  const { data: books, isLoading } = useTrendingBooks(10, enabled);
 
   return (
     <section>
@@ -58,11 +61,11 @@ function TrendingSection() {
             <Link
               key={book.id}
               href={`/book/${book.sourceId}/${book.title
-              .trim()
-              .toLowerCase()
-              .replace(/[\/\s]+/g, "-")
-              .replace(/-+/g, "-")}`}
-            className="group flex flex-col gap-1.5"
+                .trim()
+                .toLowerCase()
+                .replace(/[\/\s]+/g, "-")
+                .replace(/-+/g, "-")}`}
+              className="group flex flex-col gap-1.5"
             >
               <div className="relative aspect-2/3 w-full rounded overflow-hidden bg-card-surface border border-border-subtle">
                 {book.coverImage ? (
@@ -102,8 +105,8 @@ function TrendingSection() {
 
 /* ── Readers to Follow ────────────────────────────────────────── */
 
-function ReadersToFollowSection() {
-  const { data: users, isLoading } = useSuggestedUsers();
+function ReadersToFollowSection({ enabled }: { enabled: boolean }) {
+  const { data: users, isLoading } = useSuggestedUsers(enabled);
 
   return (
     <section>
@@ -194,8 +197,8 @@ function UserSuggestionCard({
 
 /* ── Featured List ────────────────────────────────────────────── */
 
-function FeaturedListSection() {
-  const { data: list, isLoading } = useFeaturedList();
+function FeaturedListSection({ enabled }: { enabled: boolean }) {
+  const { data: list, isLoading } = useFeaturedList(enabled);
 
   return (
     <section>

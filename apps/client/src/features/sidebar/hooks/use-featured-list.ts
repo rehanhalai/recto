@@ -14,7 +14,7 @@ export type FeaturedList = {
  * When a backend endpoint exists for curated lists, this hook
  * should be updated to fetch from it.
  */
-export function useFeaturedList() {
+export function useFeaturedList(enabled = true) {
   return useQuery<FeaturedList | null>({
     queryKey: ["sidebar", "featured-list"],
     queryFn: async () => {
@@ -28,6 +28,7 @@ export function useFeaturedList() {
         covers: [],
       };
     },
+    enabled,
     staleTime: 1000 * 60 * 10,
   });
 }

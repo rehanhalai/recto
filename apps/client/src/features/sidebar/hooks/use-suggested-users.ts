@@ -15,7 +15,7 @@ type SearchResponse = {
   message: string;
 };
 
-export function useSuggestedUsers() {
+export function useSuggestedUsers(enabled = true) {
   return useQuery<SuggestedUser[]>({
     queryKey: ["sidebar", "suggested-users"],
     queryFn: async () => {
@@ -27,6 +27,7 @@ export function useSuggestedUsers() {
       });
       return response.data.users;
     },
+    enabled,
     staleTime: 1000 * 60 * 5,
   });
 }

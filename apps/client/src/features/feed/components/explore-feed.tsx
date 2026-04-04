@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import type { PaginatedResponse, PostWithRelations } from "@recto/types";
 import { PostCard } from "./PostCard";
 import { PostCardSkeleton } from "./PostCardSkeleton";
+import { FeedPostsSkeleton } from "./feed-skeletons";
 import { useExploreFeed } from "../hooks/use-explore-feed";
 import { useFeedLike } from "../hooks/use-feed-like";
 
@@ -48,13 +49,7 @@ export function ExploreFeed({ initialData }: ExploreFeedProps) {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <PostCardSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <FeedPostsSkeleton count={3} />;
   }
 
   if (posts.length === 0) {

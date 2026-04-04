@@ -31,6 +31,7 @@ import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";
 import { useState, useEffect } from "react";
 import { SidebarCreatePostDialog } from "./sidebar-create-post-dialog";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const NAV_ITEMS: Array<{
   href: string;
@@ -58,9 +59,11 @@ export function SidebarLeft({
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const logoutMutation = useLogout();
-  const { data: currentRead, isLoading: isLoadingRead } =
-    useCurrentRead(isAuthenticated);
+  const { data: currentRead, isLoading: isLoadingRead } = useCurrentRead(
+    isAuthenticated && showCurrentReading && isDesktop,
+  );
   const { theme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
@@ -191,7 +194,10 @@ export function SidebarLeft({
                   : "text-ink-muted hover:text-ink hover:bg-card-surface/50 border-transparent",
               )}
             >
-              <PencilSimple size={20} weight={isCreatePostOpen ? "fill" : "regular"} />
+              <PencilSimple
+                size={20}
+                weight={isCreatePostOpen ? "fill" : "regular"}
+              />
               <span className="hidden lg:inline">Create post</span>
             </Button>
           </li>

@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { UserAvatar } from "@/components/UserAvatar";
 import { StandardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostCard } from "@/features/feed";
 import { useLogout } from "@/features/auth/hooks/use-logout";
@@ -16,13 +16,29 @@ import { SidebarLeft, SidebarRight } from "@/features/sidebar";
 import { useFollowUser } from "../hooks/use-follow-user";
 import { useProfile } from "../hooks/use-profile";
 import { useUserPosts } from "../hooks/use-user-posts";
-import { useReadingStatus } from "../hooks/use-reading-status";
-import { useUserLists } from "../hooks/use-user-lists";
-import { ReadingStrip } from "./reading-strip";
 import { RelationshipOverlay } from "./relationship-overlay";
 import { OwnerActions } from "./owner-actions";
 import { ViewerActions } from "./viewer-actions";
-import { ListCoverGrid } from "./list-cover-grid";
+import {
+  ProfileListsSkeleton,
+  ProfilePageSkeleton,
+  ProfilePostsSkeleton,
+  ProfileReadingSkeleton,
+} from "./profile-skeletons";
+
+const ProfileReadingTab = dynamic(
+  () => import("./profile-reading-tab").then((mod) => mod.ProfileReadingTab),
+  {
+    loading: () => <ProfileReadingSkeleton />,
+  },
+);
+
+const ProfileListsTab = dynamic(
+  () => import("./profile-lists-tab").then((mod) => mod.ProfileListsTab),
+  {
+    loading: () => <ProfileListsSkeleton />,
+  },
+);
 
 type UserProfilePageProps = {
   username: string;
@@ -50,31 +66,10 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
 
   // Fetch data based on active tab
   const postsQuery = useUserPosts(userId, activeTab === "posts");
-  const currentReadingQuery = useReadingStatus(
-    userId,
-    "reading",
-    activeTab === "reading",
-  );
-  const completedReadingQuery = useReadingStatus(
-    userId,
-    "finished",
-    activeTab === "reading",
-  );
-  const listsQuery = useUserLists(userId, activeTab === "lists");
   const followMutation = useFollowUser(username, userId);
 
   if (profileQuery.isLoading) {
-    return (
-      <StandardLayout
-        leftSidebar={<SidebarLeft />}
-        rightSidebar={<SidebarRight />}
-      >
-        <div className="space-y-6">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-40 w-full" />
-        </div>
-      </StandardLayout>
-    );
+    return <ProfilePageSkeleton />;
   }
 
   if (profileQuery.isError || !profile) {
@@ -212,10 +207,7 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
           {/* Posts tab */}
           <TabsContent value="posts" className="space-y-4">
             {postsQuery.isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-40 w-full" />
-                <Skeleton className="h-40 w-full" />
-              </div>
+              <ProfilePostsSkeleton />
             ) : postsQuery.data?.pages[0]?.data?.length === 0 ? (
               <p className="text-center text-ink-muted py-8">No posts yet</p>
             ) : (
@@ -241,52 +233,12 @@ export function UserProfilePage({ username }: UserProfilePageProps) {
 
           {/* Reading tab */}
           <TabsContent value="reading" className="space-y-6">
-            <ReadingStrip
-              title="Currently Reading"
-              books={currentReadingQuery.data ?? []}
-              emptyMessage="No books currently being read"
-              isLoading={currentReadingQuery.isLoading}
-            />
-            <ReadingStrip
-              title="Completed"
-              books={completedReadingQuery.data ?? []}
-              emptyMessage="No completed books"
-              isLoading={completedReadingQuery.isLoading}
-            />
+            <ProfileReadingTab userId={userId} />
           </TabsContent>
 
           {/* Lists tab */}
           <TabsContent value="lists" className="grid grid-cols-1 gap-4">
-            {listsQuery.isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </div>
-            ) : listsQuery.data && listsQuery.data.length > 0 ? (
-              listsQuery.data.map((list) => (
-                <Link
-                  key={list.id}
-                  href={`/${user.userName}/lists/${list.id}`}
-                  className="flex gap-4 items-start rounded-lg border border-border-subtle p-4 transition-all hover:bg-paper/60 hover:border-gold/30"
-                >
-                  <ListCoverGrid covers={list.covers ?? []} />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-ink">{list.name}</h3>
-                    {list.description && (
-                      <p className="text-sm text-ink-muted line-clamp-2">
-                        {list.description}
-                      </p>
-                    )}
-                    <p className="text-xs text-ink-muted/60 mt-2">
-                      {list.book_count} book
-                      {list.book_count !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <p className="text-center text-ink-muted py-8">No lists yet</p>
-            )}
+            <ProfileListsTab userId={userId} username={user.userName} />
           </TabsContent>
         </Tabs>
       </div>

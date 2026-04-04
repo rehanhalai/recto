@@ -1,4 +1,5 @@
-import { FeedClient, getExplorePosts } from "@/features/feed";
+import { getExplorePosts } from "@/features/feed";
+import { ExploreFeed } from "@/features/feed/components/explore-feed";
 
 export default async function PostsPage() {
   const initialPosts = await getExplorePosts({ limit: 15 });
@@ -16,7 +17,7 @@ export default async function PostsPage() {
           </p>
         </div>
 
-        <FeedClient type="explore" initialData={initialPosts} />
+        <ExploreFeed initialData={initialPosts} />
       </div>
     </div>
   );

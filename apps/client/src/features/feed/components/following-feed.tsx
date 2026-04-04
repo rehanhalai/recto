@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { PostCard } from "./PostCard";
 import { PostCardSkeleton } from "./PostCardSkeleton";
+import { FeedPostsSkeleton } from "./feed-skeletons";
 import { useFollowingFeed } from "../hooks/use-following-feed";
 import { useAuthStore } from "@/features/auth";
 import { useFeedLike } from "../hooks/use-feed-like";
@@ -57,7 +58,9 @@ export function FollowingFeed({ enabled }: FollowingFeedProps) {
           <MagnifyingGlass size={28} className="text-ink-muted" />
         </div>
         <div className="space-y-2">
-          <p className="text-ink font-medium text-base">You are not signed in</p>
+          <p className="text-ink font-medium text-base">
+            You are not signed in
+          </p>
           <p className="text-ink-muted text-sm max-w-xs mx-auto">
             Login to view your Following feed and continue browsing posts from
             people you follow.
@@ -74,13 +77,7 @@ export function FollowingFeed({ enabled }: FollowingFeedProps) {
   }
 
   if (isLoading && enabled) {
-    return (
-      <div className="flex flex-col gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <PostCardSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <FeedPostsSkeleton count={3} />;
   }
 
   if (enabled && posts.length === 0 && !isLoading) {
