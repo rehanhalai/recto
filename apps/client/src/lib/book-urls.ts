@@ -21,11 +21,7 @@ export function generateBookSlug(title: string): string {
  * @param title - The book title
  * @returns The complete book URL path (e.g., "/book/{sourceId}/{slug}")
  */
-export function getBookUrl(
-  sourceId: string | undefined,
-  title: string,
-): string {
-  if (!sourceId) throw new Error("Source ID is required to generate book URL");
+export function getBookUrl(sourceId: string, title: string): string {
   const slug = generateBookSlug(title);
   return `/book/${sourceId}/${slug}`;
 }
