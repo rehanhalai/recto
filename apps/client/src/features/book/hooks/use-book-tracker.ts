@@ -79,9 +79,38 @@ export function useBookTracker(bookId: string) {
     },
   });
 
+  const removeTracker = useMutation({
+    mutationFn: async () => {
+      if (!entry?.id) {
+        throw new Error("No tracker entry found for this book");
+      }
+
+      return apiInstance.delete(`/tracker/tbrbook/${entry.id}`);
+    },
+    onMutate: async () => {
+      setOptimisticStatus(null);
+      return { previousStatus: currentStatus };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["book-tracker-status", bookId],
+      });
+      toast.success("Removed from shelf");
+    },
+    onError: (_error, _variables, context) => {
+      setOptimisticStatus(context?.previousStatus ?? null);
+      toast.error("Could not remove from shelf");
+    },
+    onSettled: () => {
+      setOptimisticStatus(null);
+    },
+  });
+
   return {
     currentStatus,
+    hasEntry: Boolean(entry?.id),
     upsertTracker,
+    removeTracker,
     isLoading: trackersQuery.isLoading,
   };
 }

@@ -49,7 +49,7 @@ export function ListActionBar({ list }: ListActionBarProps) {
           >
             <Share2 className="w-5 h-5" />
           </Button>
-          {isOwner ? (
+          {isOwner && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -78,14 +78,6 @@ export function ListActionBar({ list }: ListActionBarProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-9 h-9 rounded-full text-ink-muted hover:text-foreground transition"
-            >
-              <span>nothing for you yet</span>
-            </Button>
           )}
         </div>
 

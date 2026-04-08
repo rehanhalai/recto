@@ -18,16 +18,21 @@ import { useState } from "react";
 import { useAuthStore } from "@/features/auth";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { useBookTracker } from "../../hooks/use-book-tracker";
+import {
+  useBookTracker,
+  type TrackerStatus,
+} from "../../hooks/use-book-tracker";
 import { BookListPicker } from "./book-list-picker";
 import { BuyBookResponsive } from "./buy-book-responsive";
 
 export function BookActions({ bookId }: { bookId: string }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { currentStatus, upsertTracker, isLoading } = useBookTracker(bookId);
+  const { currentStatus, hasEntry, upsertTracker, removeTracker, isLoading } =
+    useBookTracker(bookId);
   const [showBuy, setShowBuy] = useState(false);
 
-  const isPending = upsertTracker.isPending || isLoading;
+  const isPending =
+    upsertTracker.isPending || removeTracker.isPending || isLoading;
 
   const getPrimaryLabel = () => {
     switch (currentStatus) {
@@ -42,7 +47,11 @@ export function BookActions({ bookId }: { bookId: string }) {
     }
   };
 
-  const statusItems = [
+  const statusItems: Array<{
+    id: TrackerStatus;
+    label: string;
+    color: string;
+  }> = [
     { id: "wishlist", label: "Want to read", color: "bg-stone-400" },
     { id: "reading", label: "Currently reading", color: "bg-emerald-500" },
     { id: "finished", label: "Completed", color: "bg-sky-500" },
@@ -78,7 +87,7 @@ export function BookActions({ bookId }: { bookId: string }) {
               {statusItems.map((item) => (
                 <DropdownMenuItem
                   key={item.id}
-                  onClick={() => upsertTracker.mutate(item.id as any)}
+                  onClick={() => upsertTracker.mutate(item.id)}
                   className="flex h-14 cursor-pointer items-center gap-4 px-5 transition-all duration-200 hover:bg-muted/50 focus:bg-muted/60 group"
                 >
                   <div
@@ -102,6 +111,27 @@ export function BookActions({ bookId }: { bookId: string }) {
                   )}
                 </DropdownMenuItem>
               ))}
+              {currentStatus && hasEntry && (
+                <DropdownMenuItem
+                  onClick={() => removeTracker.mutate()}
+                  disabled={removeTracker.isPending}
+                  className="flex h-14 cursor-pointer items-center gap-4 px-5 transition-all duration-200 hover:bg-red-500/10 focus:bg-red-500/15 group"
+                >
+                  <div
+                    className={cn(
+                      "h-3.5 w-3.5 rounded-full shadow-sm",
+                      removeTracker.isPending
+                        ? "bg-red-500/70 animate-pulse"
+                        : "bg-red-500/40",
+                    )}
+                  />
+                  <span className="flex-1 text-sm font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 transition-all duration-200">
+                    {removeTracker.isPending
+                      ? "Removing..."
+                      : "Remove from shelf"}
+                  </span>
+                </DropdownMenuItem>
+              )}
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
