@@ -38,7 +38,7 @@ type CommunityListsResponse = {
 function CommunityListCard({ list }: { list: CommunityList }) {
   return (
     <Link
-      href={`/lists/${list.id}`}
+      href={`/list/${list.id}`}
       className="group rounded-xl border border-border-subtle bg-card-surface p-4 transition-colors hover:border-border-subtle/60"
     >
       <div className="flex items-start justify-between gap-3">
@@ -46,7 +46,9 @@ function CommunityListCard({ list }: { list: CommunityList }) {
           <h3 className="line-clamp-1 text-sm font-semibold text-ink group-hover:text-accent transition-colors">
             {list.title}
           </h3>
-          <p className="mt-1 text-xs text-ink-muted">@{list.curator.userName}</p>
+          <p className="mt-1 text-xs text-ink-muted">
+            @{list.curator.userName}
+          </p>
         </div>
         <span className="shrink-0 rounded-full bg-paper px-2 py-1 text-[11px] text-ink-muted border border-border-subtle">
           {list.bookCount} books
@@ -126,7 +128,10 @@ export function BookBrowsePage() {
   });
 
   return (
-    <StandardLayout leftSidebar={<SidebarLeft />} rightSidebar={<SidebarRight />}>
+    <StandardLayout
+      leftSidebar={<SidebarLeft />}
+      rightSidebar={<SidebarRight />}
+    >
       <div className="space-y-10">
         <section className="rounded-2xl border border-border-subtle bg-card-surface p-6">
           <p className="text-[11px] uppercase tracking-[0.2em] text-ink-muted">
@@ -136,7 +141,8 @@ export function BookBrowsePage() {
             Browse Books and Lists
           </h1>
           <p className="mt-2 text-sm text-ink-muted max-w-2xl">
-            Explore trending reads, curated genres, and community-created book lists.
+            Explore trending reads, curated genres, and community-created book
+            lists.
           </p>
         </section>
 
@@ -170,17 +176,19 @@ export function BookBrowsePage() {
         <section className="space-y-4 pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-serif italic text-ink">Community Lists</h2>
+              <h2 className="text-2xl font-serif italic text-ink">
+                Community Lists
+              </h2>
               <p className="text-xs uppercase tracking-[0.18em] text-ink-muted mt-1">
                 Curated by readers
               </p>
             </div>
-            <Link
-              href="/lists"
+            <div
+              // href="/lists"
               className="text-sm text-ink-muted hover:text-ink transition-colors"
             >
               See all lists
-            </Link>
+            </div>
           </div>
 
           {communityListsQuery.isLoading ? (
