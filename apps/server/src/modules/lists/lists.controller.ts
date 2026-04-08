@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -40,17 +41,6 @@ export class ListsController {
     };
   }
 
-  @Get(":listId")
-  async getListById(
-    @Param("listId") listId: string,
-  ): Promise<any> {
-    const data = await this.listsService.getListById(listId);
-    return {
-      data,
-      message: "List details fetched successfully",
-    };
-  }
-
   @Get("user/my-lists")
   @UseGuards(AuthGuard)
   async getMyLists(
@@ -80,6 +70,19 @@ export class ListsController {
     };
   }
 
+  @Get(":listId")
+  @UseGuards(OptionalAuthGuard)
+  async getListById(
+    @Param("listId") listId: string,
+    @CurrentUser() user?: AuthenticatedRequestUser,
+  ): Promise<any> {
+    const data = await this.listsService.getListById(listId, user?.id);
+    return {
+      data,
+      message: "List details fetched successfully",
+    };
+  }
+
   @Delete(":listId/books/:bookId")
   @UseGuards(AuthGuard)
   async removeBookFromList(
@@ -96,6 +99,18 @@ export class ListsController {
     return {
       data,
       message: "Book removed from list successfully",
+    };
+  }
+
+  @Delete(":listId")
+  @UseGuards(AuthGuard)
+  async deleteList(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("listId") listId: string,
+  ): Promise<any> {
+    await this.listsService.deleteList(user.id, listId);
+    return {
+      message: "List deleted successfully",
     };
   }
 
@@ -138,6 +153,27 @@ export class ListsController {
     return {
       data,
       message: "List created successfully",
+    };
+  }
+
+  @Patch(":listId")
+  @UseGuards(AuthGuard)
+  async updateList(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Param("listId") listId: string,
+    @Body() body: { name?: string; description?: string; is_public?: boolean },
+  ): Promise<any> {
+    const data = await this.listsService.updateList(
+      user.id,
+      listId,
+      body.name?.trim(),
+      body.description,
+      body.is_public,
+    );
+
+    return {
+      data,
+      message: "List updated successfully",
     };
   }
 }

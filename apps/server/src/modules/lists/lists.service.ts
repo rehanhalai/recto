@@ -346,14 +346,69 @@ export class ListsService {
         userId,
         name,
         description: description ?? null,
-        isPublic: isPublic ?? false,
+        isPublic: isPublic ?? true,
         bookCount: 0,
       })
       .returning();
 
     return newList;
   }
-  async getListById(listId: string) {
+
+  async updateList(
+    userId: string,
+    listId: string,
+    name?: string,
+    description?: string,
+    isPublic?: boolean,
+  ) {
+    // First check if the list exists and user owns it
+    const existingList = await this.db.query.bookLists.findFirst({
+      where: eq(bookLists.id, listId),
+      columns: { id: true, userId: true },
+    });
+
+    if (!existingList) {
+      throw new NotFoundException("List not found");
+    }
+
+    if (existingList.userId !== userId) {
+      throw new ForbiddenException("You do not have permission to edit this list");
+    }
+
+    // Build update object with only provided fields
+    const updateData: any = { updatedAt: new Date() };
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (isPublic !== undefined) updateData.isPublic = isPublic;
+
+    const [updatedList] = await this.db
+      .update(bookLists)
+      .set(updateData)
+      .where(eq(bookLists.id, listId))
+      .returning();
+
+    return updatedList;
+  }
+
+  async deleteList(userId: string, listId: string) {
+    // First check if the list exists and user owns it
+    const existingList = await this.db.query.bookLists.findFirst({
+      where: eq(bookLists.id, listId),
+      columns: { id: true, userId: true },
+    });
+
+    if (!existingList) {
+      throw new NotFoundException("List not found");
+    }
+
+    if (existingList.userId !== userId) {
+      throw new ForbiddenException("You do not have permission to delete this list");
+    }
+
+    await this.db.delete(bookLists).where(eq(bookLists.id, listId));
+  }
+
+  async getListById(listId: string, userId?: string) {
     const list = await this.db.query.bookLists.findFirst({
       where: eq(bookLists.id, listId),
       with: {
@@ -375,6 +430,10 @@ export class ListsService {
         },
       },
     });
+
+    if (!list) throw new NotFoundException(`List with ID ${listId} not found`);
+    if (!list.isPublic && (!userId || list.userId !== userId))
+      throw new NotFoundException(`List with ID ${listId} not found`);
 
     return list;
   }

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Book } from "../../types";
 import { Star } from "@phosphor-icons/react/dist/ssr";
+import { getBookUrl } from "@/lib/book-urls";
 
 interface BookCardProps {
   book: Book;
@@ -23,10 +24,7 @@ function getInitials(title: string): string {
     .toUpperCase();
 }
 
-export function BookCard({
-  book,
-  featured = false,
-}: BookCardProps) {
+export function BookCard({ book, featured = false }: BookCardProps) {
   const firstAuthor = book.authors?.[0];
   const authorName =
     typeof firstAuthor === "string"
@@ -37,18 +35,15 @@ export function BookCard({
   const hasRating = rating > 0;
   const year = extractYear(book.releaseDate ?? undefined);
 
-  const slug = book.title
-    .trim()
-    .toLowerCase()
-    .replace(/[\/\s]+/g, "-")
-    .replace(/-+/g, "-");
-
   const cardClassName = `group flex flex-col w-full h-full focus:outline-none ${
     featured ? "col-span-2 row-span-1 md:col-span-1" : ""
   }`;
 
   return (
-    <Link href={`/book/${book.sourceId}/${slug}`} className={cardClassName}>
+    <Link
+      href={getBookUrl(book.sourceId, book.title)}
+      className={cardClassName}
+    >
       {/* Cover */}
       <div
         className={`relative w-full aspect-2/3 rounded-xl overflow-hidden border border-border-subtle shadow-sm

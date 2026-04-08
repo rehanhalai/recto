@@ -25,6 +25,7 @@ import { useAuthStore, selectUser } from "@/features/auth";
 import { useDeletePost } from "../hooks/use-delete-post";
 import { PostEditDialog } from "./PostEditDialog";
 import { toast } from "@/lib/toast";
+import { getBookUrl } from "@/lib/book-urls";
 
 type PostCardProps = {
   post: PostWithRelations;
@@ -51,10 +52,10 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
   const [localLikeCount, setLocalLikeCount] = useState(likesCount ?? 0);
   const [imageAspectRatio, setImageAspectRatio] = useState<string>();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
+
   const currentUser = useAuthStore(selectUser);
   const deletePostMutation = useDeletePost();
-  
+
   const isOwner = currentUser?.id === author?.id;
   // const [saved, setSaved] = useState(false);
 
@@ -153,13 +154,13 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
           >
             {isOwner ? (
               <>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="cursor-pointer"
                   onClick={handleEdit}
                 >
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="cursor-pointer text-red-500 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
                   onClick={handleDelete}
                   disabled={deletePostMutation.isPending}
@@ -179,11 +180,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
       {/* Optional Book Mention */}
       {book && (
         <Link
-          href={`/book/${book.sourceId}/${book.title
-            .trim()
-            .toLowerCase()
-            .replace(/[\/\s]+/g, "-")
-            .replace(/-+/g, "-")}`}
+          href={getBookUrl(book.sourceId, book.title)}
           className="flex items-start gap-4 p-3 rounded-lg border border-border-subtle bg-paper/50 hover:bg-paper/80 transition-colors"
         >
           <div className="shrink-0 relative w-12 h-18 rounded-md overflow-hidden bg-paper flex items-center justify-center border border-border-subtle shadow-sm">
@@ -242,7 +239,9 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 560px"
             onLoad={(event) =>
-              setImageAspectRatio(`${event.currentTarget.naturalWidth} / ${event.currentTarget.naturalHeight}`)
+              setImageAspectRatio(
+                `${event.currentTarget.naturalWidth} / ${event.currentTarget.naturalHeight}`,
+              )
             }
           />
         </div>
@@ -296,7 +295,7 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
         </button> */}
       </footer>
 
-      <PostEditDialog 
+      <PostEditDialog
         post={post}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}

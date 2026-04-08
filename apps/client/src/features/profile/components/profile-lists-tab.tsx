@@ -21,7 +21,7 @@ export function ProfileListsTab({ userId, username }: ProfileListsTabProps) {
         {listsQuery.data.map((list) => (
           <Link
             key={list.id}
-            href={`/${username}/lists/${list.id}`}
+            href={`/list/${list.id}`}
             className="flex gap-4 items-start rounded-lg border border-border-subtle p-4 transition-all hover:bg-paper/60 hover:border-gold/30"
           >
             <ListCoverGrid covers={list.covers ?? []} />

@@ -28,6 +28,7 @@ import { useTheme } from "next-themes";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui";
 import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
+import { getBookUrl } from "@/lib/book-urls";
 import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";
 import { useState, useEffect } from "react";
 import { SidebarCreatePostDialog } from "./sidebar-create-post-dialog";
@@ -227,7 +228,7 @@ export function SidebarLeft({
               {currentRead.slice(0, 2).map((read: (typeof currentRead)[0]) => (
                 <CurrentReadingCard
                   key={read.id}
-                  bookId={read.bookId}
+                  bookId={read.book.sourceId}
                   title={read.book.title}
                   authors={read.book.authors}
                   coverUrl={read.book.coverImage}
@@ -399,10 +400,7 @@ function CurrentReadingCard({
   coverUrl: string | null;
 }) {
   return (
-    <Link
-      href={`/book/${bookId}/${title.replaceAll(" ", "-")}`}
-      className="block group"
-    >
+    <Link href={getBookUrl(bookId, title)} className="block group">
       <div className="flex items-start gap-2.5">
         <div className="relative w-6 h-8 rounded overflow-hidden shrink-0 bg-card-surface border border-border-subtle">
           {coverUrl ? (

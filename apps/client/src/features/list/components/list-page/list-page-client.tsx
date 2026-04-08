@@ -27,8 +27,12 @@ export function ListPageClient({ list }: ListPageClientProps) {
     >
       <div className="flex flex-col min-h-screen bg-background pb-20 rounded-xl overflow-hidden border border-border-subtle/20 shadow-sm">
         <ListHeader list={list} formatDate={formatDate} />
-        <ListActionBar />
-        <ListTable items={list.items} formatDate={formatDate} />
+        <ListActionBar list={list} />
+        <ListTable
+          items={list.items}
+          formatDate={formatDate}
+          listId={list.id}
+        />
       </div>
     </StandardLayout>
   );

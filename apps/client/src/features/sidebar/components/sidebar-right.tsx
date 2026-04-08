@@ -12,6 +12,7 @@ import { useSuggestedUsers } from "../hooks/use-suggested-users";
 import { useFeaturedList } from "../hooks/use-featured-list";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { getBookUrl } from "@/lib/book-urls";
 
 export function SidebarRight() {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -60,11 +61,7 @@ function TrendingSection({ enabled }: { enabled: boolean }) {
           {books.slice(0, 6).map((book, index) => (
             <Link
               key={book.id}
-              href={`/book/${book.sourceId}/${book.title
-                .trim()
-                .toLowerCase()
-                .replace(/[\/\s]+/g, "-")
-                .replace(/-+/g, "-")}`}
+              href={getBookUrl(book.sourceId, book.title)}
               className="group flex flex-col gap-1.5"
             >
               <div className="relative aspect-2/3 w-full rounded overflow-hidden bg-card-surface border border-border-subtle">

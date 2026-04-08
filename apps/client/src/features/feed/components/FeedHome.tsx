@@ -12,6 +12,7 @@ import { ArrowRight, BookOpen, Sparkle } from "@phosphor-icons/react";
 import { BOOK_GENRES, type GenreMetadata } from "@/constants/genres";
 import { useRouter } from "next/navigation";
 import { PostCard } from "./PostCard";
+import { getBookUrl } from "@/lib/book-urls";
 
 interface FeedHomeProps {
   initialPosts: PaginatedResponse<PostWithRelations>;
@@ -65,7 +66,7 @@ export function FeedHome({ initialPosts }: FeedHomeProps) {
             currentRead.map((read: (typeof currentRead)[0]) => (
               <Link
                 key={read.id}
-                href={`/book/${read.book.id}/${read.book.title.replaceAll(" ", "-")}`}
+                href={getBookUrl(read.book.sourceId, read.book.title)}
                 className="group relative shrink-0 transition-transform hover:scale-105 active:scale-95"
               >
                 <div className="w-32 md:w-40 aspect-2/3 rounded shadow-xl overflow-hidden border-2 border-white/50 bg-card-surface">

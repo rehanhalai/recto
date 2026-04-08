@@ -60,6 +60,19 @@ export {
 export { Progress } from "./progress";
 export { Badge } from "./badge";
 export {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogOverlay,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "./alert-dialog";
+export {
   Dialog,
   DialogPortal,
   DialogOverlay,

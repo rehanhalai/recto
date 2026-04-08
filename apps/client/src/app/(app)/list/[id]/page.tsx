@@ -7,6 +7,7 @@ interface ListPageProps {
 
 export default async function ListPage({ params }: ListPageProps) {
   const { id } = await params;
+  console.log(id);
   const list = await getList(id);
 
   if (!list) return notFound();
