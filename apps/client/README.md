@@ -1,400 +1,293 @@
-# Recto Client - Next.js Frontend
+# Recto — Web Client
 
-Modern React 19 frontend built with Next.js 16, TypeScript, and Tailwind CSS.
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-
-### Setup
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Setup environment
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
-
-# 3. Start development server
-npm run dev
-```
-
-Visit [http://localhost:3000](http://localhost:3000)
-
-## 📁 Project Structure
-
-```
-src/
-├── app/                 # Next.js App Router
-│   ├── (auth)/         # Auth pages (login, signup, etc)
-│   └── layout.tsx      # Root layout with providers
-├── features/           # Feature modules
-│   └── auth/          # Authentication system
-│       ├── components/ # LoginForm, SignupForm, etc
-│       ├── hooks/     # useAuth, useUser, usePasswordReset
-│       ├── services/  # auth-api.ts
-│       ├── store/     # Zustand auth store
-│       └── types/     # TypeScript interfaces
-├── components/        # Shared components
-│   └── providers/     # Sonner ToasterProvider
-├── config/           # App configuration
-├── hooks/            # Shared hooks
-├── lib/             # Utilities (api-client, toast)
-├── store/           # Global state
-└── types/           # Global types
-```
-
-## 🔐 Authentication System
-
-Complete auth implementation with:
-
-- ✅ Email/password login & signup
-- ✅ OTP verification (2-step)
-- ✅ Token management (auto-refresh)
-- ✅ Route protection (AuthGuard, GuestGuard)
-- ✅ Password reset (3-step flow)
-- ✅ User profiles
-
-### Quick Integration
-
-```bash
-# 1. Add dependencies
-npm install zustand sonner
-
-# 2. Add ToasterProvider to src/app/layout.tsx
-# Import and wrap root content with ToasterProvider
-
-# 3. Create auth pages
-# - src/app/(auth)/login/page.tsx
-# - src/app/(auth)/signup/page.tsx
-# - src/app/(auth)/forgot-password/page.tsx
-
-# 4. Use authentication
-import { useAuth } from "@/features/auth";
-
-function MyComponent() {
-  const { user, isAuthenticated, login, logout } = useAuth();
-  // ...
-}
-```
-
-## 📚 Documentation
-
-Detailed documentation in `/docs`:
-
-- **[Auth Quick Start](../docs/auth/README.md)** - Setup & integration
-- **[Implementation Guide](../docs/auth/IMPLEMENTATION.md)** - Detailed walkthrough
-- **[Code Examples](../docs/auth/QUICK_REFERENCE.md)** - Real-world usage
-- **[Architecture](../docs/auth/ARCHITECTURE.md)** - System design
-
-## 🛠 Tech Stack
-
-| Category         | Tool         | Version |
-| ---------------- | ------------ | ------- |
-| Framework        | Next.js      | 16      |
-| Language         | TypeScript   | 5+      |
-| Styling          | Tailwind CSS | 3.4+    |
-| State            | Zustand      | 4.5.0   |
-| UI Notifications | Sonner       | 1.8.0   |
-| HTTP Client      | Fetch API    | Native  |
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-```env
-# .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
-### API Configuration
-
-See `src/config/index.ts`:
-
-```typescript
-export const config = {
-  API_URL: process.env.NEXT_PUBLIC_API_URL,
-  TOKEN_KEYS: {
-    accessTokenKey: "recto_access_token",
-    refreshTokenKey: "recto_refresh_token",
-  },
-};
-```
-
-## 🔌 API Integration
-
-### Authentication Endpoints
-
-All endpoints use `/api/v1/user` base path:
-
-```typescript
-// src/features/auth/services/auth-api.ts
-
-POST   /signup                    // Send OTP
-POST   /signup-verify             // Verify & create account
-POST   /signin                    // Login
-POST   /logout                    // Logout
-POST   /refresh-accesstoken       // Refresh access token
-GET    /whoami                    // Get current user
-PUT    /update-profile            // Update profile
-GET    /check-username/:username  // Check availability
-POST   /forgot-password           // Send password reset OTP
-POST   /forgot-password-verify    // Verify reset OTP
-POST   /set-new-password          // Set new password
-POST   /change-password           // Change current password
-```
-
-## 🎣 Custom Hooks
-
-### useAuth
-
-Main authentication hook - handles login, signup, logout, token refresh.
-
-```typescript
-const { user, isAuthenticated, isLoading, error, login, logout } = useAuth();
-```
-
-### useUser
-
-User profile operations - update profile, check username, change password.
-
-```typescript
-const { isUpdating, error, updateProfile, checkUsernameAvailability } =
-  useUser();
-```
-
-### usePasswordReset
-
-Multi-step password reset flow.
-
-```typescript
-const {
-  step,
-  email,
-  isLoading,
-  error,
-  requestPasswordReset,
-  verifyResetOTP,
-  setNewPassword,
-} = usePasswordReset();
-```
-
-## 🛡️ Route Protection
-
-### AuthGuard - Protect authenticated routes
-
-```tsx
-import { AuthGuard } from "@/features/auth";
-
-export default function DashboardPage() {
-  return (
-    <AuthGuard>
-      <Dashboard />
-    </AuthGuard>
-  );
-}
-```
-
-### GuestGuard - Protect guest-only routes
-
-```tsx
-import { GuestGuard } from "@/features/auth";
-
-export default function LoginPage() {
-  return (
-    <GuestGuard>
-      <LoginForm />
-    </GuestGuard>
-  );
-}
-```
-
-## 🎨 Pre-built Components
-
-### LoginForm
-
-Email/password login with Google OAuth button.
-
-```tsx
-import { LoginForm } from "@/features/auth";
-
-export default function LoginPage() {
-  return <LoginForm />;
-}
-```
-
-### SignupForm
-
-Multi-step signup with email, OTP, and password.
-
-```tsx
-import { SignupForm } from "@/features/auth";
-
-export default function SignupPage() {
-  return <SignupForm />;
-}
-```
-
-### ForgotPasswordForm
-
-3-step password reset flow.
-
-```tsx
-import { ForgotPasswordForm } from "@/features/auth";
-
-export default function ForgotPasswordPage() {
-  return <ForgotPasswordForm />;
-}
-```
-
-## 📡 HTTP Client
-
-Enhanced Fetch API client with automatic token management:
-
-```typescript
-// src/lib/api-client.ts
-
-// Automatic Authorization header injection
-// 401 response handling (auto-logout)
-// Cookie support (credentials: "include")
-// Timeout management (30s default)
-
-const response = await apiClient("/user/profile", {
-  method: "GET",
-  // Token automatically added to headers
-});
-```
-
-## 🔔 Toast Notifications
-
-Sonner integration for user feedback:
-
-```typescript
-import { showToast } from "@/lib/toast";
-
-showToast.success("Profile updated!");
-showToast.error("Something went wrong");
-showToast.info("Loading data...");
-showToast.warning("Are you sure?");
-```
-
-## 📋 Available Scripts
-
-```bash
-# Development server (http://localhost:3000)
-npm run dev
-
-# Production build
-npm run build
-
-# Start production server
-npm start
-
-# Linting
-npm run lint
-
-# Type checking
-npm run type-check
-```
-
-## 🔧 Development
-
-### Code Standards
-
-- **100% TypeScript** - Full type coverage
-- **Functional Components** - React hooks only
-- **Zustand** - Lightweight state management
-- **Tailwind CSS** - Utility-first styling
-- **ESLint** - Code quality
-
-### File Naming
-
-```
-Components:     PascalCase.tsx
-Hooks:          use*.ts
-Utils:          kebab-case.ts
-Stores:         *-store.ts
-Services:       *-api.ts / *-service.ts
-Types:          index.ts or *.ts
-```
-
-## 🔐 Security Features
-
-- ✅ JWT token validation
-- ✅ httpOnly cookies (CSRF protection)
-- ✅ Password hashing (bcrypt on server)
-- ✅ Rate limiting (on server)
-- ✅ Input validation
-- ✅ CORS configured
-- ✅ Automatic token refresh
-- ✅ Secure token storage (localStorage + cookies)
-
-## ⚡ Performance
-
-- Next.js App Router with Server Components
-- Code splitting & lazy loading
-- Image optimization
-- CSS optimization with Tailwind
-- Minimal dependencies
-
-## 🐛 Debugging
-
-### Enable Debug Mode
-
-Set in `.env.local`:
-
-```env
-DEBUG=*
-```
-
-### Check Token Storage
-
-```typescript
-// In browser console
-localStorage.getItem("recto_access_token");
-localStorage.getItem("recto_refresh_token");
-document.cookie; // httpOnly cookies
-```
-
-### Monitor API Calls
-
-Open DevTools Network tab and check requests to `/api/v1/*`
-
-## 📖 Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Documentation](https://react.dev)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-- [Zustand](https://github.com/pmndrs/zustand)
-
-## 🤝 Contributing
-
-1. Follow code standards (TypeScript, Tailwind, functional components)
-2. Add JSDoc comments for functions
-3. Update documentation for new features
-4. Test thoroughly before submitting
-
-## 📞 Support
-
-For detailed information:
-
-1. Check `/docs/auth` for authentication setup
-2. Review code comments
-3. Check related documentation files
-4. Review example implementations
+Next.js 16 App Router frontend for Recto, a social reading platform.
 
 ---
 
-**Next Steps:**
+## Overview
 
-1. Run `npm install`
-2. Create `.env.local` with API URL
-3. Follow [Auth Quick Start](../docs/auth/README.md)
-4. Create auth pages
-5. Test authentication flows
+This app is the browser-facing side of Recto. It handles everything users see and interact with: the landing page, auth flows, the social feed, book discovery, reading tracking, reviews, lists, profiles, and search. It communicates exclusively with the Recto API server via an `apiInstance` wrapper that always sends cookies.
 
-**Last Updated:** January 18, 2026
+---
+
+## Tech Stack
+
+| Technology               | Usage                                                                 |
+|--------------------------|-----------------------------------------------------------------------|
+| **Next.js 16.1.1**       | App Router, RSC, file-based routing, Turbopack in dev                 |
+| **React 19**             | UI framework                                                          |
+| **Tailwind CSS v4**      | Utility-first styling with CSS variables for the design system        |
+| **shadcn/ui (new-york)** | Base UI primitives (dialogs, dropdowns, tabs, scroll areas, etc.)     |
+| **Radix UI**             | Headless primitives underlying shadcn/ui                              |
+| **TanStack Query v5**    | Server state management — all data fetching, mutations, cache control |
+| **Zustand v5**           | Client-only auth state (persisted to `localStorage`)                  |
+| **Phosphor Icons**       | Primary icon library (`@phosphor-icons/react`)                        |
+| **Lucide React**         | Secondary icon library (used by shadcn/ui components)                 |
+| **GSAP 3**               | Scroll-triggered animations on the landing page                       |
+| **Lenis**                | Smooth scroll on the landing page                                     |
+| **Cloudinary**           | Avatar/cover/post image uploads (via server-side upload endpoint)     |
+| **Embla Carousel**       | Book strip carousel on the landing page                               |
+| **React Hook Form + Zod**| Form validation across auth and profile edit flows                    |
+| **React Easy Crop**      | Avatar and cover image cropping before upload                         |
+| **react-intersection-observer** | Infinite scroll trigger for paginated feeds                  |
+
+---
+
+## Project Structure
+
+```
+apps/client/src/
+├── app/                    # Route tree only — minimal logic, no business logic here
+│   ├── page.tsx            # Landing page (/)
+│   ├── layout.tsx          # Root layout: fonts, ThemeProvider, QueryClientProvider
+│   ├── globals.css         # Design system: CSS variables, Tailwind theme, typography
+│   ├── (app)/              # Authenticated app shell
+│   │   ├── layout.tsx      # App layout (sidebar, navigation)
+│   │   ├── feed/           # /feed
+│   │   ├── browse/         # /browse
+│   │   ├── book/[id]/      # /book/:sourceId/:slug
+│   │   ├── list/[id]/      # /list/:listId
+│   │   ├── posts/          # /posts
+│   │   ├── search/         # /search
+│   │   ├── notifications/  # /notifications
+│   │   ├── settings/       # /settings
+│   │   └── (profile)/
+│   │       ├── profile/    # /profile (own profile)
+│   │       └── [username]/ # /:username (public profile)
+│   └── (auth)/             # Unauthenticated auth shell
+│       ├── login/          # /login
+│       ├── signup/         # /signup
+│       ├── forgot-password/ # /forgot-password
+│       ├── reset-password/  # /reset-password
+│       └── google-callback/ # /google-callback
+├── features/               # Feature modules — all business logic lives here
+│   ├── auth/               # Login, signup, OTP verification, password reset
+│   ├── book/               # Book detail, shelf controls, reviews, affiliate links
+│   ├── feed/               # Explore feed, following feed, post cards
+│   ├── home/               # Feed page composition
+│   ├── landing/            # Landing page components (hero, book strip)
+│   ├── list/               # List detail page, add-to-list sheet
+│   ├── navigation/         # Top nav, bottom nav
+│   ├── notifications/      # Notifications list
+│   ├── profile/            # User profile, reading shelves, posts tab
+│   ├── search/             # Global search (users, books, lists)
+│   └── sidebar/            # Desktop sidebar
+├── components/             # Shared, reusable UI components
+│   ├── layout/             # StandardLayout, sidebars, footer
+│   ├── providers/          # ThemeProvider
+│   ├── ui/                 # shadcn/ui components
+│   ├── UserAvatar.tsx      # Avatar with Cloudinary image
+│   ├── StarRating.tsx      # 1–5 star display component
+│   ├── ReadingStatusBadge.tsx # Wishlist/Reading/Finished badge
+│   ├── avatar-image-picker.tsx # Crop + upload avatar
+│   └── cover-image-picker.tsx  # Crop + upload cover image
+├── lib/                    # Utilities and API client
+│   ├── api.ts              # apiInstance (fetch wrapper, cookie-based)
+│   ├── book-urls.ts        # getBookUrl(sourceId, title) → /book/:id/:slug
+│   ├── cookies.ts          # Cookie read utilities
+│   ├── deduplicate.ts      # Array deduplication helper
+│   ├── format-relative-time.ts # "2 hours ago" formatting
+│   ├── image-crop.ts       # Canvas-based crop output
+│   ├── toast.ts            # Toast notification helpers
+│   └── utils.ts            # clsx/tailwind-merge cn() utility
+├── hooks/
+│   └── use-media-query.ts  # Responsive breakpoint hook
+├── store/
+│   └── auth.store.ts       # Zustand store: { user, isAuthenticated, setUser }
+├── constants/
+│   └── genres.ts           # Curated genre list for UI
+├── config.ts               # NEXT_PUBLIC_API_URL + genre utilities
+└── provider.tsx            # TanStack QueryClientProvider
+```
+
+---
+
+## Routing
+
+| Route                   | What it renders                                                      |
+|-------------------------|----------------------------------------------------------------------|
+| `/`                     | Landing page with hero scroll sequence, GSAP animations              |
+| `/feed`                 | Explore feed (all posts) + following feed tab                        |
+| `/browse`               | Trending books and discovery                                         |
+| `/book/:sourceId/:slug` | Book detail: metadata, ratings, shelf controls, reviews, affiliate links |
+| `/list/:listId`         | Curated book list detail (Spotify-inspired header)                   |
+| `/posts`                | Individual post view                                                 |
+| `/search`               | Global search across users, books, and lists                         |
+| `/notifications`        | User notifications                                                   |
+| `/settings`             | Account settings                                                     |
+| `/profile`              | Own user profile                                                     |
+| `/:username`            | Public user profile with posts, reviews, and shelves                 |
+| `/login`                | Email/password sign-in                                               |
+| `/signup`               | Email registration with OTP verification                              |
+| `/forgot-password`      | Password reset request                                               |
+| `/reset-password`       | New password via reset token                                         |
+| `/google-callback`      | Google OAuth redirect handler                                        |
+
+---
+
+## Features
+
+### Feed
+
+Two tabs: **Explore** (all posts, global) and **Following** (posts from users you follow).
+
+Both use cursor-based infinite scroll. Cursors are ISO timestamp strings (and post ID for explore's tie-breaking). `react-intersection-observer` triggers `fetchNextPage` when the bottom sentinel enters the viewport. TanStack Query's `useInfiniteQuery` manages the page stack.
+
+### Browse / Trending
+
+Displays books ranked by post mention frequency over the last 30 days. Falls back to recent books if no trending data exists.
+
+### Book Detail
+
+URL structure: `/book/:sourceId/:slug` where `sourceId` is the Google Books volume ID.
+
+- **Shelf controls**: Add/move a book between Wishlist, Currently Reading, and Finished. Enforces a 20-book limit per shelf (server-enforced, surfaced to the client as an error toast).
+- **Reviews**: Star rating (1–5) + optional text review. One review per user per book. Users can edit or delete their own review.
+- **Affiliate links**: Loaded lazily on demand. Links to Amazon (country-aware domain), AbeBooks, and Bookshop.org. Requires ISBN-13 to be present on the book record.
+- **Stats**: Reader count, review count, list count, rating distribution histogram, average rating — all fetched from `/api/book/stats/:bookId`.
+- **Community lists**: Lists containing this book, fetched from `/api/lists?bookId=...`.
+
+### Lists
+
+Users create named, optionally public/private lists of books. The list detail page shows a rich header with cover art, stats, and a table of books with authors and rating. Books can be added or removed by the list owner.
+
+### Search
+
+Unified search at `GET /api/search?q=...&type=all|users|books|lists`. The "all" mode runs three parallel queries and returns combined results. The client shows tabbed results for each type.
+
+### Auth
+
+Recto uses two auth methods:
+1. **Email + OTP**: Signup sends an OTP to the user's email. Correct OTP creates the account and issues a session cookie.
+2. **Google OAuth**: Redirect-based flow via Passport.js strategy. On success, the server sets the session cookie and redirects to `/feed`.
+
+The client stores minimal user state (`{ id, userName, avatarImage, isAuthenticated }`) in a Zustand store persisted to `localStorage` under the key `auth-storage`. The landing page reads this to redirect already-authenticated users directly to `/feed`.
+
+On any 401 response, the `apiInstance` dispatches a custom `auth:unauthorized` event, which the auth provider listens to and clears session state.
+
+### Profile
+
+Displays the user's posts (with pagination), reading shelves (wishlist, currently reading, finished), and reviews. Public profiles are accessible at `/:username` without authentication.
+
+Users can edit their profile (username, full name, bio) and update their avatar and cover image. Image editing uses `react-easy-crop` to crop before uploading via multipart form to `/api/user/update-profileimage`.
+
+---
+
+## API Client
+
+All API calls go through `apiInstance` defined in `src/lib/api.ts`:
+
+```typescript
+export const apiInstance = {
+  get:    <T>(endpoint, params?) => request<T>("GET",    endpoint, { params }),
+  post:   <T>(endpoint, body?)   => request<T>("POST",   endpoint, { body }),
+  patch:  <T>(endpoint, body?)   => request<T>("PATCH",  endpoint, { body }),
+  delete: <T>(endpoint)          => request<T>("DELETE", endpoint),
+};
+```
+
+Key behaviour:
+- **`credentials: "include"`** on every request — sends the `session_id` httpOnly cookie automatically
+- FormData bodies skip the `Content-Type: application/json` header (browser sets multipart boundary)
+- 401 responses dispatch `auth:unauthorized` to trigger client-side logout
+- Base URL from `NEXT_PUBLIC_API_URL` env var (default: `http://localhost:8080/api`)
+
+---
+
+## State Management
+
+TanStack Query v5 handles all server state. A single `QueryClient` is created via `useState` in `provider.tsx` to prevent re-instantiation on re-renders.
+
+Zustand (`useAuthStore`) handles client-only auth state. It is persisted to `localStorage` so the landing page can detect existing sessions on first load without a network request.
+
+---
+
+## Design System
+
+The design system is called **Literary Dusk** and is defined entirely in `src/app/globals.css` using Tailwind v4 CSS variables.
+
+### Color Palette
+
+```css
+/* Light mode */
+--paper: #faf7f2;       /* Page background — warm cream */
+--card:  #f3ede3;       /* Card surface — warm ecru */
+--ink:   #1c1814;       /* Primary text — deep warm ink */
+--ink-muted: #78695a;   /* Secondary text — warm taupe */
+--border-subtle: #e0d8cc; /* Dividers */
+--gold: #c9a96e;        /* Accent — Literary Dusk gold */
+--gold-muted: #a0804e;  /* Dimmer gold */
+
+/* Dark mode ("Midnight Library") */
+--paper: #0e0d0a;       /* Near-black with warm brown undertone */
+--card:  #181510;       /* Warm dark brown */
+--ink:   #ede8df;       /* Warm cream text */
+--ink-muted: #9a8b7a;   /* Warm muted tan */
+--border-subtle: #2a2520;
+```
+
+There is also a full Tea Green / Beige / Cornsilk / Papaya Whip / Light Bronze palette defined as CSS custom properties for use in specific components.
+
+The body has a very subtle SVG paper-grain `background-image` (2% opacity light, 3.5% dark) for texture.
+
+### Typography
+
+| Font                | Variable                 | Usage                            |
+|---------------------|--------------------------|----------------------------------|
+| **DM Sans**         | `--font-dm-sans`         | Body text (sans-serif)           |
+| **Playfair Display**| `--font-playfair-display`| Headings (h1–h6 via `font-serif`) |
+| **Cormorant Garamond** | `--font-cormorant`    | Literary quotes, italic accents  |
+| **Geist Mono**      | `--font-geist-mono`      | Code/monospace                   |
+
+### Icon Libraries
+
+- **Phosphor Icons** (`@phosphor-icons/react`) — primary icons throughout the app
+- **Lucide React** — used internally by shadcn/ui components
+
+### shadcn/ui
+
+Configured with the `new-york` style variant, `neutral` base color, and CSS variables mode. Components in use include: Accordion, AlertDialog, Avatar, Dialog, DropdownMenu, Label, Progress, ScrollArea, Separator, Slot, Tabs.
+
+Custom components (e.g. `UserAvatar`, `StarRating`, `ReadingStatusBadge`) sit next to shadcn components in `src/components/`.
+
+### Animations
+
+- **GSAP 3 + ScrollTrigger**: Landing page section entrances — subtitle, heading, and feature cards animate in with `opacity`/`y` on scroll. Disabled on mobile/tablet to prevent jank.
+- **Lenis**: Smooth scroll on the landing page only.
+- **Embla Carousel**: Auto-scrolling book strip on the landing page.
+- **tw-animate-css**: Tailwind-compatible CSS animation classes for micro-interactions.
+
+---
+
+## Environment Variables
+
+| Variable              | Required | Description                                          |
+|-----------------------|----------|------------------------------------------------------|
+| `NEXT_PUBLIC_API_URL` | Yes      | Backend API base URL (`http://localhost:8080/api`)   |
+
+---
+
+## Running Locally
+
+```bash
+# From monorepo root
+pnpm dev
+
+# Or from this directory
+pnpm dev
+```
+
+The client runs at `http://localhost:3000`. Requires the server to be running at the `NEXT_PUBLIC_API_URL`.
+
+---
+
+## Deployment
+
+Deployed to **Vercel**. Next.js config (`next.config.ts`) sets:
+
+- `outputFileTracingRoot` to the monorepo root (required for workspace packages)
+- `turbopack.root` to the monorepo root
+- `experimental.optimizeCss: true`
+- Remote image patterns for: `covers.openlibrary.org`, `books.google.com`, `res.cloudinary.com`, `lh3.googleusercontent.com`
+
+No custom `vercel.json` is required — Vercel auto-detects Next.js.
