@@ -39,7 +39,10 @@ export default function LandingPage() {
       }
 
       const parsed = JSON.parse(persistedAuth) as {
-        state?: { isAuthenticated?: boolean; user?: { id?: string | null } | null };
+        state?: {
+          isAuthenticated?: boolean;
+          user?: { id?: string | null } | null;
+        };
       };
 
       const hasAuth = Boolean(
@@ -69,7 +72,10 @@ export default function LandingPage() {
 
       try {
         const parsed = JSON.parse(event.newValue) as {
-          state?: { isAuthenticated?: boolean; user?: { id?: string | null } | null };
+          state?: {
+            isAuthenticated?: boolean;
+            user?: { id?: string | null } | null;
+          };
         };
 
         const hasAuth = Boolean(
@@ -213,16 +219,39 @@ export default function LandingPage() {
             its rightful space.
           </h2>
 
-          <div className="paper-feature mb-6 sm:mb-10">
-            <Link
-              href="/feed"
-              className="inline-flex items-center rounded-full border border-gold/40 bg-gold/10 px-6 py-3 text-sm font-medium tracking-wide text-gold transition-colors hover:bg-gold hover:text-black"
-            >
-              Start Exploring
-            </Link>
+          <div className="paper-feature mb-8 sm:mb-12 w-full max-w-3xl">
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-gold/25 bg-linear-to-b from-gold/[0.08] via-white/[0.02] to-transparent px-6 py-7 sm:px-9 sm:py-10 shadow-[0_14px_44px_rgba(255,203,107,0.08)]">
+              <div className="pointer-events-none absolute left-8 right-8 top-0 h-px bg-linear-to-r from-transparent via-gold/45 to-transparent" />
+              <div className="pointer-events-none absolute left-8 right-8 bottom-0 h-px bg-linear-to-r from-transparent via-gold/30 to-transparent" />
+
+              <div className="relative z-10 flex flex-col items-center gap-5 sm:gap-6 text-center">
+                <span className="text-[10px] sm:text-xs uppercase tracking-[0.32em] text-gold/85">
+                  Continue to your reading circle
+                </span>
+
+                <h3 className="text-2xl sm:text-3xl md:text-[2.1rem] leading-tight font-serif text-white">
+                  Return to the books that move you.
+                </h3>
+
+                <p className="max-w-xl text-sm sm:text-base leading-relaxed text-white/65">
+                  Step into your feed for thoughtful recommendations, reader
+                  conversations, and the next pages in your journey.
+                </p>
+
+                <Link
+                  href="/feed"
+                  className="inline-flex items-center justify-center rounded-full border border-gold/60 bg-gold/16 px-7 py-3 text-sm font-semibold tracking-[0.06em] text-gold transition-all hover:bg-gold hover:text-black hover:shadow-[0_10px_24px_rgba(255,203,107,0.24)]"
+                >
+                  Enter Your Feed
+                </Link>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mt-10 md:mt-12 text-left border-t border-white/10 pt-10 md:pt-16">
+          <div
+            id="features"
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mt-10 md:mt-12 text-left border-t border-white/10 pt-10 md:pt-16"
+          >
             <div className="paper-feature space-y-4">
               <span className="text-gold font-serif italic text-2xl">01</span>
               <h3 className="text-xl font-semibold">Tactile Feel</h3>
@@ -246,6 +275,116 @@ export default function LandingPage() {
                 Connect your collections across formats into one beautiful,
                 searchable, and timeless archive.
               </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative z-10 px-5 sm:px-6 pb-16 sm:pb-20 bg-black text-white">
+          <div className="mx-auto max-w-6xl border-y border-white/10 py-14 sm:py-16">
+            <div className="text-center mb-10 sm:mb-12">
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-gold/80">
+                How Recto Works
+              </span>
+              <h3 className="mt-4 text-3xl sm:text-4xl md:text-5xl font-serif leading-tight">
+                A calmer rhythm for serious readers.
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+              <article className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+                <span className="text-gold font-serif italic text-2xl">01</span>
+                <h4 className="mt-3 text-xl font-semibold">
+                  Shape Your Shelves
+                </h4>
+                <p className="mt-3 text-sm leading-relaxed text-white/65">
+                  Organize titles across wishlist, currently reading, and
+                  finished while preserving a clear record of your reading life.
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+                <span className="text-gold font-serif italic text-2xl">02</span>
+                <h4 className="mt-3 text-xl font-semibold">Read In Company</h4>
+                <p className="mt-3 text-sm leading-relaxed text-white/65">
+                  Share reflections, publish ratings, and follow readers whose
+                  literary taste consistently resonates with yours.
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+                <span className="text-gold font-serif italic text-2xl">03</span>
+                <h4 className="mt-3 text-xl font-semibold">
+                  Discover With Intention
+                </h4>
+                <p className="mt-3 text-sm leading-relaxed text-white/65">
+                  Explore a feed guided by real reader momentum, searchable
+                  collections, and carefully curated lists.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative z-10 px-5 sm:px-6 pb-20 sm:pb-28 bg-black text-white">
+          <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-start">
+            <div>
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-gold/80">
+                Platform Highlights
+              </span>
+              <h3 className="mt-4 text-3xl sm:text-4xl md:text-5xl font-serif leading-tight max-w-xl">
+                The complete platform for a meaningful reading life.
+              </h3>
+              <p className="mt-6 max-w-xl text-sm sm:text-base leading-relaxed text-white/65">
+                Recto blends social discovery with practical reading tools for
+                readers who value depth, curation, and authentic book culture.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <span className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-xs uppercase tracking-[0.16em] text-gold/90">
+                  Social Feed
+                </span>
+                <span className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-xs uppercase tracking-[0.16em] text-gold/90">
+                  Smart Search
+                </span>
+                <span className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-xs uppercase tracking-[0.16em] text-gold/90">
+                  Reviews & Ratings
+                </span>
+                <span className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-xs uppercase tracking-[0.16em] text-gold/90">
+                  Curated Lists
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-linear-to-b from-white/[0.06] to-white/[0.02] p-6 sm:p-8">
+              <h4 className="text-xl sm:text-2xl font-serif">
+                Why Recto feels different
+              </h4>
+              <ul className="mt-6 space-y-5 text-sm sm:text-base text-white/70">
+                <li className="border-l-2 border-gold/45 pl-4">
+                  Unified discovery across readers, books, and lists through one
+                  clear search experience.
+                </li>
+                <li className="border-l-2 border-gold/45 pl-4">
+                  A feed centered on genuine reader activity, not shallow,
+                  algorithm-first recommendation loops.
+                </li>
+                <li className="border-l-2 border-gold/45 pl-4">
+                  Cookie-based authentication with server-side session
+                  validation for stronger account safety.
+                </li>
+                <li className="border-l-2 border-gold/45 pl-4">
+                  Flexible shelf tracking from wishlist to finished, so progress
+                  stays visible at every step.
+                </li>
+              </ul>
+              <div className="mt-8">
+                <Link
+                  href="/feed"
+                  className="inline-flex items-center rounded-full border border-gold/55 bg-gold/12 px-6 py-3 text-sm font-semibold tracking-[0.06em] text-gold transition-colors hover:bg-gold hover:text-black"
+                >
+                  Start Reading on Recto
+                </Link>
+              </div>
             </div>
           </div>
         </section>

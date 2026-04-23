@@ -45,7 +45,11 @@ export function Footer() {
   const socialLinks = [
     { icon: TwitterLogoIcon, href: "#", label: "Twitter" },
     { icon: LinkedinLogoIcon, href: "#", label: "LinkedIn" },
-    { icon: GithubLogoIcon, href: "#", label: "GitHub" },
+    {
+      icon: GithubLogoIcon,
+      href: "https://github.com/rehanhalai/recto",
+      label: "GitHub",
+    },
     { icon: EnvelopeIcon, href: "mailto:recto.help@gmail.com", label: "Email" },
   ];
 
