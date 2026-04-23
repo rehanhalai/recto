@@ -1,5 +1,5 @@
-import { Metadata } from "next";
-import type { Book } from "@/features/book/types";
+import { cache } from "react";
+import type { Metadata } from "next";
 import { BookDetail } from "@/features/book";
 import {
   fetchBookSSR,
@@ -12,29 +12,54 @@ type Props = {
     id: string;
     title: string;
   }>;
-  searchParams?: Promise<{
-    authors?: string;
-  }>;
+};
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://recto.social";
+
+const getBook = cache(async (id: string) => fetchBookSSR(id));
+
+const truncate = (value: string, max = 160): string => {
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 1).trimEnd()}...`;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, title } = await params;
-  const book = await fetchBookSSR(id);
+  const book = await getBook(id);
   const authorFromBook = getFirstAuthor(book);
   const plainTitle = (book?.title || title).replaceAll("-", " ");
-  const description = book?.description
-    ? stripTags(book.description).slice(0, 160)
-    : `Discover ${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""} on Recto.`;
+  const pagePath = `/book/${id}/${title}`;
+
+  const description = truncate(
+    book?.description
+      ? stripTags(book.description)
+      : `Discover ${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""} on Recto. Read reviews, ratings, and shelf activity from readers you trust.`,
+  );
 
   const finalTitle = `${plainTitle}${authorFromBook ? ` by ${authorFromBook}` : ""} | Recto`;
 
   return {
     title: finalTitle,
     description,
+    alternates: {
+      canonical: pagePath,
+    },
+    keywords: [
+      plainTitle,
+      authorFromBook || "book reviews",
+      "book details",
+      "reader ratings",
+      "Recto books",
+    ],
+    robots: {
+      index: true,
+      follow: true,
+    },
     openGraph: {
       title: finalTitle,
       description,
-      type: "book",
+      url: `${siteUrl}${pagePath}`,
+      type: "article",
       siteName: "Recto",
       images: book?.coverImage
         ? [
@@ -46,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             },
           ]
         : undefined,
-    } as any,
+    },
     twitter: {
       card: "summary_large_image",
       title: finalTitle,
@@ -56,20 +81,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function BookPage({ params, searchParams }: Props) {
+export default async function BookPage({ params }: Props) {
   const { id } = await params;
-  const InitialBook = await fetchBookSSR(id);
-  const awaitedSearchParams = await searchParams;
-  const authorsParam = awaitedSearchParams?.authors;
-  const authors = authorsParam
-    ? authorsParam.split(",").map((a) => a.trim())
-    : undefined;
+  const initialBook = await getBook(id);
 
-  if (!InitialBook) return <div>Book not found</div>;
+  if (!initialBook) return <div>Book not found</div>;
+
+  const bookSchema = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: initialBook.title,
+    author:
+      initialBook.authors?.map((author) => ({
+        "@type": "Person",
+        name: author,
+      })) || [],
+    image: initialBook.coverImage || undefined,
+    description: initialBook.description
+      ? truncate(stripTags(initialBook.description), 220)
+      : undefined,
+    url: `${siteUrl}/book/${initialBook.sourceId}/${encodeURIComponent(
+      initialBook.title.toLowerCase().replaceAll(" ", "-"),
+    )}`,
+  };
 
   return (
-    <div className="min-h-screen bg-paper dark:bg-background">
-      <BookDetail Book={InitialBook} />
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(bookSchema) }}
+      />
+      <div className="min-h-screen bg-paper dark:bg-background">
+        <BookDetail Book={initialBook} />
+      </div>
+    </>
   );
 }
