@@ -1,0 +1,31 @@
+{
+  "name": "@recto/eslint-config",
+  "version": "1.0.0",
+  "description": "Shared Eslint configuration",
+  "license": "ISC",
+  "author": "Rehan Halai",
+  "type": "module",
+  "exports": {
+    "./base": "./src/base-eslint-config.js",
+    "./backend": "./src/backend-eslint-config.js",
+    "./react": "./src/react-eslint-config.js",
+    "./frontend": "./src/frontend-eslint-config.js",
+    "./ui": "./src/ui-eslint-config.js",
+    "./next": "./src/next-eslint-config.js"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@eslint/js": "^9.26.0",
+    "@tanstack/eslint-plugin-query": "^5.74.7",
+    "eslint-config-next": "^16.1.1",
+    "eslint-config-prettier": "^10.1.3",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "eslint-plugin-turbo": "^2.5.3",
+    "globals": "^16.1.0",
+    "typescript-eslint": "^8.32.0"
+  }
+}

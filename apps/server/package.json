@@ -50,6 +50,7 @@
     "unique-names-generator": "^4.7.1"
   },
   "devDependencies": {
+    "@recto/eslint-config": "workspace:*",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
