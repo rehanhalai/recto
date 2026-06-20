@@ -3,12 +3,16 @@ import {
   Geist_Mono,
   Playfair_Display,
   Cormorant_Garamond,
-  DM_Sans,
-} from "next/font/google";
+  DM_Sans, Inter, Raleway } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Providers from "@/provider";
 import { PwaRegister } from "@/components/pwa-register";
+import { cn } from "@/lib/utils";
+
+const ralewayHeading = Raleway({subsets:['latin'],variable:'--font-heading'});
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -99,7 +103,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable, ralewayHeading.variable)}>
       <body
         className={`${dmSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${cormorantGaramond.variable} antialiased`}
       >

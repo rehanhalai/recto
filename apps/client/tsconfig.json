@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@recto/ui": ["../../packages/ui/src/components"]
     }
   },
   "include": [
