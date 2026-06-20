@@ -10,7 +10,12 @@
   "files": [
     "src"
   ],
+  "scripts": {
+    "lint": "eslint ."
+  },
   "devDependencies": {
-    "drizzle-orm": "*"
+    "drizzle-orm": "*",
+    "@recto/eslint-config": "workspace:*",
+    "eslint": "^9.18.0"
   }
 }
