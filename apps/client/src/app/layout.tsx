@@ -1,9 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import {
-  Geist_Mono,
-  Playfair_Display,
-  Cormorant_Garamond,
-  DM_Sans, Inter, Raleway } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Providers from "@/provider";

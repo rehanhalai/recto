@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Footer } from "@/components/layout/footer";
@@ -8,98 +7,9 @@ import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 import { HeroSection } from "../features/landing/components/heroSection";
 import BookStrip from "../features/landing/components/book-strip";
 import useLenis from "@/utils/lenis";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
-
-// Global ScrollTrigger optimization
-if (typeof window !== "undefined") {
-  ScrollTrigger.config({
-    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
-    syncInterval: 100,
-    limitCallbacks: true,
-  });
-}
 
 export default function LandingPageClient() {
-  const [isDesktop, setIsDesktop] = useState(false);
   useLenis();
-
-  useEffect(() => {
-    const media = window.matchMedia("(min-width: 768px)");
-    const onChange = () => setIsDesktop(media.matches);
-    onChange();
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
-
-  useEffect(() => {
-    const section = document.querySelector<HTMLElement>(".paper-section");
-    if (!section) return;
-
-    const heading = section.querySelector<HTMLElement>("h2");
-    const subtitle = section.querySelector<HTMLElement>(".paper-subtitle");
-    const featureCards = Array.from(
-      section.querySelectorAll<HTMLElement>(".paper-feature"),
-    );
-
-    if (!heading || !subtitle || featureCards.length === 0) return;
-
-    const ctx = gsap.context(() => {
-      if (!isDesktop) {
-        // Mobile/tablet fallback: keep content visible and skip entrance effects.
-        gsap.set([subtitle, heading, ...featureCards], {
-          opacity: 1,
-          y: 0,
-          clearProps: "transform",
-        });
-        return;
-      }
-
-      gsap.set([subtitle, heading, ...featureCards], { opacity: 0, y: 26 });
-
-      gsap
-        .timeline({
-          scrollTrigger: {
-            trigger: section,
-            start: "top 78%",
-            toggleActions: "play none none reverse",
-          },
-        })
-        .to(subtitle, {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          ease: "power2.out",
-        })
-        .to(
-          heading,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            ease: "power3.out",
-          },
-          "-=0.1",
-        )
-        .to(
-          featureCards,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: "power2.out",
-          },
-          "-=0.15",
-        );
-    }, section);
-
-    ScrollTrigger.refresh();
-
-    return () => ctx.revert();
-  }, [isDesktop]);
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-gold/30 selection:text-white">
@@ -111,22 +21,19 @@ export default function LandingPageClient() {
             alt="Recto"
             width={100}
             height={32}
-            className="h-7 w-auto opacity-90 hover:opacity-100 transition-opacity duration-200"
+            className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity duration-200"
           />
         </Link>
       </div>
-
       <main className="relative bg-black">
-        <HeroSection isDesktop={isDesktop} />
+        <HeroSection />
 
         {/* Dynamic Book Strip Transition (Mobile Only) */}
-        {!isDesktop && (
-          <div className="py-20 bg-black overflow-hidden relative z-20 md:hidden">
-            <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
-            <BookStrip />
-            <div className="absolute bottom-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
-          </div>
-        )}
+        <div className="py-20 bg-black overflow-hidden relative z-20 md:hidden">
+          <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+          <BookStrip />
+          <div className="absolute bottom-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+        </div>
 
         {/* Thematic Content to Carry On the Scroll */}
         <section className="paper-section min-h-screen flex flex-col items-center justify-center px-5 sm:px-6 py-20 md:py-32 text-center relative z-10 bg-black text-white">
