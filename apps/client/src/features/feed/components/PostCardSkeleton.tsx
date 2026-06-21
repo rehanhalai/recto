@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@recto/ui";
 
 export function PostCardSkeleton() {
   return (

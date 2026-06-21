@@ -1,5 +1,5 @@
 import { StarIcon } from "@phosphor-icons/react";
-import { Card, CardContent } from "@/components/ui";
+import { Card, CardContent } from "@recto/ui";
 
 interface BookCardProps {
   book: {

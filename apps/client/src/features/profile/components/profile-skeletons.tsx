@@ -1,5 +1,5 @@
 import { StandardLayout } from "@/components/layout";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@recto/ui";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";
 
 export function ProfileHeaderSkeleton() {

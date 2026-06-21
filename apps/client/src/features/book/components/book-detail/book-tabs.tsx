@@ -1,9 +1,9 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@recto/ui";
 import type { Book } from "../../types";
-import { Export, Share } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { Export } from "@phosphor-icons/react";
+import { Button } from "@recto/ui";
 import { BookOverview } from "./book-overview";
 import { BookReviews } from "../book-reviews/book-reviews";
 import { toast } from "@/lib/toast";

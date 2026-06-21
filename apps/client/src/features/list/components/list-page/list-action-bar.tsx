@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@recto/ui";
 import { Heart, MoreHorizontal, Pencil, Share2, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { EditListDialog } from "../edit-list-dialog";

@@ -1,1 +1,0 @@
-export * from "@recto/ui";

@@ -16,8 +16,8 @@ import {
   MoonIcon,
   PencilSimple,
 } from "@phosphor-icons/react";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@recto/ui";
+import { Skeleton } from "@recto/ui";
 import { useAuthStore } from "@/features/auth";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useLogout } from "@/features/auth/hooks/use-logout";
@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { UserAvatar } from "@/components/UserAvatar";
-import { Button } from "@/components/ui";
+import { Button } from "@recto/ui";
 import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
 import { getBookUrl } from "@/lib/book-urls";
 import rectoLogoDark from "@recto/assets/logos/recto-logo-dark.webp";

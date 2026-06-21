@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 
 export const CTASection = () => (
   <section className="mb-20">

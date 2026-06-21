@@ -6,7 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@recto/ui";
 import {
   Sheet,
   SheetContent,
@@ -14,8 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+} from "@recto/ui";
+import { Button } from "@recto/ui";
 import { ShoppingCart, ArrowSquareOut } from "@phosphor-icons/react";
 
 import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";

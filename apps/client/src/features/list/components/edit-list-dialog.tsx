@@ -12,7 +12,7 @@ import {
   DialogTitle,
   Input,
   Label,
-} from "@/components/ui";
+} from "@recto/ui";
 import { toast } from "@/lib/toast";
 import { updateList } from "../api/update-list";
 

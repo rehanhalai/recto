@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { StandardLayout } from "@/components/layout";
-import { Button } from "@/components/ui";
+import { Button } from "@recto/ui";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";

@@ -31,7 +31,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
   Label,
-} from "@/components/ui";
+} from "@recto/ui";
 import { useGenerateUsername } from "../hooks/use-username";
 import { useSignup } from "../hooks/use-signup";
 import { useUser } from "../hooks/use-user";

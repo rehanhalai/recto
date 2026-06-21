@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Footer } from "@/components/layout/footer";
@@ -24,7 +23,6 @@ if (typeof window !== "undefined") {
 }
 
 export default function LandingPageClient() {
-  const router = useRouter();
   const [isDesktop, setIsDesktop] = useState(false);
   useLenis();
 

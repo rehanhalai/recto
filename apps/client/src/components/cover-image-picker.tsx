@@ -17,7 +17,7 @@ import {
   DialogTitle,
   Input,
   Label,
-} from "@/components/ui";
+} from "@recto/ui";
 
 type CoverImagePickerProps = {
   label?: string;

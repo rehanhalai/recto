@@ -1,7 +1,7 @@
 "use client";
 
 import { DotsThree, UserPlus } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 
 type ViewerActionsProps = {
   isFollowing: boolean;

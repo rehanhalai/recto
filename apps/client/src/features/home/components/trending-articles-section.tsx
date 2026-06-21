@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CaretRightIcon, TrendUpIcon } from "@phosphor-icons/react";
-import { Card, CardContent } from "@/components/ui";
+import { Card, CardContent } from "@recto/ui";
 import { BlogResponse } from "@/features/home/service/home.service";
 import { ListCardSkeleton } from "./skeletons";
 

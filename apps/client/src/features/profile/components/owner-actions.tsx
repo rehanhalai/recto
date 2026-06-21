@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Gear, SignOut } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 type OwnerActionsProps = {

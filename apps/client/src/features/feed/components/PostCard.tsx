@@ -17,7 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@recto/ui";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import { apiInstance } from "@/lib/api";

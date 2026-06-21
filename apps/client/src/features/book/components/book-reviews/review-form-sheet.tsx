@@ -1,12 +1,12 @@
 import { StarIcon } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@recto/ui";
 
 interface ReviewFormSheetProps {
   open: boolean;

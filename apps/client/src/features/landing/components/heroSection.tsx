@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { BookMarquee3D } from "./book-marquee-3d";
-import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
+import { AnimatedGridPattern } from "@recto/ui";
 import { cn } from "@/lib/utils";
 
 export function HeroSection({ isDesktop }: { isDesktop: boolean }) {
@@ -30,7 +30,7 @@ export function HeroSection({ isDesktop }: { isDesktop: boolean }) {
         duration={3}
         repeatDelay={1}
         className={cn(
-          "[mask-image:radial-gradient(800px_circle_at_center,white,transparent)]",
+          "mask-[radial-gradient(800px_circle_at_center,white,transparent)]",
           "inset-x-0 inset-y-[-30%] h-[160%] skew-y-12 fill-white/5 stroke-white/5"
         )}
       />

@@ -10,8 +10,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui";
+} from "@recto/ui";
+import { Button } from "@recto/ui";
 import { useRemoveFromList } from "@/features/book/hooks/use-user-lists";
 
 interface ListTableProps {

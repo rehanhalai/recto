@@ -1,6 +1,6 @@
 import { StandardLayout } from "@/components/layout";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@recto/ui";
 
 export default function BrowseLoading() {
   return (

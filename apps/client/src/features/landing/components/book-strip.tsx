@@ -2,7 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Marquee } from "@/components/ui/marquee";
+import { Marquee } from "@recto/ui";
 
 const BOOK_COVERS = {
   harry_potter: "/landingPage/books/harry_potter_sorcerers_stone.webp",

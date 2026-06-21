@@ -14,7 +14,7 @@ import {
   EyeSlashIcon,
 } from "@phosphor-icons/react";
 
-import { Button, Input, Label } from "@/components/ui";
+import { Button, Input, Label } from "@recto/ui";
 import { useLogin } from "../hooks/use-login";
 import { SocialAuth } from "./SocialAuth";
 import { loginSchema, type LoginInput } from "../validation/schemas";
