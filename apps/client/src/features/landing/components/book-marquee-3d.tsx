@@ -49,7 +49,13 @@ const BookCard = ({ url }: { url: string }) => {
 
 export function BookMarquee3D() {
   return (
-    <div className="relative flex h-full min-h-[600px] w-full flex-row items-center justify-center gap-4 overflow-hidden [perspective:400px]">
+    <div 
+      className="relative flex h-full min-h-[600px] w-full flex-row items-center justify-center gap-4 overflow-hidden [perspective:400px]"
+      style={{
+        maskImage: "radial-gradient(ellipse at center, black 40%, transparent 100%)",
+        WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 100%)",
+      }}
+    >
       <div
         className="flex flex-row items-center gap-4"
         style={{
@@ -78,11 +84,6 @@ export function BookMarquee3D() {
           ))}
         </Marquee>
       </div>
-
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-black via-black/50 to-transparent"></div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-black to-transparent"></div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-black to-transparent"></div>
     </div>
   );
 }

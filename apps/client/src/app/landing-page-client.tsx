@@ -25,74 +25,8 @@ if (typeof window !== "undefined") {
 
 export default function LandingPageClient() {
   const router = useRouter();
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [isDesktop, setIsDesktop] = useState(false);
   useLenis();
-
-  useEffect(() => {
-    try {
-      const persistedAuth = localStorage.getItem("auth-storage");
-
-      if (!persistedAuth) {
-        setCheckingAuth(false);
-        return;
-      }
-
-      const parsed = JSON.parse(persistedAuth) as {
-        state?: {
-          isAuthenticated?: boolean;
-          user?: { id?: string | null } | null;
-        };
-      };
-
-      const hasAuth = Boolean(
-        parsed?.state?.isAuthenticated && parsed?.state?.user?.id,
-      );
-
-      if (hasAuth) {
-        router.replace("/feed");
-        return;
-      }
-
-      setCheckingAuth(false);
-    } catch {
-      setCheckingAuth(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== "auth-storage") {
-        return;
-      }
-
-      if (!event.newValue) {
-        return;
-      }
-
-      try {
-        const parsed = JSON.parse(event.newValue) as {
-          state?: {
-            isAuthenticated?: boolean;
-            user?: { id?: string | null } | null;
-          };
-        };
-
-        const hasAuth = Boolean(
-          parsed?.state?.isAuthenticated && parsed?.state?.user?.id,
-        );
-
-        if (hasAuth) {
-          router.replace("/feed");
-        }
-      } catch {
-        // Ignore malformed localStorage payloads.
-      }
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [router]);
 
   useEffect(() => {
     const media = window.matchMedia("(min-width: 768px)");
@@ -103,8 +37,6 @@ export default function LandingPageClient() {
   }, []);
 
   useEffect(() => {
-    if (checkingAuth) return;
-
     const section = document.querySelector<HTMLElement>(".paper-section");
     if (!section) return;
 
@@ -169,15 +101,7 @@ export default function LandingPageClient() {
     ScrollTrigger.refresh();
 
     return () => ctx.revert();
-  }, [checkingAuth, isDesktop]);
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-5 h-5 rounded-full border-2 border-white/15 border-t-white animate-spin" />
-      </div>
-    );
-  }
+  }, [isDesktop]);
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-gold/30 selection:text-white">
@@ -222,7 +146,7 @@ export default function LandingPageClient() {
           </h2>
 
           <div className="paper-feature mb-8 sm:mb-12 w-full max-w-3xl">
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-gold/25 bg-linear-to-b from-gold/[0.08] via-white/[0.02] to-transparent px-6 py-7 sm:px-9 sm:py-10 shadow-[0_14px_44px_rgba(255,203,107,0.08)]">
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-gold/25 bg-linear-to-b from-gold/[0.08] via-white/2 to-transparent px-6 py-7 sm:px-9 sm:py-10 shadow-[0_14px_44px_rgba(255,203,107,0.08)]">
               <div className="pointer-events-none absolute left-8 right-8 top-0 h-px bg-linear-to-r from-transparent via-gold/45 to-transparent" />
               <div className="pointer-events-none absolute left-8 right-8 bottom-0 h-px bg-linear-to-r from-transparent via-gold/30 to-transparent" />
 
