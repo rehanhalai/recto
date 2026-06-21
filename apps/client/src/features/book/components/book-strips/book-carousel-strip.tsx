@@ -10,7 +10,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
+} from "@recto/ui";
 
 interface BookCarouselStripProps {
   title: string;

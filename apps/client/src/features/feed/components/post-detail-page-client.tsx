@@ -8,7 +8,7 @@ import type { ApiEnvelope, PostWithRelations } from "@recto/types";
 import { ArrowLeftIcon, HeartIcon } from "@phosphor-icons/react";
 
 import { StandardLayout } from "@/components/layout";
-import { Button } from "@/components/ui";
+import { Button } from "@recto/ui";
 import { PostCard } from "@/features/feed/components/PostCard";
 import { useAuthStore } from "@/features/auth";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";

@@ -23,13 +23,13 @@ import { toast } from "@/lib/toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { searchBooks } from "@/features/book/service/search-books";
 import type { Book } from "@/features/book/types";
-import { Button, Input, Label } from "@/components/ui";
+import { Button, Input, Label } from "@recto/ui";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@recto/ui";
 
 type BookSearchResult = {
   id?: string;

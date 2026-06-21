@@ -22,7 +22,7 @@ import {
   DialogTitle,
   Input,
   Label,
-} from "@/components/ui";
+} from "@recto/ui";
 import { searchBooks } from "@/features/book/service/search-books";
 import type { Book } from "@/features/book/types";
 

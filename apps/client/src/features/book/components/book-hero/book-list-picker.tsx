@@ -6,16 +6,16 @@ import {
   DialogContent,
   DialogHeader,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@recto/ui";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from "@recto/ui";
+import { Button } from "@recto/ui";
+import { Input } from "@recto/ui";
 import {
   ListPlus,
   Plus,
@@ -32,7 +32,7 @@ import {
   useCreateList,
 } from "../../hooks/use-user-lists";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@recto/ui";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface BookListPickerProps {

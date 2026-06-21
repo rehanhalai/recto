@@ -86,3 +86,5 @@ export {
 export { ScrollArea, ScrollBar } from "./scroll-area";
 export { Skeleton } from "./skeleton";
 export { Textarea } from "./textarea";
+export { Marquee } from "./marquee";
+export { AnimatedGridPattern } from "./animated-grid-pattern";

@@ -12,7 +12,7 @@ import {
   SpinnerIcon,
 } from "@phosphor-icons/react";
 
-import { Button, Input, Label } from "@/components/ui";
+import { Button, Input, Label } from "@recto/ui";
 import { setNewPassword } from "@/features/auth/services/auth-api";
 import {
   newPasswordSchema,

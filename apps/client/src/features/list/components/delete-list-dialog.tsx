@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@recto/ui";
 import { toast } from "@/lib/toast";
 import { deleteList } from "../api/delete-list";
 

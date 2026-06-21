@@ -6,7 +6,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui";
+} from "@recto/ui";
 import { BookResponse } from "@/features/home/service/home.service";
 import { BookCard } from "./book-card";
 import { BookCardSkeleton } from "./skeletons";

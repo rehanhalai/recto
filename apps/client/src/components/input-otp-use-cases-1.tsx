@@ -7,20 +7,20 @@ import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
+} from "@recto/ui";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from "@/components/ui/input-otp";
+} from "@recto/ui";
 
 export const title = "Email Verification Flow";
 

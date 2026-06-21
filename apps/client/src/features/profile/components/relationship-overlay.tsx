@@ -8,14 +8,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@recto/ui";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@recto/ui";
+import { Skeleton } from "@recto/ui";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useProfileRelations } from "../hooks/use-profile-relations";
 

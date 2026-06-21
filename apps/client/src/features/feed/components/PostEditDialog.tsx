@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   Label,
-} from "@/components/ui";
+} from "@recto/ui";
 import type { PostWithRelations } from "@recto/types";
 
 type PostEditDialogProps = {

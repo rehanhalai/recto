@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import sanitizeHtml from "sanitize-html";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import type { Book } from "../../types";
 import { useBookAffiliateLinks } from "../../hooks/use-book-affiliate-links";
 import { getLanguageName } from "../../utils/book-utils";

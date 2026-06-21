@@ -8,8 +8,8 @@ import { useState } from "react";
 
 import { UserAvatar } from "@/components/UserAvatar";
 import { StandardLayout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@recto/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@recto/ui";
 import { PostCard } from "@/features/feed";
 import { useLogout } from "@/features/auth/hooks/use-logout";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";

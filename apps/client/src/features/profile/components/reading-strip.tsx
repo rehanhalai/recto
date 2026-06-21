@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@recto/ui";
 import type { TrackerEntry } from "../types";
 
 type ReadingStripProps = {

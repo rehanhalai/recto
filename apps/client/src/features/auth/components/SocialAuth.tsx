@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Separator } from "@/components/ui";
+import { Button, Separator } from "@recto/ui";
 import { GoogleLogoIcon } from "@phosphor-icons/react";
 import { getGoogleAuthUrl } from "../services/auth-api";
 

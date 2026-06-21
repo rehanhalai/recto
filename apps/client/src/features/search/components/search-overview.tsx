@@ -4,7 +4,7 @@ import { useSearch } from "../api/search";
 import { BookCard } from "@/features/book/components/book-strips/book-card";
 import { deduplicateByKey } from "@/lib/deduplicate";
 import { UserAvatar } from "@/components/UserAvatar";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import {
   UserIcon,
   BookBookmark,

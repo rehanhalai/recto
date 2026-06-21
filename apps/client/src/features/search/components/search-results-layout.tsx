@@ -1,14 +1,14 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@recto/ui";
 import { SearchOverview } from "./search-overview";
 import { SearchBooksTab } from "./search-books-tab";
 import { SearchUsersTab } from "./search-users-tab";
 import { SearchListsTab } from "./search-lists-tab";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { Suspense, useState, useEffect } from "react";
-import { Input, Button } from "@/components/ui";
+import { Input, Button } from "@recto/ui";
 import { TrendingBooksStrip } from "@/features/book/components/book-strips/TrendingBooksStrip";
 
 function SearchResultsContent() {

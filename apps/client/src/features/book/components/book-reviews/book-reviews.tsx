@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import { useAuthStore } from "@/features/auth";
 import {
   BookReview,

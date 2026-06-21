@@ -5,7 +5,7 @@ import {
   TrashSimpleIcon,
 } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/UserAvatar";
-import { Button } from "@/components/ui/button";
+import { Button } from "@recto/ui";
 import { BookReview } from "../../hooks/use-book-reviews";
 
 interface ReviewCardProps {

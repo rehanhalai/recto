@@ -26,8 +26,8 @@ import {
   FormLabel,
   FormMessage,
   Input,
-} from "@/components/ui";
-import { Textarea } from "@/components/ui/textarea";
+} from "@recto/ui";
+import { Textarea } from "@recto/ui";
 import { SidebarLeft, SidebarRight } from "@/features/sidebar";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useGenerateUsername } from "@/features/auth/hooks/use-username";

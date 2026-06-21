@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeIcon, SpinnerIcon } from "@phosphor-icons/react";
 
-import { Button, Input, Label } from "@/components/ui";
+import { Button, Input, Label } from "@recto/ui";
 import { forgotPasswordRequest } from "@/features/auth/services/auth-api";
 import {
   passwordResetSchema,

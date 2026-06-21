@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@recto/ui";
 import { UserAvatar } from "@/components/UserAvatar";
 
 interface ListHeaderProps {
