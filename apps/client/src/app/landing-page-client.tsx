@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Footer } from "@/components/layout/footer";
 import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
-import { HeroScrollSequence } from "../features/landing/components/hero-scroll-sequence";
+import { HeroSection } from "../features/landing/components/heroSection";
 import BookStrip from "../features/landing/components/book-strip";
 import useLenis from "@/utils/lenis";
 import gsap from "gsap";
@@ -195,14 +195,16 @@ export default function LandingPageClient() {
       </div>
 
       <main className="relative bg-black">
-        <HeroScrollSequence />
+        <HeroSection isDesktop={isDesktop} />
 
-        {/* Dynamic Book Strip Transition */}
-        <div className="py-20 bg-black overflow-hidden relative z-20">
-          <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
-          <BookStrip />
-          <div className="absolute bottom-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
-        </div>
+        {/* Dynamic Book Strip Transition (Mobile Only) */}
+        {!isDesktop && (
+          <div className="py-20 bg-black overflow-hidden relative z-20 md:hidden">
+            <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+            <BookStrip />
+            <div className="absolute bottom-0 left-0 w-full h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+          </div>
+        )}
 
         {/* Thematic Content to Carry On the Scroll */}
         <section className="paper-section min-h-screen flex flex-col items-center justify-center px-5 sm:px-6 py-20 md:py-32 text-center relative z-10 bg-black text-white">
