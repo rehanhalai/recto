@@ -4,11 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Footer } from "@/components/layout/footer";
 import rectoLogoLight from "@recto/assets/logos/recto-logo-light.webp";
-import { HeroSection } from "../features/landing/components/heroSection";
-import BookStrip from "../features/landing/components/book-strip";
+import { HeroSection } from "../components/heroSection";
+import BookStrip from "../components/book-strip";
 import useLenis from "@/utils/lenis";
 
-export default function LandingPageClient() {
+export default function LandingPage() {
   useLenis();
 
   return (
@@ -122,7 +122,7 @@ export default function LandingPageClient() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-              <article className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+              <article className="rounded-2xl border border-white/10 bg-white/2 p-6">
                 <span className="text-gold font-serif italic text-2xl">01</span>
                 <h4 className="mt-3 text-xl font-semibold">
                   Shape Your Shelves
@@ -133,7 +133,7 @@ export default function LandingPageClient() {
                 </p>
               </article>
 
-              <article className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+              <article className="rounded-2xl border border-white/10 bg-white/2 p-6">
                 <span className="text-gold font-serif italic text-2xl">02</span>
                 <h4 className="mt-3 text-xl font-semibold">Read In Company</h4>
                 <p className="mt-3 text-sm leading-relaxed text-white/65">
@@ -142,7 +142,7 @@ export default function LandingPageClient() {
                 </p>
               </article>
 
-              <article className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+              <article className="rounded-2xl border border-white/10 bg-white/2 p-6">
                 <span className="text-gold font-serif italic text-2xl">03</span>
                 <h4 className="mt-3 text-xl font-semibold">
                   Discover With Intention
@@ -186,7 +186,7 @@ export default function LandingPageClient() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-linear-to-b from-white/[0.06] to-white/[0.02] p-6 sm:p-8">
+            <div className="rounded-3xl border border-white/10 bg-linear-to-b from-white/6 to-white/2 p-6 sm:p-8">
               <h4 className="text-xl sm:text-2xl font-serif">
                 Why Recto feels different
               </h4>
