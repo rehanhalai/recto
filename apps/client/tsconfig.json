@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@recto/ui": ["../../packages/ui/src/components"]
+      "@recto/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": [
