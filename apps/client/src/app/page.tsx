@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import LandingPageClient from "./landing-page-client";
+import LandingPage from "@/features/landing-page/page/landing-page";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://recto.social";
 const landingDescription =
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LandingPage() {
+export default function Page() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -56,7 +56,7 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
-      <LandingPageClient />
+      <LandingPage />
     </>
   );
 }

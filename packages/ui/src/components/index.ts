@@ -22,8 +22,17 @@ export {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuGroup,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
 } from "./dropdown-menu";
 export {
   Sheet,
@@ -88,3 +97,58 @@ export { Skeleton } from "./skeleton";
 export { Textarea } from "./textarea";
 export { Marquee } from "./marquee";
 export { AnimatedGridPattern } from "./animated-grid-pattern";
+export {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+  AvatarBadge,
+} from "./avatar";
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from "./breadcrumb";
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./collapsible";
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./tooltip";
+export {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInput,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSkeleton,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
+} from "./sidebar";
+export { AppSidebar } from "./app-sidebar";
+export { NavMain } from "./nav-main";
+export { NavProjects } from "./nav-projects";
+export { NavSecondary } from "./nav-secondary";
+export { NavUser } from "./nav-user";
