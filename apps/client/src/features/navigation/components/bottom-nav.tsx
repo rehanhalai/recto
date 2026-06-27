@@ -70,7 +70,7 @@ const toBookSearchResult = (book: Book): BookSearchResult => {
   };
 };
 
-export function BottomNav() {
+export function BottomNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -200,6 +200,7 @@ export function BottomNav() {
           "fixed bottom-0 left-0 right-0 block lg:hidden z-40",
           "bg-card/95 dark:bg-card/95 backdrop-blur-md border-t border-border-subtle",
           "h-16",
+          className
         )}
         style={{
           paddingBottom: "env(safe-area-inset-bottom)",
@@ -234,7 +235,7 @@ export function BottomNav() {
               "bg-accent hover:bg-accent/90 transition-all duration-150",
               "active:scale-95",
               "ring ring-paper dark:ring-card",
-              "flex-shrink-0",
+              "shrink-0",
               "shadow-lg",
             )}
             aria-label="Compose post"

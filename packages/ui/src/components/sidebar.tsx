@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -18,6 +20,7 @@ import { Skeleton } from "@recto/ui/components/skeleton"
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@recto/ui/components/tooltip"
 import { PanelLeftIcon } from "lucide-react"
@@ -140,7 +143,9 @@ function SidebarProvider({
         )}
         {...props}
       >
-        {children}
+        <TooltipProvider delayDuration={0}>
+          {children}
+        </TooltipProvider>
       </div>
     </SidebarContext.Provider>
   )
