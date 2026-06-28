@@ -20,18 +20,17 @@ export function useFeedLike(queryKey: QueryKey) {
       return apiInstance.post<void>(`/posts/${postId}/like`);
     },
     onMutate: async ({ postId, isLikedByMe }) => {
-      await queryClient.cancelQueries({ queryKey });
+      await queryClient.cancelQueries({ queryKey: ["feed", "posts"] });
 
-      const previousFeed = queryClient.getQueryData<
-        InfiniteData<PaginatedResponse<PostWithRelations>>
-      >(queryKey);
-
-      if (previousFeed) {
-        queryClient.setQueryData<InfiniteData<PaginatedResponse<PostWithRelations>>>(
-          queryKey,
-          {
-            ...previousFeed,
-            pages: previousFeed.pages.map((page) => ({
+      // We don't save previous state for all queries for rollback because it's complex,
+      // but we can invalidate on error. For a simple implementation, we just optimistically update all.
+      queryClient.setQueriesData<InfiniteData<PaginatedResponse<PostWithRelations>>>(
+        { queryKey: ["feed", "posts"] },
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
               ...page,
               data: page.data.map((post) => {
                 if (post.id !== postId) {
@@ -47,19 +46,19 @@ export function useFeedLike(queryKey: QueryKey) {
                 };
               }),
             })),
-          },
-        );
-      }
+          };
+        },
+      );
 
-      return { previousFeed };
+      return { postId, isLikedByMe };
     },
-    onError: (_err, _variables, context) => {
-      if (context?.previousFeed) {
-        queryClient.setQueryData(queryKey, context.previousFeed);
-      }
+    onError: () => {
+      // If mutation fails, we simply invalidate all feeds to refetch correct state
+      queryClient.invalidateQueries({ queryKey: ["feed", "posts"] });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
+      // Invalidate to ensure background sync
+      queryClient.invalidateQueries({ queryKey: ["feed", "posts"] });
     },
   });
 }

@@ -7,11 +7,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Heart,
-  ChatCircle,
-  DotsThree,
-  ShareFat,
-  BookmarkSimple,
-} from "@phosphor-icons/react";
+  MessageCircle,
+  MoreHorizontal,
+  Share2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +19,6 @@ import {
 } from "@recto/ui";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatRelativeTime } from "@/lib/format-relative-time";
-import { apiInstance } from "@/lib/api";
 import { useAuthStore, selectUser } from "@/features/auth";
 import { useDeletePost } from "../hooks/use-delete-post";
 import { PostEditDialog } from "./PostEditDialog";
@@ -48,8 +46,6 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
   } = post;
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [liked, setLiked] = useState(Boolean(isLikedByMe));
-  const [localLikeCount, setLocalLikeCount] = useState(likesCount ?? 0);
   const [imageAspectRatio, setImageAspectRatio] = useState<string>();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -57,40 +53,19 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
   const deletePostMutation = useDeletePost();
 
   const isOwner = currentUser?.id === author?.id;
-  // const [saved, setSaved] = useState(false);
 
   const timeAgo = formatRelativeTime(createdAt);
   const authorUserName = author?.userName ?? "unknown";
   const authorDisplayName =
     author?.fullName ?? author?.userName ?? "Deleted user";
   const authorAvatarImage = author?.avatarImage ?? null;
-  const hasExternalLikeHandler = typeof onLike === "function";
 
-  const resolvedLiked = hasExternalLikeHandler ? Boolean(isLikedByMe) : liked;
-  const resolvedLikeCount = hasExternalLikeHandler
-    ? (likesCount ?? 0)
-    : localLikeCount;
+  const resolvedLiked = Boolean(isLikedByMe);
+  const resolvedLikeCount = likesCount ?? 0;
 
-  const handleLike = async () => {
-    if (hasExternalLikeHandler) {
-      onLike?.(id);
-      return;
-    }
-
-    const wasLiked = liked;
-    setLiked(!wasLiked);
-    setLocalLikeCount((c) => (wasLiked ? c - 1 : c + 1));
-
-    try {
-      if (wasLiked) {
-        await apiInstance.delete(`/posts/${id}/like`);
-      } else {
-        await apiInstance.post(`/posts/${id}/like`);
-      }
-    } catch {
-      // Revert on error
-      setLiked(wasLiked);
-      setLocalLikeCount((c) => (wasLiked ? c + 1 : c - 1));
+  const handleLike = () => {
+    if (onLike) {
+      onLike(id);
     }
   };
 
@@ -101,6 +76,23 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
     }
 
     router.push(`/posts/${id}`);
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/posts/${id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by @${authorUserName}`,
+          url,
+        });
+      } catch (err) {
+        // user aborted or error
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard");
+    }
   };
 
   const handleDelete = async () => {
@@ -145,8 +137,8 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
         </Link>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-border-subtle/30 focus:outline-none transition-colors">
-            <DotsThree size={28} weight="bold" />
+          <DropdownMenuTrigger className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-border-subtle/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-border-subtle transition-colors">
+            <MoreHorizontal size={20} />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
@@ -254,12 +246,11 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
             onClick={handleLike}
             aria-label={`Like post by ${authorUserName}`}
             aria-pressed={resolvedLiked}
-            className="flex items-center gap-1.5 text-ink-muted hover:text-gold transition-colors focus:outline-none"
+            className="flex items-center gap-1.5 text-ink-muted hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm px-1 py-0.5 -ml-1"
           >
             <Heart
-              size={20}
-              weight={resolvedLiked ? "fill" : "regular"}
-              className={resolvedLiked ? "text-gold" : ""}
+              size={18}
+              className={resolvedLiked ? "fill-primary text-primary" : ""}
             />
             <span className="text-sm font-medium">{resolvedLikeCount}</span>
           </button>
@@ -267,17 +258,18 @@ export function PostCard({ post, onLike, onComment }: PostCardProps) {
           <button
             onClick={handleComment}
             aria-label={`Comment on post by ${authorUserName}`}
-            className="flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors focus:outline-none"
+            className="flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink rounded-sm px-1 py-0.5"
           >
-            <ChatCircle size={20} weight="regular" />
+            <MessageCircle size={18} />
             <span className="text-sm font-medium">{commentsCount}</span>
           </button>
 
           <button
+            onClick={handleShare}
             aria-label="Share post"
-            className="flex items-center text-ink-muted hover:text-ink transition-colors focus:outline-none"
+            className="flex items-center text-ink-muted hover:text-ink transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink rounded-sm px-1 py-0.5"
           >
-            <ShareFat size={20} weight="regular" />
+            <Share2 size={18} />
           </button>
         </div>
 

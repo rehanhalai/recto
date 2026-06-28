@@ -90,29 +90,27 @@ export function FeedHome({ initialPosts }: FeedHomeProps) {
       {/* Community Highlights - Top 5 Posts */}
       {topPosts.length > 0 && (
         <FeedSection title="Community Highlights" href="/posts">
-          <div className="flex flex-col gap-6">
-            {topPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLike={handleLike}
-                onComment={handleComment}
-              />
-            ))}
+          {topPosts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onLike={handleLike}
+              onComment={handleComment}
+            />
+          ))}
 
-            <Link
-              href="/posts"
-              className="group flex items-center justify-center gap-2 py-4 border border-dashed border-border-subtle rounded-xl hover:bg-card-surface transition-colors"
-            >
-              <span className="text-sm font-medium text-ink-muted group-hover:text-ink">
-                See more discussions
-              </span>
-              <ArrowRight
-                size={16}
-                className="text-ink-muted group-hover:text-ink transition-transform group-hover:translate-x-1"
-              />
-            </Link>
-          </div>
+          <Link
+            href="/posts"
+            className="group flex flex-col items-center justify-center gap-2 h-full min-h-[200px] border border-dashed border-border-subtle rounded-xl hover:bg-card-surface transition-colors"
+          >
+            <span className="text-sm font-medium text-ink-muted group-hover:text-ink">
+              See more discussions
+            </span>
+            <ArrowRight
+              size={16}
+              className="text-ink-muted group-hover:text-ink transition-transform group-hover:translate-x-1"
+            />
+          </Link>
         </FeedSection>
       )}
 
